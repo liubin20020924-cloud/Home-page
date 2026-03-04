@@ -7,7 +7,7 @@ set -e  # 遇到错误立即退出
 
 # 配置
 PROJECT_DIR="/opt/Home-page"
-BACKUP_DIR="/opt/Home-page/backups"
+BACKUP_DIR="/var/backups/Home-page"  # 改为 /var/backups 下的项目目录
 LOG_FILE="/var/log/integrate-code/deploy.log"
 REPO_URL="https://github.com/liubin20020924-cloud/Home-page.git"
 APP_NAME="Home-page"
