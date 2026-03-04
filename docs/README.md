@@ -14,6 +14,15 @@
 | [更新日志](./CHANGELOG.md) | 版本更新历史、功能改进、问题修复 | 了解最新功能 |
 | [配置指南](./CONFIGURATION_GUIDE.md) | 系统配置详细说明 | 环境部署 |
 
+### CI/CD 自动化部署
+
+| 文档 | 说明 | 适用场景 |
+|------|------|----------|
+| [CI/CD文档索引](./CICD/README.md) | CI/CD完整文档目录导航 | 了解CI/CD文档结构 |
+| [完整实施指南](./CICD/00-COMPLETE_GUIDE.md) | CI/CD完整实施流程 | 新项目部署 |
+| [快速参考](./CICD/01-QUICK_REFERENCE.md) | 常用命令、配置速查 | 日常运维 |
+| [部署指南](./CICD/02-DEPLOYMENT_GUIDE.md) | 详细的部署流程 | 初次部署 |
+
 ### 系统指南
 
 | 文档 | 说明 | 目标读者 |
@@ -32,10 +41,30 @@ docs/
 ├── README.md                              # 本文件 - 文档索引
 ├── CHANGELOG.md                           # 版本更新日志
 ├── CONFIGURATION_GUIDE.md                 # 系统配置指南
+├── CICD/                                  # CI/CD自动化部署文档目录
+│   ├── README.md                          # CI/CD文档索引
+│   ├── 00-COMPLETE_GUIDE.md              # 完整实施指南
+│   ├── 01-QUICK_REFERENCE.md            # 快速参考
+│   ├── 02-DEPLOYMENT_GUIDE.md           # 部署指南
+│   ├── 03-CURRENT_FLOW.md               # 当前流程
+│   ├── 04-DEPLOYMENT_HISTORY.md         # 部署历史
+│   ├── 10-GIT_CONFIG_SOLUTION.md        # Git配置方案
+│   ├── 11-PROXY_SETUP.md                # 代理设置
+│   ├── 12-AUTO_DEPLOY_SETUP.md          # 自动部署配置
+│   ├── 20-SSH_DEPLOYMENT.md             # SSH部署
+│   ├── 21-SIMPLIFIED_CI_CD.md           # 简化CI/CD
+│   ├── 22-QUICK_SETUP.md                # 快速设置
+│   ├── 23-TEST_GUIDE.md                 # 测试指南
+│   ├── 30-WEBHOOK_TROUBLESHOOTING.md    # Webhook故障排查
+│   ├── 31-SERVICE_TROUBLESHOOTING.md    # 服务故障排查
+│   ├── 40-FINAL_SUMMARY.md              # 最终总结
+│   └── 41-IMPLEMENTATION_SUMMARY.md      # 实施总结
 ├── UNIFIED_SYSTEM_GUIDE.md                # 统一用户管理系统指南
 ├── 工单系统设计文档.md                   # 工单系统设计文档
 ├── KB_SYSTEM_GUIDE.md                    # 知识库系统指南
-└── HOME_SYSTEM_GUIDE.md                   # 官网系统指南
+├── HOME_SYSTEM_GUIDE.md                   # 官网系统指南
+├── USER_REGISTRATION_GUIDE.md             # 用户注册指南
+└── VERSION_MANAGEMENT_GUIDE.md           # 版本管理指南
 ```
 
 ---

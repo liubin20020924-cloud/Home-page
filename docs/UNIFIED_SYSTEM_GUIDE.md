@@ -752,7 +752,7 @@ def validate_password(password):
 
 如有问题请联系：
 - 邮箱: support@cloud-doors.com
-- 工单系统: http://your-server:5000/case
+- 工单系统: http://cloud-doors.com:5000/case
 
 ---
 

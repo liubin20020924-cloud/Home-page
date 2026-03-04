@@ -52,21 +52,30 @@ setup_git() {
     log_info "Git配置完成"
 }
 
-# 添加Gitee远程仓库
-setup_gitee_remote() {
-    log_step "添加Gitee远程仓库..."
+# 添加GitHub远程仓库
+setup_github_remote() {
+    log_step "添加GitHub远程仓库..."
 
     cd /opt/Home-page 2>/dev/null || {
         log_error "项目目录不存在: /opt/Home-page"
         exit 1
     }
 
-    # 检查是否已存在gitee远程仓库
-    if git remote | grep -q gitee; then
-        log_info "Gitee远程仓库已存在"
+    # 检查是否已存在origin远程仓库
+    if git remote | grep -q origin; then
+        log_info "origin远程仓库已存在"
+
+        # 检查是否指向GitHub
+        ORIGIN_URL=$(git remote get-url origin 2>/dev/null)
+        if [[ "$ORIGIN_URL" != *"github.com"* ]]; then
+            log_warn "origin未指向GitHub，当前为: $ORIGIN_URL"
+            log_info "更新为GitHub仓库..."
+            git remote set-url origin https://github.com/liubin20020924-cloud/Home-page.git
+            log_info "已更新为GitHub仓库"
+        fi
     else
-        git remote add gitee https://gitee.com/liubin_studies/Home-page.git
-        log_info "Gitee远程仓库已添加"
+        git remote add origin https://github.com/liubin20020924-cloud/Home-page.git
+        log_info "origin远程仓库已添加"
     fi
 
     # 显示配置的远程仓库
@@ -132,8 +141,8 @@ main() {
     # 配置Git
     setup_git
 
-    # 添加Gitee远程仓库
-    setup_gitee_remote
+    # 添加GitHub远程仓库
+    setup_github_remote
 
     # 配置智能拉取脚本
     setup_smart_pull
@@ -148,13 +157,16 @@ main() {
     echo ""
     echo "下一步操作："
     echo ""
-    echo "1. 运行部署服务安装脚本："
-    echo "   bash /opt/Home-page/scripts/deploy_service.sh"
+    echo "1. 运行Git配置检查："
+    echo "   bash /opt/Home-page/scripts/check_git_config.sh"
     echo ""
-    echo "2. 手动测试部署："
+    echo "2. 如需配置代理（访问GitHub）："
+    echo "   git config --global http.https://github.proxy http://proxy-server:port"
+    echo ""
+    echo "3. 手动测试部署："
     echo "   bash /opt/Home-page/scripts/deploy.sh"
     echo ""
-    echo "3. 查看配置："
+    echo "4. 查看配置："
     echo "   git remote -v"
     echo "   git config --global --list"
     echo ""
