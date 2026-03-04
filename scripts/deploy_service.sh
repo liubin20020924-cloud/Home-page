@@ -55,9 +55,20 @@ set_permissions() {
     log_step "设置脚本权限..."
     chmod +x "$PROJECT_DIR/scripts/deploy.sh"
     chmod +x "$PROJECT_DIR/scripts/rollback.sh"
-    chmod +x "$PROJECT_DIR/scripts/check_and_deploy.sh"
     chmod +x "$PROJECT_DIR/scripts/webhook_receiver_github.py"
     chmod +x "$PROJECT_DIR/scripts/check_and_deploy_github.sh"
+    chmod +x "$PROJECT_DIR/scripts/smart-pull.sh"
+    chmod +x "$PROJECT_DIR/scripts/one-time-setup.sh"
+
+    # 检查并设置可选的Gitee相关脚本
+    if [ -f "$PROJECT_DIR/scripts/check_and_deploy.sh" ]; then
+        chmod +x "$PROJECT_DIR/scripts/check_and_deploy.sh"
+    fi
+
+    if [ -f "$PROJECT_DIR/scripts/webhook_receiver.py" ]; then
+        chmod +x "$PROJECT_DIR/scripts/webhook_receiver.py"
+    fi
+
     log_info "权限设置完成"
 }
 
