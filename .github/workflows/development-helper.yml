@@ -1,0 +1,70 @@
+name: Development Helper
+
+on:
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: '源分支（例如：feat/new-feature）'
+        required: true
+        default: 'develop'
+      target_branch:
+        description: '目标分支（main 或 develop）'
+        required: true
+        default: 'main'
+      auto_merge:
+        description: '是否自动合并（添加 auto-merge 标签）'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    name: Create Pull Request
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get branch info
+        id: branch_info
+        run: |
+          echo "当前分支: ${{ inputs.source_branch }}"
+          echo "目标分支: ${{ inputs.target_branch }}"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ inputs.source_branch }}
+          base: ${{ inputs.target_branch }}
+          title: "Merge ${{ inputs.source_branch }} into ${{ inputs.target_branch }}"
+          body: |
+            ## 概述
+            自动创建的 PR，将 `${{ inputs.source_branch }}` 合并到 `${{ labels.target_branch }}`
+
+            ## 变更内容
+            - 来源分支: ${{ inputs.source_branch }}
+            - 目标分支: ${{ inputs.target_branch }}
+            - 创建时间: ${{ github.event.repository.updated_at }}
+
+            ## CI/CD 检查
+            此 PR 会自动触发 CI/CD 流水线进行测试、代码检查和安全检查。
+
+            ## 自动合并
+            - 所有检查通过后会自动合并到目标分支
+          draft: false
+          labels: |
+            auto-merge
+          reviewers: |
+            ${{ github.actor }}

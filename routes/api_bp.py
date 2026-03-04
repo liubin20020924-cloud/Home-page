@@ -193,18 +193,40 @@ def trilium_test():
 
         # 如果没有token，尝试使用密码登录
         if not token and hasattr(config, 'TRILIUM_LOGIN_PASSWORD'):
-            from trilium_py.client import ETAPI
-            ea = ETAPI(server_url)
-            token = ea.login(config.TRILIUM_LOGIN_PASSWORD)
-            if not token:
-                return error_response(message='Trilium登录失败，请检查密码配置')
+            try:
+                from trilium_py.client import ETAPI
+                ea = ETAPI(server_url)
+                token = ea.login(config.TRILIUM_LOGIN_PASSWORD)
+                if not token:
+                    return error_response(message='Trilium登录失败，请检查密码配置')
+            except ImportError:
+                return error_response(message='trilium-py 模块未安装，请检查Trilium配置')
+            except Exception as e:
+                logger.error(f"Trilium登录失败: {e}")
+                return error_response(message=f'Trilium登录失败: {str(e)}')
 
         # 测试连接
-        from trilium_py.client import ETAPI
-        ea = ETAPI(server_url, token)
+        try:
+            from trilium_py.client import ETAPI
+            ea = ETAPI(server_url, token)
 
-        # 获取根笔记测试连接
-        root_note = ea.get_note('root')
+            # 获取根笔记测试连接
+            root_note = ea.get_note('root')
+        except ImportError:
+            # 回退：直接测试API连接
+            try:
+                import requests
+                headers = {}
+                if token:
+                    headers['Authorization'] = f'Bearer {token}'
+                response = requests.get(f"{server_url}/api/notes/root", headers=headers, timeout=10)
+                root_note = response.status_code == 200
+            except Exception as e:
+                logger.error(f"Trilium API连接测试失败: {e}")
+                return error_response(message=f'连接失败: {str(e)}')
+        except Exception as e:
+            logger.error(f"Trilium连接测试失败: {str(e)}")
+            return error_response(message=f'连接失败: {str(e)}')
 
         if root_note:
             return success_response(data={'server_url': server_url}, message='Trilium 连接成功')

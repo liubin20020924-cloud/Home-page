@@ -37,6 +37,33 @@
 ### 修复 (Fixed)
 - 修复 `scripts/check_deploy_config.py` 的编码问题 (Windows GBK 兼容)
 - 将 Unicode 符号替换为 ASCII 等效字符
+- 移除已废弃的 trilium-py 依赖，改用直接 API 调用
+  - 注释掉 `requirements.txt` 中的 trilium-py==0.8.5
+  - 注释掉 `check_dependencies.py` 中的 trilium_py 依赖检查
+  - 为所有使用 trilium-py 的代码添加 fallback 机制
+  - 修复 `routes/api_bp.py` 中 Trilium 测试连接的 ImportError 处理
+  - 修复 `routes/kb_bp.py` 中附件代理的 ImportError 处理
+  - 修复 `common/trilium_helper.py` 中递归获取笔记的 ImportError 处理
+  - 所有 Trilium 相关功能 现在支持在 trilium-py 未安装时通过 requests 直接调用 API
+
+### 变更 (Changed)
+- 重构 CI/CD 流程，实现自动合并到 main 分支
+  - 更新 `.github/workflows/ci-cd.yml`：支持所有分支的 push 和 PR 触发
+  - 添加自动合并任务：PR 通过所有检查后自动合并到 main 分支
+  - 优化部署通知：支持 Webhook 和 SSH 两种方式
+  - 添加部署摘要：在 GitHub Actions 中显示部署信息
+- 新增 Development Helper 工作流
+  - 支持通过 GitHub Actions 手动创建 PR
+  - 支持配置自动合并选项
+- 增强 webhook 接收器功能
+  - 添加版本信息记录和查询 (`/webhook/version`)
+  - 添加部署日志查询 (`/webhook/logs`)
+  - 支持更详细的部署日志记录
+  - 兼容 GitHub Webhook 标准格式和 CI/CD 通知格式
+- 新增 CI/CD 快速参考文档 (`docs/CICD_QUICK_REFERENCE.md`)
+  - 完整的分支策略说明
+  - 详细的开发和部署工作流程
+  - 常见问题解答和快速命令参考
 
 ---
 

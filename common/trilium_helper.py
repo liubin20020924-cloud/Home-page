@@ -559,60 +559,67 @@ class TriliumHelper:
             tuple: (success: bool, results: list, message: str)
         """
         try:
-            from trilium_py.client import ETAPI
-
-            server_url = self.server_url.rstrip('/')
-            token = self.token
-
-            if not token:
-                logger.info("使用密码模式连接Trilium")
-                ea = ETAPI(server_url)
-            else:
-                ea = ETAPI(server_url, token)
-
-            logger.info("开始递归获取 Trilium 所有笔记...")
-            all_results = []
-
-            # 获取根节点
+            # 尝试使用 trilium-py 模块
             try:
-                root_note = ea.get_note('root')
-                logger.info(f"获取到根节点: {root_note.get('noteId', 'root')}")
-            except Exception as e:
-                logger.error(f"获取根节点失败: {e}")
-                return False, [], f'获取根节点失败: {str(e)}'
+                from trilium_py.client import ETAPI
 
-            # 递归获取所有笔记
-            def collect_notes(note_id):
-                """递归收集笔记"""
+                server_url = self.server_url.rstrip('/')
+                token = self.token
+
+                if not token:
+                    logger.info("使用密码模式连接Trilium")
+                    ea = ETAPI(server_url)
+                else:
+                    ea = ETAPI(server_url, token)
+
+                logger.info("开始递归获取 Trilium 所有笔记...")
+                all_results = []
+
+                # 获取根节点
                 try:
-                    note_info = ea.get_note(note_id)
-
-                    if not note_info:
-                        return
-
-                    # 添加当前笔记（排除根节点）
-                    if note_id != 'root':
-                        all_results.append({
-                            'noteId': note_info.get('noteId', note_id),
-                            'title': note_info.get('title', ''),
-                            'type': note_info.get('type', 'text'),
-                            'dateModified': note_info.get('utcDateModified', '')
-                        })
-                        logger.debug(f"收集笔记: {note_id} - {note_info.get('title', '')}")
-
-                    # 递归处理子笔记
-                    child_note_ids = note_info.get('childNoteIds', [])
-                    for child_id in child_note_ids:
-                        collect_notes(child_id)
-
+                    root_note = ea.get_note('root')
+                    logger.info(f"获取到根节点: {root_note.get('noteId', 'root')}")
                 except Exception as e:
-                    logger.warning(f"获取笔记 {note_id} 失败: {e}")
+                    logger.error(f"获取根节点失败: {e}")
+                    return False, [], f'获取根节点失败: {str(e)}'
 
-            # 从根节点开始递归
-            collect_notes('root')
+                # 递归获取所有笔记
+                def collect_notes(note_id):
+                    """递归收集笔记"""
+                    try:
+                        note_info = ea.get_note(note_id)
 
-            logger.info(f"递归获取完成，共获取 {len(all_results)} 条笔记")
-            return True, all_results, '获取成功'
+                        if not note_info:
+                            return
+
+                        # 添加当前笔记（排除根节点）
+                        if note_id != 'root':
+                            all_results.append({
+                                'noteId': note_info.get('noteId', note_id),
+                                'title': note_info.get('title', ''),
+                                'type': note_info.get('type', 'text'),
+                                'dateModified': note_info.get('utcDateModified', '')
+                            })
+                            logger.debug(f"收集笔记: {note_id} - {note_info.get('title', '')}")
+
+                        # 递归处理子笔记
+                        child_note_ids = note_info.get('childNoteIds', [])
+                        for child_id in child_note_ids:
+                            collect_notes(child_id)
+
+                    except Exception as e:
+                        logger.warning(f"获取笔记 {note_id} 失败: {e}")
+
+                # 从根节点开始递归
+                collect_notes('root')
+
+                logger.info(f"递归获取完成，共获取 {len(all_results)} 条笔记")
+                return True, all_results, '获取成功'
+
+            except ImportError:
+                logger.warning("trilium-py 模块未安装，回退到基础API模式")
+                # 回退方案：直接调用 Trilium API
+                return self._get_all_notes_via_api()
 
         except Exception as e:
             logger.error(f"递归获取 Trilium 所有笔记异常: {e}", exc_info=True)
