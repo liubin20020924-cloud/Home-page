@@ -10,6 +10,14 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
+# 注册 pytest 标记
+def pytest_configure(config):
+    """配置 pytest 标记"""
+    config.addinivalue_line(
+        "markers", "integration: 标记集成测试"
+    )
+
+
 @pytest.fixture
 def app():
     """应用测试 fixture"""
