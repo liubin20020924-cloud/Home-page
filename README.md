@@ -456,7 +456,8 @@ DB_POOL_MAX_SHARED=5        # 最大共享连接
 
 ### 核心文档
 - [快速开始](./docs/QUICK_START.md)
-- [快速配置指南（简化版）](./docs/QUICK_SETUP_GUIDE.md) ⭐ **推荐**
+- [Git配置方案](./docs/GIT_CONFIG_SOLUTION.md) ⭐ **新** - 腾讯云完整配置
+- [快速配置指南（简化版）](./docs/QUICK_SETUP_GUIDE.md) ⭐
 - [简化版CI/CD配置](./docs/SIMPLIFIED_CI_CD.md)
 - [版本管理规范](./docs/VERSION_MANAGEMENT_GUIDE.md) ⭐
 - [版本管理快速指南](./docs/QUICK_START_VERSIONING.md) ⭐
