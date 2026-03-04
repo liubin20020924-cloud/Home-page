@@ -1,0 +1,529 @@
+{% extends "home/base.html" %}
+
+{% block title %}备件库服务 - 云户科技{% endblock %}
+
+{% block content %}
+  <!-- 导航栏 -->
+  {% include 'home/components/header.html' %}
+
+  <!-- 页面标题 -->
+  <section style="padding: clamp(80px, 12vh, 120px) 0; background: linear-gradient(135deg, #0A4DA2, #2563eb); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -50%; right: -10%; width: 500px; height: 500px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(80px);"></div>
+    <div style="position: absolute; bottom: -50%; left: -10%; width: 400px; height: 400px; background: rgba(162, 217, 61, 0.15); border-radius: 50%; filter: blur(80px);"></div>
+    <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px); position: relative; z-index: 10; text-align: center;">
+      <h1 style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; color: white; margin-bottom: clamp(16px, 2.5vh, 24px);">备件库服务</h1>
+      <p style="font-size: clamp(1rem, 1.3vw, 1.25rem); color: rgba(255, 255, 255, 0.9); max-width: clamp(400px, 70vw, 600px); margin: 0 auto; line-height: 1.7;">
+        专业的IT备件储备与快速响应服务，保障企业业务连续性
+      </p>
+    </div>
+  </section>
+
+  <!-- 服务概述 -->
+  <section style="padding: clamp(60px, 10vh, 100px) 0; background: white;">
+    <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px);">
+      <div style="text-align: center; margin-bottom: clamp(40px, 7vh, 72px);">
+        <span style="color: #A2D93D; font-weight: 600; font-size: clamp(11px, 0.9vw, 13px); text-transform: uppercase; letter-spacing: 2px;">SERVICE OVERVIEW</span>
+        <h2 style="margin-top: clamp(10px, 2vh, 16px); font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; color: #1a202c;">服务概述</h2>
+        <div style="width: 60px; height: 3px; background: linear-gradient(to right, #0A4DA2, #A2D93D); margin: clamp(12px, 2vh, 20px) auto;"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: clamp(32px, 5vw, 60px); align-items: center;">
+        <div>
+          <div style="color: #374151; line-height: 1.85; margin-bottom: 32px; font-size: clamp(0.95rem, 1.1vw, 1.05rem);">
+            <p style="text-indent: 2em; margin-bottom: 20px;">
+              云户科技备件库服务致力于为企业客户提供专业、高效的IT备件解决方案。我们建立了完善的备件储备体系，涵盖服务器、存储、网络设备等多个领域的常用备件。
+            </p>
+            <p style="text-indent: 2em; margin-bottom: 20px;">
+              通过科学的库存管理和智能预警机制，我们能够快速响应客户的紧急需求，最大限度减少因设备故障导致的业务中断时间，保障企业的业务连续性。
+            </p>
+            <p style="text-indent: 2em; margin-bottom: 0;">
+              同时，我们还提供备件定期巡检、健康状态评估等增值服务，帮助客户优化备件管理策略，降低运维成本。
+            </p>
+          </div>
+
+          <!-- 核心优势 -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; padding: 16px; background: rgba(10, 77, 162, 0.05); border-radius: 12px;">
+              <div style="width: 40px; height: 40px; background: #0A4DA2; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                <i class="fa fa-check" style="color: white; font-size: 16px;"></i>
+              </div>
+              <span style="font-weight: 600; color: #1a202c; font-size: 0.95rem;">快速响应</span>
+            </div>
+            <div style="display: flex; align-items: center; padding: 16px; background: rgba(162, 217, 61, 0.1); border-radius: 12px;">
+              <div style="width: 40px; height: 40px; background: #A2D93D; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                <i class="fa fa-cubes" style="color: white; font-size: 16px;"></i>
+              </div>
+              <span style="font-weight: 600; color: #1a202c; font-size: 0.95rem;">丰富库存</span>
+            </div>
+            <div style="display: flex; align-items: center; padding: 16px; background: rgba(10, 77, 162, 0.05); border-radius: 12px;">
+              <div style="width: 40px; height: 40px; background: #0A4DA2; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                <i class="fa fa-shield" style="color: white; font-size: 16px;"></i>
+              </div>
+              <span style="font-weight: 600; color: #1a202c; font-size: 0.95rem;">正品保障</span>
+            </div>
+            <div style="display: flex; align-items: center; padding: 16px; background: rgba(162, 217, 61, 0.1); border-radius: 12px;">
+              <div style="width: 40px; height: 40px; background: #A2D93D; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                <i class="fa fa-wrench" style="color: white; font-size: 16px;"></i>
+              </div>
+              <span style="font-weight: 600; color: #1a202c; font-size: 0.95rem;">专业维护</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 图片轮播展示 -->
+        <div style="position: relative; width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);">
+          <div id="partsCarousel" style="position: relative; width: 100%; min-height: 450px; max-height: 600px; overflow: hidden; background: #f9fafb;">
+            <!-- 轮播图片 -->
+            <div id="carouselTrack" style="display: flex; transition: transform 0.5s ease-in-out; min-height: 450px; max-height: 600px; align-items: center; justify-content: center; width: 700%;">
+              <!-- 克隆的最后一张（用于无缝循环） -->
+              <div class="carousel-slide clone" style="width: 14.2857%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 450px; max-height: 600px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='home/images/BJ/optimized/BJ5.webp') }}" type="image/webp">
+                  <img src="{{ url_for('static', filename='home/images/BJ/BJ5.jpg') }}" alt="备件库5" style="width: 100%; height: auto; max-height: 600px; object-fit: contain;" loading="lazy" decoding="async" width="1200" height="600">
+                </picture>
+              </div>
+              <!-- 实际图片 -->
+              <div class="carousel-slide original" style="width: 14.2857%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 450px; max-height: 600px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='home/images/BJ/optimized/BJ1.webp') }}" type="image/webp">
+                  <img src="{{ url_for('static', filename='home/images/BJ/BJ1.jpg') }}" alt="备件库1" style="width: 100%; height: auto; max-height: 600px; object-fit: contain;" loading="lazy" decoding="async" width="1200" height="600">
+                </picture>
+              </div>
+              <div class="carousel-slide original" style="width: 14.2857%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 450px; max-height: 600px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='home/images/BJ/optimized/BJ2.webp') }}" type="image/webp">
+                  <img src="{{ url_for('static', filename='home/images/BJ/BJ2.jpg') }}" alt="备件库2" style="width: 100%; height: auto; max-height: 600px; object-fit: contain;" loading="lazy" decoding="async" width="1200" height="600">
+                </picture>
+              </div>
+              <div class="carousel-slide original" style="width: 14.2857%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 450px; max-height: 600px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='home/images/BJ/optimized/BJ3.webp') }}" type="image/webp">
+                  <img src="{{ url_for('static', filename='home/images/BJ/BJ3.jpg') }}" alt="备件库3" style="width: 100%; height: auto; max-height: 600px; object-fit: contain;" loading="lazy" decoding="async" width="1200" height="600">
+                </picture>
+              </div>
+              <div class="carousel-slide original" style="width: 14.2857%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 450px; max-height: 600px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='home/images/BJ/optimized/BJ4.webp') }}" type="image/webp">
+                  <img src="{{ url_for('static', filename='home/images/BJ/BJ4.jpg') }}" alt="备件库4" style="width: 100%; height: auto; max-height: 600px; object-fit: contain;" loading="lazy" decoding="async" width="1200" height="600">
+                </picture>
+              </div>
+              <div class="carousel-slide original" style="width: 14.2857%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 450px; max-height: 600px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='home/images/BJ/optimized/BJ5.jpg') }}" type="image/webp">
+                  <img src="{{ url_for('static', filename='home/images/BJ/BJ5.jpg') }}" alt="备件库5" style="width: 100%; height: auto; max-height: 600px; object-fit: contain;" loading="lazy" decoding="async" width="1200" height="600">
+                </picture>
+              </div>
+              <!-- 克隆的第一张（用于无缝循环） -->
+              <div class="carousel-slide clone" style="width: 14.2857%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 450px; max-height: 600px;">
+                <picture>
+                  <source srcset="{{ url_for('static', filename='home/images/BJ/optimized/BJ1.webp') }}" type="image/webp">
+                  <img src="{{ url_for('static', filename='home/images/BJ/BJ1.jpg') }}" alt="备件库1" style="width: 100%; height: auto; max-height: 600px; object-fit: contain;" loading="lazy" decoding="async" width="1200" height="600">
+                </picture>
+              </div>
+            </div>
+            <!-- 左右箭头 -->
+            <button id="prevBtn" onclick="slideTo(-1)" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); z-index: 10; opacity: 1;">
+              <i class="fa fa-chevron-left" style="color: #0A4DA2; font-size: 18px;"></i>
+            </button>
+            <button id="nextBtn" onclick="slideTo(1)" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); z-index: 10; opacity: 1;">
+              <i class="fa fa-chevron-right" style="color: #0A4DA2; font-size: 18px;"></i>
+            </button>
+            <!-- 指示器 -->
+            <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10;">
+              <span onclick="goToSlide(0)" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); cursor: pointer; transition: all 0.3s;"></span>
+              <span onclick="goToSlide(1)" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); cursor: pointer; transition: all 0.3s;"></span>
+              <span onclick="goToSlide(2)" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); cursor: pointer; transition: all 0.3s;"></span>
+              <span onclick="goToSlide(3)" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); cursor: pointer; transition: all 0.3s;"></span>
+              <span onclick="goToSlide(4)" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); cursor: pointer; transition: all 0.3s;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 备件分类 -->
+  <section style="padding: clamp(60px, 10vh, 100px) 0; background: #f9fafb;">
+    <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px);">
+      <div style="text-align: center; margin-bottom: clamp(40px, 7vh, 72px);">
+        <span style="color: #A2D93D; font-weight: 600; font-size: clamp(11px, 0.9vw, 13px); text-transform: uppercase; letter-spacing: 2px;">PARTS CATEGORIES</span>
+        <h2 style="margin-top: clamp(10px, 2vh, 16px); font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; color: #1a202c;">备件分类</h2>
+        <div style="width: 60px; height: 3px; background: linear-gradient(to right, #0A4DA2, #A2D93D); margin: clamp(12px, 2vh, 20px) auto;"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: clamp(20px, 3vw, 32px);">
+        <!-- 服务器备件 -->
+        <div style="background: white; border-radius: 20px; padding: clamp(24px, 4vw, 36px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); transition: all 0.35s; border: 1px solid #f3f4f6; text-align: center;" class="parts-card">
+          <div style="width: clamp(60px, 8vw, 80px); height: clamp(60px, 8vw, 80px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px);">
+            <i class="fa fa-server" style="font-size: clamp(24px, 3.5vw, 32px); color: white;"></i>
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">服务器备件</h3>
+          <p style="color: #4b5563; margin-bottom: 16px; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            CPU、内存、硬盘、电源、风扇、主板等服务器核心组件
+          </p>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">CPU处理器</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">内存模块</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px);">硬盘驱动器</li>
+          </ul>
+        </div>
+
+   
+        <!-- 电源备件 -->
+        <div style="background: white; border-radius: 20px; padding: clamp(24px, 4vw, 36px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); transition: all 0.35s; border: 1px solid #f3f4f6; text-align: center;" class="parts-card">
+          <div style="width: clamp(60px, 8vw, 80px); height: clamp(60px, 8vw, 80px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px);">
+            <i class="fa fa-plug" style="font-size: clamp(24px, 3.5vw, 32px); color: white;"></i>
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">电源备件</h3>
+          <p style="color: #4b5563; margin-bottom: 16px; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            UPS不间断电源、PDU配电单元、稳压器等电力设备
+          </p>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">UPS电源</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">配电柜PDU</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px);">电池组</li>
+          </ul>
+        </div>
+
+        <!-- 其他配件 -->
+        <div style="background: white; border-radius: 20px; padding: clamp(24px, 4vw, 36px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); transition: all 0.35s; border: 1px solid #f3f4f6; text-align: center;" class="parts-card">
+          <div style="width: clamp(60px, 8vw, 80px); height: clamp(60px, 8vw, 80px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px);">
+            <i class="fa fa-puzzle-piece" style="font-size: clamp(24px, 3.5vw, 32px); color: white;"></i>
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">其他配件</h3>
+          <p style="color: #4b5563; margin-bottom: 16px; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            线缆、机架、散热配件、工具等各类辅助配件
+          </p>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">各类线缆</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">机架配件</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px);">散热风扇</li>
+          </ul>
+        </div>
+
+        <!-- 维保服务 -->
+        <div style="background: white; border-radius: 20px; padding: clamp(24px, 4vw, 36px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); transition: all 0.35s; border: 1px solid #f3f4f6; text-align: center;" class="parts-card">
+          <div style="width: clamp(60px, 8vw, 80px); height: clamp(60px, 8vw, 80px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px);">
+            <i class="fa fa-cogs" style="font-size: clamp(24px, 3.5vw, 32px); color: white;"></i>
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">维保服务</h3>
+          <p style="color: #4b5563; margin-bottom: 16px; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            备件巡检、状态评估、故障诊断、预防性维护
+          </p>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">定期巡检</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px); margin-bottom: 6px;">健康评估</li>
+            <li style="color: #6b7280; font-size: clamp(13px, 0.95vw, 15px);">故障诊断</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 备件卡片悬停效果 -->
+  <style>
+    .parts-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* 轮播按钮悬停效果 */
+    #prevBtn:hover, #nextBtn:hover {
+      background: white;
+      transform: translateY(-50%) scale(1.15);
+    }
+
+    #prevBtn:active, #nextBtn:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+  </style>
+
+  <!-- 服务流程 -->
+  <section style="padding: clamp(60px, 10vh, 100px) 0; background: white;">
+    <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px);">
+      <div style="text-align: center; margin-bottom: clamp(40px, 7vh, 72px);">
+        <span style="color: #A2D93D; font-weight: 600; font-size: clamp(11px, 0.9vw, 13px); text-transform: uppercase; letter-spacing: 2px;">SERVICE PROCESS</span>
+        <h2 style="margin-top: clamp(10px, 2vh, 16px); font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; color: #1a202c;">服务流程</h2>
+        <div style="width: 60px; height: 3px; background: linear-gradient(to right, #0A4DA2, #A2D93D); margin: clamp(12px, 2vh, 20px) auto;"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: clamp(20px, 3vw, 32px);">
+        <!-- 步骤1 -->
+        <div style="text-align: center; position: relative;">
+          <div style="width: clamp(70px, 10vw, 90px); height: clamp(70px, 10vw, 90px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px); font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 800; color: white;">
+            1
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">需求确认</h3>
+          <p style="color: #6b7280; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            客户提交备件需求，确认备件型号、数量、交付时间
+          </p>
+        </div>
+
+        <!-- 步骤2 -->
+        <div style="text-align: center; position: relative;">
+          <div style="width: clamp(70px, 10vw, 90px); height: clamp(70px, 10vw, 90px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px); font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 800; color: white;">
+            2
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">库存查询</h3>
+          <p style="color: #6b7280; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            系统自动查询库存，确认备件可用性和状态
+          </p>
+        </div>
+
+        <!-- 步骤3 -->
+        <div style="text-align: center; position: relative;">
+          <div style="width: clamp(70px, 10vw, 90px); height: clamp(70px, 10vw, 90px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px); font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 800; color: white;">
+            3
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">质量检测</h3>
+          <p style="color: #6b7280; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            出库前进行质量检测，确保备件性能良好
+          </p>
+        </div>
+
+        <!-- 步骤4 -->
+        <div style="text-align: center; position: relative;">
+          <div style="width: clamp(70px, 10vw, 90px); height: clamp(70px, 10vw, 90px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px); font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 800; color: white;">
+            4
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">快速配送</h3>
+          <p style="color: #6b7280; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            专业物流配送，确保备件准时送达客户现场
+          </p>
+        </div>
+
+        <!-- 步骤5 -->
+        <div style="text-align: center; position: relative;">
+          <div style="width: clamp(70px, 10vw, 90px); height: clamp(70px, 10vw, 90px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(16px, 3vh, 24px); font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 800; color: white;">
+            5
+          </div>
+          <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(10px, 2vh, 16px);">安装支持</h3>
+          <p style="color: #6b7280; line-height: 1.75; font-size: clamp(0.85rem, 1vw, 0.95rem);">
+            提供专业技术支持，协助客户完成备件安装调试
+          </p>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- 联系我们 -->
+  <section style="padding: clamp(60px, 10vh, 100px) 0; background: linear-gradient(135deg, #0A4DA2, #2563eb);">
+    <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px); text-align: center;">
+      <h2 style="font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; color: white; margin-bottom: clamp(16px, 3vh, 28px);">
+        需要备件支持？
+      </h2>
+      <p style="font-size: clamp(1rem, 1.3vw, 1.15rem); color: rgba(255, 255, 255, 0.9); margin-bottom: clamp(32px, 5vh, 48px); max-width: clamp(400px, 70vw, 600px); margin-left: auto; margin-right: auto; line-height: 1.7;">
+        立即联系我们，我们的专业团队将为您提供快速、可靠的备件服务
+      </p>
+      <div style="display: flex; gap: clamp(12px, 2vw, 20px); justify-content: center; flex-wrap: wrap;">
+        <a href="tel:4001033083" style="background: white; color: #0A4DA2; padding: clamp(12px, 1.5vh, 16px) clamp(24px, 3vw, 40px); border-radius: 10px; text-decoration: none; font-weight: 600; font-size: clamp(0.9rem, 1.1vw, 1rem); display: inline-flex; align-items: center; transition: all 0.3s;">
+          <i class="fa fa-phone" style="margin-right: clamp(6px, 1vw, 10px);"></i>
+          400-103-3083
+        </a>
+        <a href="#contact" style="background: transparent; color: white; padding: clamp(12px, 1.5vh, 16px) clamp(24px, 3vw, 40px); border: 2px solid white; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: clamp(0.9rem, 1.1vw, 1rem); display: inline-flex; align-items: center; transition: all 0.3s;">
+          <i class="fa fa-envelope" style="margin-right: clamp(6px, 1vw, 10px);"></i>
+          在线留言
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  {% include 'home/components/footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    let currentSlide = 1; // 从第一张真实图片开始（索引1，因为索引0是克隆的最后一张）
+    const carouselTrack = document.getElementById('carouselTrack');
+    const indicators = document.querySelectorAll('#partsCarousel > div:last-child > span');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const originalSlides = carouselTrack ? carouselTrack.querySelectorAll('.carousel-slide.original') : [];
+    const totalOriginalSlides = originalSlides.length;
+    const totalSlides = totalOriginalSlides + 2; // 加上两个克隆的
+    let autoPlayInterval;
+
+    // 检查图片是否加载成功
+    function checkImageLoading() {
+      console.log('=== 图片加载状态检查 ===');
+      console.log(`轮播轨道宽度: ${carouselTrack.offsetWidth}px`);
+      console.log(`轮播轨道样式宽度: ${getComputedStyle(carouselTrack).width}`);
+      console.log(`总图片数: ${totalSlides} (含克隆)`);
+      console.log(`真实图片数: ${totalOriginalSlides}`);
+
+      const allImages = carouselTrack.querySelectorAll('img');
+      allImages.forEach((img, index) => {
+        const isClone = img.closest('.clone') ? '克隆' : '真实';
+        console.log(`图片 ${index + 1}: ${img.alt} (${isClone}) - ${img.complete ? '已加载' : '加载中'}`);
+        console.log(`  - src: ${img.src}`);
+        console.log(`  - naturalWidth: ${img.naturalWidth}`);
+        console.log(`  - naturalHeight: ${img.naturalHeight}`);
+        console.log(`  - offsetWidth: ${img.offsetWidth}px`);
+        console.log(`  - offsetHeight: ${img.offsetHeight}px`);
+        const imgContainer = img.parentElement;
+        console.log(`  - 容器宽度: ${imgContainer.offsetWidth}px`);
+        console.log(`  - 容器显示: ${getComputedStyle(imgContainer).display}`);
+
+        // 监听加载事件
+        img.addEventListener('load', () => {
+          console.log(`✓ 图片加载成功: ${img.alt}, 尺寸: ${img.naturalWidth}x${img.naturalHeight}`);
+        });
+
+        img.addEventListener('error', () => {
+          console.error(`✗ 图片加载失败: ${img.alt}`);
+        });
+      });
+    }
+
+    function updateCarousel(instant = false) {
+      if (!carouselTrack) return;
+
+      // 禁用动画实现瞬间跳转（用于循环边界）
+      if (instant) {
+        carouselTrack.style.transition = 'none';
+      } else {
+        carouselTrack.style.transition = 'transform 0.5s ease-in-out';
+      }
+
+      // 移动轮播轨道，每个slide占 100/7 ≈ 14.2857%
+      carouselTrack.style.transform = `translateX(-${currentSlide * 14.2857}%)`;
+
+      // 更新指示器（只更新实际图片的指示器）
+      const actualSlide = currentSlide - 1; // 去掉克隆的第一张
+      if (actualSlide >= 0 && actualSlide < indicators.length) {
+        indicators.forEach((indicator, index) => {
+          if (index === actualSlide) {
+            indicator.style.background = '#fff';
+            indicator.style.width = '30px';
+            indicator.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+          } else {
+            indicator.style.background = 'rgba(255, 255, 255, 0.5)';
+            indicator.style.width = '10px';
+            indicator.style.boxShadow = 'none';
+          }
+        });
+      }
+
+      // 左右按钮始终保持可点击状态，无边界限制
+      prevBtn.style.opacity = '1';
+      nextBtn.style.opacity = '1';
+      prevBtn.style.cursor = 'pointer';
+      nextBtn.style.cursor = 'pointer';
+
+      console.log(`轮播更新: currentSlide=${currentSlide}, 实际图片索引=${actualSlide}`);
+    }
+
+    function slideTo(direction) {
+      if (totalSlides === 0) return;
+
+      const previousSlide = currentSlide;
+      currentSlide = currentSlide + direction;
+
+      console.log(`滑动: 方向=${direction}, 上一个=${previousSlide}, 当前=${currentSlide}`);
+
+      // 循环轮播：无缝切换
+      if (currentSlide >= totalSlides) {
+        // 从克隆的第一张（索引6）跳回真正的第一张（索引1）
+        console.log('到达末尾，跳回第一张');
+        updateCarousel(); // 先滑动到克隆的第一张
+        setTimeout(() => {
+          currentSlide = 1; // 瞬间跳到真正的第一张
+          updateCarousel(true);
+        }, 500);
+      } else if (currentSlide <= 0) {
+        // 从克隆的最后一张（索引0）跳到真正的最后一张（索引5）
+        console.log('到达开头，跳到最后一张');
+        updateCarousel(); // 先滑动到克隆的最后一张
+        setTimeout(() => {
+          currentSlide = totalSlides - 2; // 瞬间跳到真正的最后一张
+          updateCarousel(true);
+        }, 500);
+      } else {
+        updateCarousel();
+      }
+
+      resetAutoPlay();
+    }
+
+    function goToSlide(index) {
+      if (totalOriginalSlides === 0) return;
+
+      // index 是 0-4，转换为 1-5
+      if (index >= 0 && index < totalOriginalSlides) {
+        currentSlide = index + 1;
+        updateCarousel();
+        resetAutoPlay();
+      }
+    }
+
+    function startAutoPlay() {
+      if (totalSlides === 0) return;
+
+      autoPlayInterval = setInterval(() => {
+        slideTo(1);  // 自动播放使用 slideTo(1) 自动循环
+      }, 4000);
+    }
+
+    function stopAutoPlay() {
+      if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+      }
+    }
+
+    function resetAutoPlay() {
+      stopAutoPlay();
+      startAutoPlay();
+    }
+
+    // 初始化
+    if (carouselTrack && originalSlides.length > 0) {
+      console.log(`初始化轮播，共 ${totalOriginalSlides} 张真实图片`);
+
+      // 检查图片加载状态
+      checkImageLoading();
+
+      // 启动自动播放
+      updateCarousel();
+      startAutoPlay();
+
+      // 绑定事件
+      prevBtn.addEventListener('click', () => slideTo(-1));
+      nextBtn.addEventListener('click', () => slideTo(1));
+
+      indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => goToSlide(index));
+      });
+
+      carouselTrack.addEventListener('mouseenter', stopAutoPlay);
+      carouselTrack.addEventListener('mouseleave', startAutoPlay);
+
+      // 监听所有图片的加载事件
+      const allImages = carouselTrack.querySelectorAll('img');
+      allImages.forEach((img, index) => {
+        img.addEventListener('load', () => {
+          console.log(`✓ 图片 ${index + 1}/${allImages.length} 加载完成: ${img.alt}`);
+        });
+
+        img.addEventListener('error', () => {
+          console.error(`✗ 图片 ${index + 1}/${allImages.length} 加载失败: ${img.alt}`);
+          console.error(`  路径: ${img.src}`);
+        });
+      });
+
+      // 页面可见性变化时控制自动播放
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stopAutoPlay();
+        } else {
+          startAutoPlay();
+        }
+      });
+    } else {
+      console.error('轮播初始化失败：未找到轮播元素或图片');
+    }
+  })();
+</script>
+{% endblock %}

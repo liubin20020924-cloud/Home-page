@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理仪表板 - 云户科技</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+  <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #0A4DA2;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #A2D93D;
+      padding-bottom: 10px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #0A4DA2 0%, #174A85 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .quick-link {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #333;
+      border: 2px solid #e9ecef;
+      transition: all 0.3s;
+    }
+
+    .quick-link:hover {
+      background: #0A4DA2;
+      color: white;
+      border-color: #0A4DA2;
+      transform: translateY(-2px);
+    }
+
+    .quick-link i {
+      font-size: 20px;
+      margin-right: 10px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #0A4DA2;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">
+      <i class="fa fa-arrow-left"></i> 返回首页
+    </a>
+
+    <h1><i class="fa fa-dashboard"></i> 管理仪表板</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3><i class="fa fa-users"></i> 访问统计</h3>
+        <div class="value">0</div>
+      </div>
+      <div class="stat-card">
+        <h3><i class="fa fa-envelope"></i> 留言数量</h3>
+        <div class="value">0</div>
+      </div>
+      <div class="stat-card">
+        <h3><i class="fa fa-ticket"></i> 工单数量</h3>
+        <div class="value">0</div>
+      </div>
+      <div class="stat-card">
+        <h3><i class="fa fa-book"></i> 知识库条目</h3>
+        <div class="value">0</div>
+      </div>
+    </div>
+
+    <h2>快捷操作</h2>
+    <div class="quick-links">
+      <a href="/messages" class="quick-link">
+        <i class="fa fa-envelope"></i> 留言管理
+      </a>
+      <a href="/kb/MGMT/" class="quick-link">
+        <i class="fa fa-book"></i> 知识库管理
+      </a>
+      <a href="/case/" class="quick-link">
+        <i class="fa fa-ticket"></i> 工单系统
+      </a>
+      <a href="/user-mgmt/" class="quick-link">
+        <i class="fa fa-users"></i> 用户管理
+      </a>
+    </div>
+  </div>
+</body>
+</html>

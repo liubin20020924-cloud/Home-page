@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>云户知识库 - 登录</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f4c81 0%, #1a5c9e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h2 {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #0f4c81 0%, #1a5c9e 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2.5rem;
+        }
+
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #1a5c9e;
+            box-shadow: 0 0 0 0.2rem rgba(26, 92, 158, 0.25);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #0f4c81 0%, #1a5c9e 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(26, 92, 158, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .alert-danger {
+            background: #fee;
+            color: #c33;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .footer-links a {
+            color: #1a5c9e;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #1a5c9e;
+        }
+
+        .input-group {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <h2>知识库管理系统</h2>
+            <p>用户登录</p>
+        </div>
+
+        <!-- 消息提示 -->
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('kb.login') }}"
+              autocomplete="off">
+            <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+
+            <div class="mb-3">
+                <label for="username" class="form-label">
+                    <i class="fas fa-user me-2"></i>用户名
+                </label>
+                <input type="text" class="form-control" id="username" name="username"
+                       placeholder="请输入用户名" required autocomplete="username" autofocus>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">
+                    <i class="fas fa-lock me-2"></i>密码
+                </label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="password" name="password"
+                           placeholder="请输入密码" required autocomplete="current-password">
+                    <button type="button" class="password-toggle" id="togglePassword">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-login">
+                <i class="fas fa-sign-in-alt me-2"></i>登录
+            </button>
+        </form>
+
+        <div class="footer-links">
+            <a href="/">
+                <i class="fas fa-home me-1"></i>返回官网
+            </a>
+            <a href="/case/">
+                <i class="fas fa-ticket me-1"></i>工单系统
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // 检查登录状态并自动跳转
+        function checkLoginAndRedirect() {
+            $.ajax({
+                url: '/kb/auth/check-login',
+                method: 'GET',
+                cache: false,
+                success: function(response) {
+                    if (response.success && response.data && response.data.user) {
+                        // 已登录，跳转到知识库首页
+                        console.log('检测到已登录状态，自动跳转');
+                        const nextUrl = '{{ request.args.get("next", "/kb/") }}';
+                        window.location.href = nextUrl;
+                    }
+                },
+                error: function(xhr) {
+                    // 忽略错误，用户可以正常登录
+                    console.log('登录状态检查失败，用户可以正常登录');
+                }
+            });
+        }
+
+        // 清除表单自动填充
+        function clearAutoFill() {
+            const form = document.querySelector('form');
+            if (form) {
+                // 清除所有密码输入框
+                const passwordInputs = form.querySelectorAll('input[type="password"]');
+                passwordInputs.forEach(input => {
+                    input.value = '';
+                });
+            }
+        }
+
+        // 页面加载时清除自动填充
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            checkLoginAndRedirect();
+
+            clearAutoFill();
+
+            // 监听页面显示事件(处理浏览器缓存)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    // 页面从缓存恢复,清除表单
+                    clearAutoFill();
+                    // 重新检查登录状态
+                    checkLoginAndRedirect();
+                }
+            });
+
+            // 自动聚焦到用户名输入框
+            const usernameInput = document.querySelector('input[name="username"]');
+            if (usernameInput && !usernameInput.value) {
+                usernameInput.focus();
+            }
+
+            // 密码显示/隐藏切换
+            const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('togglePassword');
+            const toggleIcon = passwordToggle.querySelector('i');
+
+            passwordToggle.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.classList.remove('fa-eye');
+                    toggleIcon.classList.add('fa-eye-slash');
+
+                    // 3秒后自动隐藏密码
+                    setTimeout(() => {
+                        if (passwordInput.type === 'text') {
+                            passwordInput.type = 'password';
+                            toggleIcon.classList.remove('fa-eye-slash');
+                            toggleIcon.classList.add('fa-eye');
+                        }
+                    }, 3000);
+                } else {
+                    passwordInput.type = 'password';
+                    toggleIcon.classList.remove('fa-eye-slash');
+                    toggleIcon.classList.add('fa-eye');
+                }
+            });
+
+            // 前端输入验证函数
+            function validateLoginForm() {
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+
+                // 用户名验证
+                if (username.length < 3) {
+                    alert('用户名长度至少3位');
+                    document.getElementById('username').focus();
+                    return false;
+                }
+
+                if (!/^[a-zA-Z0-9_@.-]+$/.test(username)) {
+                    alert('用户名只能包含字母、数字、下划线、@、.、-');
+                    document.getElementById('username').focus();
+                    return false;
+                }
+
+                // 密码非空验证
+                if (!password) {
+                    alert('请输入密码');
+                    document.getElementById('password').focus();
+                    return false;
+                }
+
+                return true;
+            }
+
+            // 表单提交验证
+            document.querySelector('form').addEventListener('submit', function(e) {
+                e.preventDefault();  // 总是阻止默认提交，使用AJAX
+
+                if (!validateLoginForm()) {
+                    return false;
+                }
+
+                // 防止重复提交
+                const submitBtn = this.querySelector('.btn-login');
+                if (submitBtn && submitBtn.disabled) {
+                    console.log('表单正在提交中，忽略重复提交');
+                    return false;
+                }
+
+                // 使用AJAX提交表单
+                const formData = new FormData(this);
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>登录中...';
+
+                fetch('{{ url_for("kb.login") }}', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    // 检查是否是重定向（302）
+                    if (response.redirected || response.status === 302) {
+                        // 登录成功，重定向到目标页面
+                        const redirectUrl = response.url || window.location.href;
+                        window.location.href = redirectUrl;
+                        return;
+                    }
+
+                    if (response.ok) {
+                        return response.json().then(data => {
+                            if (data.success) {
+                                // 检查是否需要强制修改密码
+                                if (data.data && data.data.force_password_change) {
+                                    alert('首次登录或初始密码不安全，请修改密码后再继续使用系统！');
+                                    window.location.href = '/kb/auth/change-password';
+                                } else {
+                                    // 登录成功，重新加载页面
+                                    window.location.href = window.location.href;
+                                }
+                            } else {
+                                throw new Error(data.message || data.error || '登录失败');
+                            }
+                        });
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.error || data.message || '登录失败，请检查用户名和密码');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('登录请求失败:', error);
+                    alert(error.message || '登录失败，请检查网络连接');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>登录';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

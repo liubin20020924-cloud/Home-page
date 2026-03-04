@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工单详情 - 云户科技工单系统</title>
+
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='case/css/forum-style.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand">
+                <img src="{{ url_for('static', filename='case/images/Logo.jpg') }}" alt="Logo" class="logo-img">
+                <span class="brand-text">工单管理系统</span>
+            </a>
+
+            <ul class="navbar-nav">
+                <li><a href="/case/submit" class="nav-link"><i class="fas fa-plus-circle"></i> 提交工单</a></li>
+                <li><a href="/case/my-tickets" class="nav-link"><i class="fas fa-list"></i> 我的工单</a></li>
+                {% if session.get('role') in ['admin', 'user'] %}
+                <li><a href="/case/admin/tickets" class="nav-link"><i class="fas fa-tasks"></i> 工单管理</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="navbar-user">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>{{ session.get('display_name') or session.get('username') }}</span>
+                    <span class="user-badge">{{ session.get('role') }}</span>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="showPasswordModal()">
+                    <i class="fas fa-key"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="main-wrapper">
+        <div class="page-container">
+            <!-- 论坛容器 -->
+            <div class="forum-container">
+                
+                <!-- 加载状态 -->
+                <div id="loadingState" class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>加载中...</p>
+                </div>
+
+                <!-- 工单内容 -->
+                <div id="ticketContent" style="display: none;">
+                    
+                    <!-- 工单详情区域 -->
+                    <div class="ticket-detail-section">
+                        <div class="ticket-detail-header">
+                            <div>
+                                <h1 class="ticket-title" id="ticketTitle"></h1>
+                                <div class="ticket-meta">
+                                    <div class="ticket-meta-item">
+                                        <i class="fas fa-ticket-alt"></i>
+                                        <span id="ticketId"></span>
+                                    </div>
+                                    <div class="ticket-meta-item">
+                                        <i class="fas fa-user"></i>
+                                        <span>联系人: <span id="contactName"></span></span>
+                                    </div>
+                                    <div class="ticket-meta-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span>创建时间: <span id="createTime"></span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                <span class="status-badge" id="statusBadge"></span>
+                                <span class="priority-badge" id="priorityBadge"></span>
+                            </div>
+                        </div>
+
+                        <!-- 工单描述（作为主帖） -->
+                        <div class="forum-post customer">
+                            <div class="post-header">
+                                <div class="post-avatar" id="postAvatar"></div>
+                                <div class="post-info">
+                                    <div>
+                                        <span class="post-author" id="postAuthor"></span>
+                                        <span class="post-role customer">
+                                            <i class="fas fa-user"></i> 客户
+                                        </span>
+                                        <span class="post-time">
+                                            <i class="fas fa-clock"></i>
+                                            <span id="postTime"></span>
+                                        </span>
+                                    </div>
+                                    <div style="margin-top: 8px; font-size: 13px; color: var(--gray-600);">
+                                        <span><i class="fas fa-phone"></i> <span id="contactPhone"></span></span>
+                                        <span style="margin-left: 16px;"><i class="fas fa-envelope"></i> <span id="contactEmail"></span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="post-content" id="postContent">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 回复区域 -->
+                    <div class="replies-section">
+                        <div class="replies-section-header">
+                            <h3>
+                                <i class="fas fa-comments"></i> 回复
+                                <span class="replies-count" id="repliesCount">0</span>
+                            </h3>
+                        </div>
+
+                        <!-- 回复列表 -->
+                        <div class="replies-list" id="repliesList">
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h3>暂无回复</h3>
+                                <p>成为第一个回复的人</p>
+                            </div>
+                        </div>
+
+                        <!-- 回复框 -->
+                        <div class="reply-box">
+                            <div class="reply-box-header">
+                                <span class="reply-box-title">
+                                    <i class="fas fa-reply"></i> 添加回复
+                                </span>
+                            </div>
+                            <textarea id="replyEditor" class="reply-editor" placeholder="请输入您的回复内容..." rows="4"></textarea>
+                            <div class="reply-actions">
+                                <button class="btn btn-secondary" onclick="clearReply()">
+                                    <i class="fas fa-times"></i> 清空
+                                </button>
+                                <button class="btn-submit-reply" id="submitBtn" onclick="submitReply()">
+                                    <i class="fas fa-paper-plane"></i> 发送回复
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 满意度评价区域（仅客户可见） -->
+                        <div id="satisfactionSection" style="display: none;">
+                            <div class="satisfaction-box">
+                                <div class="satisfaction-header">
+                                    <h3>
+                                        <i class="fas fa-star"></i> 服务满意度评价
+                                    </h3>
+                                    <p>如果工单已处理完成，请对我们的服务进行评价</p>
+                                </div>
+                                <div class="satisfaction-rating">
+                                    <button class="rating-btn" data-rating="1" onclick="selectRating(1)">
+                                        <i class="far fa-star"></i>
+                                    </button>
+                                    <button class="rating-btn" data-rating="2" onclick="selectRating(2)">
+                                        <i class="far fa-star"></i>
+                                    </button>
+                                    <button class="rating-btn" data-rating="3" onclick="selectRating(3)">
+                                        <i class="far fa-star"></i>
+                                    </button>
+                                    <button class="rating-btn" data-rating="4" onclick="selectRating(4)">
+                                        <i class="far fa-star"></i>
+                                    </button>
+                                    <button class="rating-btn" data-rating="5" onclick="selectRating(5)">
+                                        <i class="far fa-star"></i>
+                                    </button>
+                                </div>
+                                <textarea id="satisfactionComment" class="satisfaction-comment" placeholder="请输入您的评价建议（选填）..." rows="3"></textarea>
+                                <div class="satisfaction-actions">
+                                    <button class="btn btn-primary" id="submitSatisfactionBtn" onclick="submitSatisfaction()">
+                                        <i class="fas fa-paper-plane"></i> 提交评价
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 已评价显示区域 -->
+                        <div id="satisfactionView" style="display: none;">
+                            <div class="satisfaction-view">
+                                <h3>
+                                    <i class="fas fa-star text-warning"></i> 您的评价
+                                </h3>
+                                <div class="rating-display" id="ratingDisplay"></div>
+                                <div class="comment-display" id="commentDisplay"></div>
+                                <div class="rating-time" id="ratingTime"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 满意度评价样式 */
+        .satisfaction-box {
+            margin-top: 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #fffbeb 0%, white 100%);
+            border: 2px solid #fbbf24;
+            border-radius: var(--radius-lg);
+        }
+
+        .satisfaction-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin: 0 0 8px 0;
+        }
+
+        .satisfaction-header p {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin: 0 0 16px 0;
+        }
+
+        .satisfaction-rating {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .rating-btn {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .rating-btn:hover {
+            border-color: #fbbf24;
+            color: #fbbf24;
+            transform: scale(1.1);
+        }
+
+        .rating-btn.active {
+            border-color: #fbbf24;
+            color: #fbbf24;
+            background: #fffbeb;
+        }
+
+        .rating-btn.active i {
+            font-weight: 900;
+        }
+
+        .satisfaction-comment {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 12px;
+            transition: border-color 0.2s ease;
+        }
+
+        .satisfaction-comment:focus {
+            outline: none;
+            border-color: var(--warning-color);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+        }
+
+        .satisfaction-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 已评价显示样式 */
+        .satisfaction-view {
+            margin-top: 24px;
+            padding: 20px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+        }
+
+        .satisfaction-view h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin: 0 0 16px 0;
+        }
+
+        .rating-display {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .rating-display i {
+            font-size: 20px;
+            color: #fbbf24;
+        }
+
+        .comment-display {
+            font-size: 14px;
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: 8px;
+            padding: 12px;
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        .rating-time {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+    </style>
+
+    <!-- 修改密码模态框 -->
+    <div class="modal fade" id="passwordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">修改密码</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="passwordForm">
+                        <div class="mb-3">
+                            <label class="form-label">旧密码</label>
+                            <input type="password" class="form-control" id="oldPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">新密码</label>
+                            <input type="password" class="form-control" id="newPassword" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">确认新密码</label>
+                            <input type="password" class="form-control" id="confirmPassword" required minlength="6">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="changePassword()">确认修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 获取工单ID
+        const ticketId = '{{ ticket_id }}';
+        const currentRole = '{{ session.get("role") }}';
+        const currentUser = '{{ session.get("username") }}';
+        let selectedRating = 0;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTicketDetail();
+            loadReplies();
+            loadSatisfaction();
+        });
+
+        // 加载工单详情
+        async function loadTicketDetail() {
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const ticket = result.data;
+                    displayTicketDetail(ticket);
+                } else {
+                    alert(result.message || '加载工单详情失败');
+                }
+            } catch (error) {
+                console.error('加载工单详情失败:', error);
+                alert('加载工单详情失败');
+            }
+        }
+
+        // 显示工单详情
+        function displayTicketDetail(ticket) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('ticketContent').style.display = 'block';
+
+            // 设置基本信息
+            document.getElementById('ticketId').textContent = ticket.ticket_id;
+            document.getElementById('ticketTitle').textContent = ticket.title;
+            document.getElementById('contactName').textContent = ticket.customer_contact_name;
+            document.getElementById('createTime').textContent = ticket.create_time;
+            document.getElementById('contactPhone').textContent = ticket.customer_contact || '未提供';
+            document.getElementById('contactEmail').textContent = ticket.customer_email || '未提供';
+
+            // 设置状态标签
+            const statusMap = {
+                'pending': { text: '待处理', class: 'pending' },
+                'processing': { text: '处理中', class: 'processing' },
+                'completed': { text: '已完成', class: 'completed' },
+                'closed': { text: '已关闭', class: 'closed' }
+            };
+            const statusInfo = statusMap[ticket.status] || statusMap['pending'];
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = statusInfo.text;
+            statusBadge.className = `status-badge ${statusInfo.class}`;
+
+            // 设置优先级标签
+            const priorityMap = {
+                'urgent': { text: '紧急', class: 'urgent' },
+                'high': { text: '高', class: 'high' },
+                'medium': { text: '中', class: 'medium' },
+                'low': { text: '低', class: 'low' }
+            };
+            const priorityInfo = priorityMap[ticket.priority] || priorityMap['medium'];
+            const priorityBadge = document.getElementById('priorityBadge');
+            priorityBadge.textContent = priorityInfo.text;
+            priorityBadge.className = `priority-badge ${priorityInfo.class}`;
+
+            // 设置主帖内容
+            document.getElementById('postAvatar').textContent = ticket.customer_contact_name.charAt(0).toUpperCase();
+            document.getElementById('postAuthor').textContent = ticket.customer_contact_name;
+            document.getElementById('postTime').textContent = ticket.create_time;
+
+            // 设置帖子内容（工单描述）
+            const content = ticket.content || '无详细描述';
+            document.getElementById('postContent').innerHTML = content.replace(/\n/g, '<br>');
+
+            // 如果工单已完成或关闭，显示满意度评价（仅客户）
+            if (currentRole === 'customer' && ['completed', 'closed'].includes(ticket.status)) {
+                document.getElementById('satisfactionSection').style.display = 'block';
+            }
+        }
+
+        // 加载回复列表
+        async function loadReplies() {
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}/messages`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayReplies(result.data);
+                }
+            } catch (error) {
+                console.error('加载回复失败:', error);
+            }
+        }
+
+        // 显示回复列表
+        function displayReplies(messages) {
+            const repliesList = document.getElementById('repliesList');
+            const repliesCount = document.getElementById('repliesCount');
+
+            repliesCount.textContent = messages.length;
+
+            if (messages.length === 0) {
+                repliesList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>暂无回复</h3>
+                        <p>成为第一个回复的人</p>
+                    </div>
+                `;
+                return;
+            }
+
+
+            repliesList.innerHTML = messages.map(msg => {
+                // 判断是否是客服角色（admin或user），customer是客户
+                const isService = msg.sender === 'admin' || msg.sender === 'user';
+                const roleClass = isService ? 'service' : 'customer';
+                const roleText = isService ? '技术支持' : '客户';
+                const firstLetter = msg.sender_name.charAt(0).toUpperCase();
+
+                return `
+                    <div class="reply-card ${roleClass}">
+                        <div class="post-header" style="margin-bottom: 12px; padding-bottom: 12px;">
+                            <div class="post-avatar ${roleClass}" style="width: 40px; height: 40px; font-size: 16px;">
+                                ${firstLetter}
+                            </div>
+                            <div class="post-info">
+                                <div>
+                                    <span class="post-author">${msg.sender_name}</span>
+                                    <span class="post-role ${roleClass}">
+                                        <i class="fas fa-${isService ? 'headset' : 'user'}"></i> ${roleText}
+                                    </span>
+                                    <span class="post-time">
+                                        <i class="fas fa-clock"></i> ${msg.send_time}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="post-content" style="font-size: 14px;">
+                            ${msg.content.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 滚动到最新回复
+            const lastReply = repliesList.lastElementChild;
+            if (lastReply) {
+                lastReply.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // 提交回复
+        async function submitReply() {
+            const editor = document.getElementById('replyEditor');
+            const content = editor.value.trim();
+
+            if (!content) {
+                alert('请输入回复内容');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}/message`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        sender: currentRole === 'customer' ? 'customer' : 'service'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    editor.value = '';
+                    await loadReplies();
+                    alert('回复发送成功');
+                } else {
+                    alert(result.message || '发送失败');
+                }
+            } catch (error) {
+                console.error('发送回复失败:', error);
+                alert('发送失败，请重试');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送回复';
+            }
+        }
+
+        // 清空回复
+        function clearReply() {
+            document.getElementById('replyEditor').value = '';
+        }
+
+        // 选择评分
+        function selectRating(rating) {
+            selectedRating = rating;
+            const buttons = document.querySelectorAll('.rating-btn');
+            buttons.forEach((btn, index) => {
+                if (index < rating) {
+                    btn.classList.add('active');
+                    btn.querySelector('i').className = 'fas fa-star';
+                } else {
+                    btn.classList.remove('active');
+                    btn.querySelector('i').className = 'far fa-star';
+                }
+            });
+        }
+
+        // 加载满意度评价
+        async function loadSatisfaction() {
+            if (currentRole !== 'customer') return;
+
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}/satisfaction`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // 已评价，显示评价内容
+                    document.getElementById('satisfactionSection').style.display = 'none';
+                    document.getElementById('satisfactionView').style.display = 'block';
+
+                    const satisfaction = result.data;
+                    // 显示星星
+                    const stars = '★'.repeat(satisfaction.rating) + '☆'.repeat(5 - satisfaction.rating);
+                    document.getElementById('ratingDisplay').innerHTML = stars.split('').map(s => {
+                        return `<i class="${s === '★' ? 'fas' : 'far'} fa-star"></i>`;
+                    }).join('');
+
+                    // 显示评价文字
+                    if (satisfaction.comment) {
+                        document.getElementById('commentDisplay').textContent = satisfaction.comment;
+                        document.getElementById('commentDisplay').style.display = 'block';
+                    } else {
+                        document.getElementById('commentDisplay').style.display = 'none';
+                    }
+
+                    // 显示评价时间
+                    document.getElementById('ratingTime').textContent = '评价时间: ' + satisfaction.create_time;
+                }
+            } catch (error) {
+                console.error('加载满意度评价失败:', error);
+            }
+        }
+
+        // 提交满意度评价
+        async function submitSatisfaction() {
+            if (selectedRating === 0) {
+                alert('请选择评分');
+                return;
+            }
+
+            const comment = document.getElementById('satisfactionComment').value.trim();
+
+            const submitBtn = document.getElementById('submitSatisfactionBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}/satisfaction`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        rating: selectedRating,
+                        comment: comment
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('评价提交成功，感谢您的反馈！');
+                    // 重新加载评价显示
+                    await loadSatisfaction();
+                } else {
+                    alert(result.message || '提交失败');
+                }
+            } catch (error) {
+                console.error('提交评价失败:', error);
+                alert('提交失败，请重试');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交评价';
+            }
+        }
+
+        // 显示密码修改模态框
+        function showPasswordModal() {
+            const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+            modal.show();
+        }
+
+        // 修改密码
+        async function changePassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('密码长度至少为6位');
+                return;
+            }
+
+            try {
+                const response = await fetch('/kb/auth/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        old_password: oldPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('密码修改成功，请重新登录');
+                    // 使用表单提交退出登录
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/case/api/logout';
+                    document.body.appendChild(form);
+                    form.submit();
+                } else {
+                    alert(result.message || '密码修改失败');
+                }
+            } catch (error) {
+                console.error('修改密码失败:', error);
+                alert('修改密码失败');
+            }
+        }
+
+        // 登出
+        function logout() {
+            if (confirm('确定要登出吗？')) {
+                // 使用表单提交退出登录
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/case/api/logout';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

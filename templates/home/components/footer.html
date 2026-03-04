@@ -1,0 +1,93 @@
+<!-- 返回顶部按钮 -->
+<button id="backToTop" style="position: fixed; bottom: 24px; right: 24px; background: #0A4DA2; color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(10, 77, 162, 0.3); opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 50; cursor: pointer; border: none;">
+  <i class="fa fa-arrow-up" style="font-size: 18px;"></i>
+</button>
+
+<!-- 页脚 -->
+<footer style="background: #1a202c; color: white; padding: 60px 0;">
+  <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px;">
+    <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: 40px;">
+      <div>
+        <a href="/" style="display: flex; align-items: center; text-decoration: none; margin-bottom: 16px;">
+          <picture>
+            <source srcset="{{ url_for('static', filename='home/images/Logo4.png') }}" type="image/webp">
+            <img src="{{ url_for('static', filename='home/images/Logo4.png') }}" alt="云户科技 Logo" style="height: 40px; width: auto; max-width: 100%; object-fit: contain; display: block;" loading="lazy" decoding="async" width="200" height="40">
+          </picture>
+        </a>
+        <p style="color: rgba(255, 255, 255, 0.7); font-size: 14px; line-height: 1.7;">
+          专业IT服务提供商，专注于系统运维、超融合虚拟化维保、数据备份等核心业务，为企业国产化转型保驾护航。
+        </p>
+      </div>
+      <div>
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">快速链接</h3>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+          <li><a href="/about" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">公司介绍</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">业务介绍</a></li>
+          <li><a href="#cases" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">用户案例</a></li>
+          <li><a href="#solutions" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">解决方案</a></li>
+          <li><a href="#contact" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">联系我们</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">业务范围</h3>
+        <ul style="list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 0px; font-size: 14px;">
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">系统运维</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">超融合虚拟化维保</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">数据备份</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">国产化信创替代</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">项目实施</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">容灾演练</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">机房搬迁</a></li>
+          <li><a href="#services" style="color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s;">技术培训</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">联系我们</h3>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+          <li style="display: flex; align-items: flex-start;">
+            <i class="fa fa-map-marker" style="color: #A2D93D; margin-right: 12px; font-size: 16px; margin-top: 2px;"></i>
+            <span>上海市浦东新区泰谷路78号希莱科技大厦512室</span>
+          </li>
+          <li style="display: flex; align-items: flex-start;">
+            <i class="fa fa-phone" style="color: #A2D93D; margin-right: 12px; font-size: 16px; margin-top: 2px;"></i>
+            <span>400-103-3083</span>
+          </li>
+          <li style="display: flex; align-items: flex-start;">
+            <i class="fa fa-envelope" style="color: #A2D93D; margin-right: 12px; font-size: 16px; margin-top: 2px;"></i>
+            <span>support@cloud-doors.com</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 40px; padding-top: 32px; text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 14px;">
+      <p>© {{ now.year }} 云户科技（CLOUD-DOORS）. 保留所有权利。</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* 响应式布局 */
+  @media (min-width: 768px) {
+    footer > div > div {
+      grid-template-columns: repeat(4, 1fr) !important;
+    }
+  }
+
+  @media (min-width: 992px) and (max-width: 1199px) {
+    footer > div > div {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 32px;
+    }
+  }
+
+  /* 页脚链接悬停效果 */
+  footer ul li a:hover {
+    color: #A2D93D !important;
+  }
+
+  /* 返回顶部按钮样式 */
+  #backToTop.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+</style>

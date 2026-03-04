@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理系统</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+        }
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+        }
+        .data-table-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .table {
+            color: #fff;
+            margin-bottom: 0;
+        }
+        .table thead th {
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            font-weight: 600;
+        }
+        .table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar-custom">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <a class="navbar-brand text-white" href="/kb/">
+                    <i class="fas fa-database"></i> 知识库管理系统
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- 操作按钮区域 -->
+        <div class="card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-custom" onclick="exportData()">
+                        <i class="fas fa-download me-2"></i>导出数据
+                    </button>
+                    <button class="btn btn-danger" id="batchDeleteBtn" disabled>
+                        <i class="fas fa-trash me-2"></i>删除选中
+                    </button>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span>已选中: <strong id="selectedCount">0</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card-custom p-4">
+            <div class="data-table-container">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">
+                                <input type="checkbox" id="selectAllCheckbox">
+                            </th>
+                            <th>编号</th>
+                            <th>名称</th>
+                            <th>链接</th>
+                            <th>更新时间</th>
+                            <th style="width: 180px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- 数据将通过 JavaScript 加载 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">暂无数据</h5>
+            </div>
+
+            <!-- 分页 -->
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <div class="text-secondary">
+                    显示第 <strong id="showingStart">1</strong> 到 <strong id="showingEnd">20</strong> 条，
+                    共 <strong id="totalCount">{{ total_count }}</strong> 条记录
+                </div>
+                <nav>
+                    <ul class="pagination" id="pagination">
+                        <!-- 分页将通过 JavaScript 生成 -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        console.log('=== 脚本开始加载 ===');
+
+        // 全局变量
+        let currentPage = {{ page | default(1) }};
+        let perPage = 20;
+        let totalRecords = {{ total_count | default(0) }};
+        let currentRecords = [];
+        let selectedIds = new Set();
+        let searchQuery = '';
+
+        // DOM 元素
+        let dataTableBody = null;
+        let emptyState = null;
+        let loadingOverlay = null;
+        let selectedCountEl = null;
+        let selectAllCheckbox = null;
+
+        // 工具函数
+        function showLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updateSelectionUI() {
+            if (!selectedCountEl) return;
+            const count = selectedIds.size;
+            selectedCountEl.textContent = count;
+
+            const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+            if (batchDeleteBtn) {
+                batchDeleteBtn.disabled = count === 0;
+            }
+
+            if (selectAllCheckbox && currentRecords.length > 0) {
+                selectAllCheckbox.checked = count === currentRecords.length;
+                selectAllCheckbox.indeterminate = count > 0 && count < currentRecords.length;
+            }
+        }
+
+        // 渲染表格
+        function renderTable(records) {
+            console.log('渲染表格，记录数:', records ? records.length : 0);
+
+            if (!records || records.length === 0) {
+                dataTableBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            let html = '';
+            records.forEach(record => {
+                html += `
+                <tr data-id="${record.KB_Number}">
+                    <td>
+                        <input type="checkbox" class="row-checkbox"
+                               value="${record.KB_Number}"
+                               ${selectedIds.has(String(record.KB_Number)) ? 'checked' : ''}>
+                    </td>
+                    <td>
+                        <strong class="text-primary">KB_${record.KB_Number}</strong>
+                    </td>
+                    <td>${record.KB_Name}</td>
+                    <td>
+                        ${record.KB_link && record.KB_link !== 'None' ?
+                            `<a href="${record.KB_link}" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>${record.KB_link}
+                            </a>` :
+                            '<span class="text-muted">-</span>'}
+                    </td>
+                    <td>${formatDate(record.KB_UpdateTime)}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary btn-edit" data-id="${record.KB_Number}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${record.KB_Number}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            });
+
+            dataTableBody.innerHTML = html;
+            currentRecords = records;
+            bindTableEvents();
+        }
+
+        // 绑定表格事件
+        function bindTableEvents() {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const id = this.value;
+                    if (this.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                    updateSelectionUI();
+                });
+            });
+
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    if (confirm('确定要删除这条记录吗？')) {
+                        deleteRecord(id);
+                    }
+                });
+            });
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            const totalPages = Math.ceil(totalRecords / perPage);
+            const showingStart = (currentPage - 1) * perPage + 1;
+            const showingEnd = Math.min(currentPage * perPage, totalRecords);
+
+            document.getElementById('showingStart').textContent = showingStart;
+            document.getElementById('showingEnd').textContent = showingEnd;
+            document.getElementById('totalCount').textContent = totalRecords;
+
+            let html = '';
+
+            html += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    `;
+                }
+            }
+
+            html += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+
+            document.getElementById('pagination').innerHTML = html;
+
+            document.querySelectorAll('.page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = parseInt(this.getAttribute('data-page'));
+                    if (page && page !== currentPage && page > 0 && page <= totalPages) {
+                        loadPage(page);
+                    }
+                });
+            });
+        }
+
+        // 加载页面数据
+        function loadPage(page) {
+            showLoading();
+            currentPage = page;
+
+            console.log('加载数据，页码:', page);
+            fetch(`/kb/MGMT/api/records?page=${page}&per_page=${perPage}&search=${encodeURIComponent(searchQuery)}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API返回的数据:', data);
+                    if (data.success) {
+                        renderTable(data.records);
+                        totalRecords = data.total_count;
+                        renderPagination();
+                        selectedIds.clear();
+                        updateSelectionUI();
+                    } else {
+                        alert(data.message || '加载数据失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('加载失败:', error);
+                    alert('加载数据失败: ' + error.message);
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+
+        // 导出数据
+        function exportData() {
+            console.log('导出数据，总记录数:', totalRecords);
+            if (totalRecords === 0) {
+                alert('没有数据可导出');
+                return;
+            }
+            showLoading();
+            fetch(`/kb/MGMT/api/records?page=1&per_page=99999`)
+                .then(response => response.json())
+                .then(data => {
+                    const records = data.records;
+                    const headers = ['KB_Number', 'KB_Name', 'KB_link', 'KB_UpdateTime'];
+                    const csvContent = [
+                        headers.join(','),
+                        ...records.map(r => headers.map(h => {
+                            let val = r[h] || '';
+                            if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
+                                return `"${val.replace(/"/g, '""')}"`;
+                            }
+                            return val;
+                        }).join(','))
+                    ].join('\n');
+                    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.setAttribute('href', URL.createObjectURL(blob));
+                    link.setAttribute('download', `知识库导出_${new Date().toLocaleString('zh-CN').replace(/[\/\s:]/g, '-')}.csv`);
+                    link.click();
+                    hideLoading();
+                    alert('导出成功');
+                })
+                .catch(error => {
+                    console.error('导出失败:', error);
+                    hideLoading();
+                    alert('导出失败，请重试');
+                });
+        }
+
+        // 删除记录
+        function deleteRecord(id) {
+            showLoading();
+            fetch('/kb/MGMT/api/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ KB_Number: id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('删除成功');
+                    loadPage(currentPage);
+                } else {
+                    alert(data.message || '删除失败');
+                }
+            })
+            .catch(error => {
+                console.error('删除失败:', error);
+                alert('删除失败，请重试');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== 页面加载 - 初始化 ===');
+
+            dataTableBody = document.getElementById('dataTableBody');
+            emptyState = document.getElementById('emptyState');
+            loadingOverlay = document.getElementById('loadingOverlay');
+            selectedCountEl = document.getElementById('selectedCount');
+            selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+            console.log('DOM 元素初始化完成');
+            console.log('totalRecords:', totalRecords);
+
+            try {
+                const initialRecords = {{ records_json | tojson | safe }};
+                console.log('初始记录数量:', initialRecords.length);
+
+                if (initialRecords && initialRecords.length > 0) {
+                    renderTable(initialRecords);
+                    renderPagination();
+                } else {
+                    renderTable([]);
+                    renderPagination();
+                }
+                console.log('=== 初始化完成 ===');
+            } catch (e) {
+                console.error('处理初始数据时出错:', e);
+                loadPage(1);
+            }
+
+            // 全选复选框
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const checked = this.checked;
+                    const checkboxes = document.querySelectorAll('.row-checkbox');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = checked;
+                        const id = checkbox.value;
+                        if (checked) {
+                            selectedIds.add(id);
+                        } else {
+                            selectedIds.delete(id);
+                        }
+                    });
+                    updateSelectionUI();
+                });
+            }
+        });
+
+        console.log('=== 脚本加载完成 ===');
+    </script>
+</body>
+</html>

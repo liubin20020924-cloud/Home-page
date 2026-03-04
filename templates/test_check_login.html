@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试 check-login API</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>测试 check-login API</h1>
+    <button id="testBtn">测试</button>
+    <div id="result"></div>
+
+    <script>
+        $('#testBtn').click(function() {
+            $.ajax({
+                url: '/kb/auth/check-login',
+                method: 'GET',
+                success: function(response) {
+                    $('#result').html('<pre>' + JSON.stringify(response, null, 2) + '</pre>');
+                    console.log('Response:', response);
+
+                    const user = response.data ? response.data.user : null;
+
+                    if (!response.success || !user) {
+                        console.log('Will redirect to login');
+                    } else if (user && user.role !== 'admin') {
+                        console.log('Will redirect to MGMT');
+                    } else {
+                        console.log('User is logged in and has admin role - NO REDIRECT');
+                    }
+                },
+                error: function(xhr) {
+                    $('#result').html('<p style="color:red">Error: ' + xhr.status + '</p>');
+                    console.error('Error:', xhr);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工单详情 - 云户科技工单系统</title>
+
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='case/css/ticket-system-v3.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand">
+                <img src="{{ url_for('static', filename='case/images/Logo.jpg') }}" alt="Logo" class="logo-img">
+                <span class="brand-text">工单管理系统</span>
+            </a>
+
+            <ul class="navbar-nav">
+                <li><a href="/case/submit" class="nav-link"><i class="fas fa-plus-circle"></i> 提交工单</a></li>
+                <li><a href="/case/my-tickets" class="nav-link"><i class="fas fa-list"></i> 我的工单</a></li>
+                {% if session.get('role') in ['admin', 'user'] %}
+                <li><a href="/case/admin/tickets" class="nav-link"><i class="fas fa-tasks"></i> 工单管理</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="navbar-user">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>{{ session.get('display_name') or session.get('username') }}</span>
+                    <span class="user-badge">{{ session.get('role') }}</span>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="showPasswordModal()">
+                    <i class="fas fa-key"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="main-wrapper">
+        <div class="page-container">
+            <div class="row">
+                <!-- 工单信息 -->
+                <div class="col-lg-8">
+                    <div class="card" id="ticketInfoCard">
+                        <div class="card-header">
+                            <i class="fas fa-ticket"></i>
+                            工单详情
+                        </div>
+                        <div class="card-body" id="ticketInfo">
+                            <div class="loading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 聊天区域 -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div class="card-header">
+                            <i class="fas fa-comments"></i>
+                            消息记录
+                            <span style="margin-left: auto;">
+                                <span class="badge badge-status-connected" id="connectionStatus">
+                                    <i class="fas fa-circle"></i> 已连接
+                                </span>
+                            </span>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div id="chatMessages" style="height: 400px; overflow-y: auto; padding: 20px; background: var(--gray-50);">
+                                <div class="loading">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            <div style="padding: 16px; border-top: 1px solid var(--gray-200); background: white;">
+                                <div style="display: flex; gap: 12px; align-items: flex-end;">
+                                    <textarea id="messageInput" rows="2"
+                                              placeholder="输入消息..."
+                                              style="flex: 1; padding: 12px; border: 2px solid var(--gray-200);
+                                              border-radius: var(--radius-xl); resize: none; min-height: 50px; font-family: inherit;"></textarea>
+                                    <button onclick="sendMessage()" class="btn btn-primary" style="height: 50px; width: 50px; border-radius: var(--radius-xl); padding: 0;">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 侧边栏 -->
+                <div class="col-lg-4">
+                    <!-- 管理员操作区 -->
+                    <div class="card admin-only" style="display: none;" id="adminCard">
+                        <div class="card-header">
+                            <i class="fas fa-cog"></i>
+                            工单操作
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">工单状态</label>
+                                <select class="form-select" id="statusSelect">
+                                    <option value="pending">待处理</option>
+                                    <option value="processing">处理中</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="closed">已关闭</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">分配给</label>
+                                <select class="form-select" id="assigneeSelect">
+                                    <option value="">未分配</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">处理说明</label>
+                                <textarea class="form-textarea" id="resolutionText" rows="3"
+                                          placeholder="请输入处理说明..."></textarea>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="updateTicket()" class="btn btn-primary" style="flex: 1;">
+                                    <i class="fas fa-save"></i> 更新
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 工单状态 -->
+                    <div class="card" id="statusCard">
+                        <div class="card-header">
+                            <i class="fas fa-info-circle"></i>
+                            工单状态
+                        </div>
+                        <div class="card-body" id="ticketStatus">
+                            <div class="loading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 附件列表 -->
+                    <div class="card" style="margin-top: 24px;" id="attachmentCard">
+                        <div class="card-header">
+                            <i class="fas fa-paperclip"></i>
+                            附件列表
+                        </div>
+                        <div class="card-body" id="attachmentList">
+                            <div class="loading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码模态框 -->
+    <div class="modal fade" id="passwordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-key"></i> 修改密码</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label class="form-label">旧密码<span class="required">*</span></label>
+                            <input type="password" class="form-control" id="oldPassword" required placeholder="请输入当前密码">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">新密码<span class="required">*</span></label>
+                            <input type="password" class="form-control" id="newPassword" required placeholder="请输入新密码（至少6位）" minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">确认新密码<span class="required">*</span></label>
+                            <input type="password" class="form-control" id="confirmPassword" required placeholder="请再次输入新密码" minlength="6">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="changePassword()">
+                        <i class="fas fa-save"></i> 保存修改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <h5>云户科技工单系统</h5>
+            <p>专业的客户服务支持平台</p>
+            <p>&copy; 2026 云户科技 版权所有</p>
+            <a href="/"><i class="fas fa-home"></i> 返回官网</a>
+        </div>
+    </footer>
+
+    <script src="/static/case/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- 统一登录检查 -->
+    <script src="{{ url_for('static', filename='case/js/unified-login-checker.js') }}?v=1.0"></script>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <script>
+        // 全局变量
+        let ticketId = window.location.pathname.split('/').pop();
+        let ticketData = null;
+        const socket = io('/', {
+            transports: ['websocket', 'polling'],
+            upgrade: false
+        });
+
+        // 映射表
+        const typeMap = {
+            'technical': '技术支持',
+            'service': '产品咨询',
+            'complaint': '售后投诉',
+            'other': '其他问题'
+        };
+
+        const priorityMap = {
+            'urgent': '紧急',
+            'high': '高',
+            'medium': '中',
+            'low': '低'
+        };
+
+        const statusMap = {
+            'pending': '待处理',
+            'processing': '处理中',
+            'completed': '已完成',
+            'closed': '已关闭'
+        };
+
+        // 加载工单信息
+        async function loadTicket() {
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    ticketData = data.data;
+                    renderTicketInfo(data.data);
+                    renderStatus(data.data);
+                    renderAttachments(data.data.attachments || []);
+
+                    // 显示管理员操作区
+                    if (['admin', 'user'].includes(data.data.role)) {
+                        document.getElementById('adminCard').style.display = 'block';
+                        document.getElementById('statusSelect').value = data.data.status;
+                    }
+
+                    // 加载消息
+                    loadMessages();
+                } else {
+                    alert('加载失败：' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                alert('加载工单失败，请刷新页面重试');
+            }
+        }
+
+        // 渲染工单信息
+        function renderTicketInfo(ticket) {
+            document.getElementById('ticketInfo').innerHTML = `
+                <div style="margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span class="badge badge-priority-${ticket.priority}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                            ${priorityMap[ticket.priority]}
+                        </span>
+                        <span class="badge badge-status-${ticket.status}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                            ${statusMap[ticket.status]}
+                        </span>
+                    </div>
+                    <h2 style="font-size: 1.8rem; font-weight: 700; color: var(--gray-800); margin-bottom: 16px;">
+                        ${escapeHtml(ticket.title)}
+                    </h2>
+                </div>
+                <hr style="margin: 24px 0; border-color: var(--gray-200);">
+                <div class="row">
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">工单编号：</strong>
+                        <span style="font-family: monospace; font-weight: 600; color: var(--primary);">${ticket.ticket_id}</span>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">工单类型：</strong>
+                        <span>${typeMap[ticket.issue_type] || ticket.issue_type}</span>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">客户公司：</strong>
+                        <span>${escapeHtml(ticket.customer_name || '-')}</span>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">联系人：</strong>
+                        <span>${escapeHtml(ticket.customer_contact_name || '-')}</span>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">联系电话：</strong>
+                        <span>${escapeHtml(ticket.customer_contact_phone || '-')}</span>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">联系邮箱：</strong>
+                        <span>${escapeHtml(ticket.customer_email || '-')}</span>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">提交时间：</strong>
+                        <span>${ticket.create_time || '-'}</span>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 16px;">
+                        <strong style="color: var(--gray-600);">涉及产品：</strong>
+                        <span>${escapeHtml(ticket.product || '-')}</span>
+                    </div>
+                </div>
+                <hr style="margin: 24px 0; border-color: var(--gray-200);">
+                <div>
+                    <h4 style="color: var(--primary-dark); margin-bottom: 12px;">
+                        <i class="fas fa-align-left"></i> 问题详情
+                    </h4>
+                    <div style="background: var(--gray-50); padding: 20px; border-radius: var(--radius-lg); border-left: 4px solid var(--primary); line-height: 1.8; white-space: pre-wrap;">
+                        ${escapeHtml(ticket.content || '-')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染状态信息
+        function renderStatus(ticket) {
+            document.getElementById('ticketStatus').innerHTML = `
+                <div style="text-align: center;">
+                    <span class="badge badge-status-${ticket.status}" style="font-size: 1.2rem; padding: 0.75rem 1.5rem;">
+                        ${statusMap[ticket.status]}
+                    </span>
+                    <div style="margin-top: 16px; color: var(--gray-500);">
+                        <div>创建时间：${ticket.create_time || '-'}</div>
+                        <div>更新时间：${ticket.update_time || '-'}</div>
+                        ${ticket.resolution ? `<div style="margin-top: 12px; padding: 12px; background: var(--success-pale); border-radius: var(--radius-lg);">
+                            <strong>处理说明：</strong><br>${escapeHtml(ticket.resolution)}
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染附件
+        function renderAttachments(attachments) {
+            const attachmentList = document.getElementById('attachmentList');
+
+            if (attachments.length === 0) {
+                attachmentList.innerHTML = '<div style="text-align: center; color: var(--gray-500); padding: 20px;">暂无附件</div>';
+                return;
+            }
+
+            attachmentList.innerHTML = attachments.map(attachment => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px;
+                    background: var(--gray-50); border-radius: var(--radius-lg); border: 1px solid var(--gray-200);
+                    margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-file" style="color: var(--primary); font-size: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">${escapeHtml(attachment.filename)}</div>
+                            <div style="font-size: 0.85rem; color: var(--gray-500);">${formatFileSize(attachment.filesize)}</div>
+                        </div>
+                    </div>
+                    <a href="${attachment.filepath}" download="${attachment.filename}"
+                       class="btn btn-sm btn-primary">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        // 加载消息
+        async function loadMessages() {
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}/messages`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // 后端直接返回消息数组，不是 {messages: []}
+                    renderMessages(data.data || []);
+                }
+            } catch (error) {
+                console.error('加载消息失败:', error);
+            }
+        }
+
+        // 渲染消息
+        function renderMessages(messages) {
+            const chatMessages = document.getElementById('chatMessages');
+
+            if (!messages || messages.length === 0) {
+                chatMessages.innerHTML = '<div style="text-align: center; color: var(--gray-500); padding: 40px;">暂无消息</div>';
+                return;
+            }
+
+            chatMessages.innerHTML = messages.map(msg => {
+                // 后端使用 sender 字段判断是否管理员
+                const isAdmin = msg.sender === 'admin' || msg.sender === 'user';
+                return `
+                <div class="message ${isAdmin ? 'admin' : 'customer'}" style="display: flex; margin-bottom: 16px; ${isAdmin ? 'justify-content: flex-start;' : 'justify-content: flex-end;'}">
+                    <div style="max-width: 70%; padding: 12px 16px; border-radius: var(--radius-xl);
+                        line-height: 1.6; box-shadow: var(--shadow-sm);
+                        ${isAdmin
+                            ? 'background: white; color: var(--gray-700); border-bottom-left-radius: 4px; border: 1px solid var(--gray-200);'
+                            : 'background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-bottom-right-radius: 4px;'
+                        }">
+                        <div style="white-space: pre-wrap;">${escapeHtml(msg.content)}</div>
+                        <div style="font-size: 0.75rem; margin-top: 8px; opacity: 0.8;">
+                            ${msg.sender_name || '未知'} · ${msg.send_time}
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            if (!content) {
+                alert('请输入消息内容');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}/message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    input.value = '';
+                    loadMessages();
+                } else {
+                    alert('发送失败：' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('发送失败:', error);
+                alert('发送失败，请稍后重试');
+            }
+        }
+
+        // 更新工单
+        async function updateTicket() {
+            const status = document.getElementById('statusSelect').value;
+            const assignee = document.getElementById('assigneeSelect').value;
+            const resolution = document.getElementById('resolutionText').value;
+
+            try {
+                const response = await fetch(`/case/api/ticket/${ticketId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status, assignee, resolution })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('更新成功！');
+                    loadTicket();
+                } else {
+                    alert('更新失败：' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('更新失败:', error);
+                alert('更新失败，请稍后重试');
+            }
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                // 使用表单提交退出登录
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/case/api/logout';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // 显示修改密码模态框
+        function showPasswordModal() {
+            new bootstrap.Modal(document.getElementById('passwordModal')).show();
+        }
+
+        // 修改密码
+        function changePassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword.length < 6) {
+                alert('新密码长度至少为6位');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('两次输入的新密码不一致');
+                return;
+            }
+
+            if (oldPassword === newPassword) {
+                alert('新密码不能与旧密码相同');
+                return;
+            }
+
+            fetch('/auth/api/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    old_password: oldPassword,
+                    new_password: newPassword
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('密码修改成功！');
+                    document.getElementById('changePasswordForm').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+                } else {
+                    alert('密码修改失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('修改密码失败:', error);
+                alert('密码修改失败，请稍后重试');
+            });
+        }
+
+        // WebSocket事件
+        socket.on('connect', () => {
+            console.log('已连接到服务器');
+            socket.emit('join_ticket', { ticket_id: ticketId });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('与服务器断开连接');
+            document.getElementById('connectionStatus').className = 'badge badge-status-disconnected';
+            document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle"></i> 未连接';
+        });
+
+        socket.on('new_message', (data) => {
+            if (data.ticket_id === ticketId) {
+                loadMessages();
+            }
+        });
+
+        socket.on('ticket_update', (data) => {
+            if (data.ticket_id === ticketId) {
+                loadTicket();
+            }
+        });
+
+        // 回车发送消息
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 页面加载时获取工单
+        document.addEventListener('DOMContentLoaded', loadTicket);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>云户知识库管理系统</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css?v=5.3.0" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=6.4.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}?v=2.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='kb/css/edge_fixes.css') }}?v=2.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='kb/css/style.css') }}?v=2.0">
+</head>
+<body>
+    <div class="container">
+        <!-- 密码复杂度警告提示框 -->
+        {% if session.get('password_strength_warning') %}
+        <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>密码安全提示：</strong> {{ session.password_strength_warning }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+        </div>
+        {% endif %}
+
+        <!-- 顶部用户信息栏 -->
+        {% if current_user %}
+        <div class="user-info-bar mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="user-info">
+                    <i class="fas fa-user-circle text-white me-2"></i>
+                    <span class="fw-bold">{{ current_user.display_name or current_user.username }}</span>
+                    {% if current_user.role == 'admin' %}
+                    <span class="badge bg-light text-dark ms-2">管理员</span>
+                    {% else %}
+                    <span class="badge bg-light text-dark ms-2">用户</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="fas fa-key me-1"></i>修改密码
+                    </button>
+                    {% if current_user.role == 'admin' %}
+                    <a href="/kb/MGMT/" class="btn btn-sm btn-light">
+                        <i class="fas fa-tools me-1"></i>管理后台
+                    </a>
+                    {% endif %}
+                    <a href="/kb/auth/logout" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-sign-out-alt me-1"></i>退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 标题和Logo -->
+        <div class="header">
+            <div class="container">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='kb/images/Logo.jpg') }}" alt="云户知识库" class="logo-img">
+                    <div class="logo-text">
+                        <h1>知识库管理系统</h1>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="statistics">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <h3 id="totalCount">{{ total_count }}</h3>
+                    <p class="text-muted">总记录数</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h3 id="showingCount">{{ showing_count }}</h3>
+                    <p class="text-muted">当前显示</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <button id="refreshBtn" class="btn btn-outline-primary">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索选项卡 -->
+        <div class="search-tabs">
+            <ul class="nav nav-tabs" id="searchTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="id-search-tab" data-bs-toggle="tab" 
+                            data-bs-target="#id-search" type="button" role="tab">
+                        <i class="fas fa-key"></i> 按ID搜索
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="name-search-tab" data-bs-toggle="tab" 
+                            data-bs-target="#name-search" type="button" role="tab">
+                        <i class="fas fa-search"></i> 按名称搜索
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="content-search-tab" data-bs-toggle="tab" 
+                            data-bs-target="#content-search" type="button" role="tab">
+                        <i class="fas fa-file-alt"></i> 按内容搜索
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="searchTabContent">
+                <!-- 按ID搜索 -->
+                <div class="tab-pane fade show active" id="id-search" role="tabpanel">
+                    <div class="search-box">
+                        <!-- 修改这里：添加action和method -->
+                        <form id="idSearchForm" class="row g-3" action="/kb/search" method="GET">
+                            <div class="col-md-10">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                    <input type="text"
+                                           class="form-control form-control-lg"
+                                           id="searchId"
+                                           name="id"
+                                           placeholder="输入知识库编号 (KB_Number)..."
+                                           pattern="[0-9]*"
+                                           title="请输入数字"
+                                           {% if search_id is defined %}value="{{ search_id }}"{% endif %}>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                            </div>
+                        </form>
+                        {% if error %}
+                        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 按名称搜索 -->
+                <div class="tab-pane fade" id="name-search" role="tabpanel">
+                    <div class="search-box">
+                        <form id="nameSearchForm" class="row g-3">
+                            <div class="col-md-10">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-font"></i></span>
+                                    <input type="text" 
+                                           class="form-control form-control-lg" 
+                                           id="searchName" 
+                                           name="search_name" 
+                                           placeholder="输入知识库名称 (KB_Name)...">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                            </div>
+                        </form>
+                        <div id="nameSearchResults" class="mt-3"></div>
+                    </div>
+                </div>
+                
+                <!-- 按内容搜索 -->
+                <div class="tab-pane fade" id="content-search" role="tabpanel">
+                    <div class="search-box">
+                        <form id="contentSearchForm" class="row g-3">
+                            <div class="col-md-10">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-file-alt"></i></span>
+                                    <input type="text" 
+                                           class="form-control form-control-lg" 
+                                           id="searchContent" 
+                                           name="search_content" 
+                                           placeholder="输入笔记内容关键词...">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                            </div>
+                        </form>
+                        <div class="mt-3">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>内容搜索说明：</strong> 搜索Trilium笔记中的内容，支持全文搜索，包括标题和笔记内容。
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="contentSearchResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="d-flex justify-content-between mb-3">
+            <div class="d-flex gap-2">
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-home me-1"></i>返回官网
+                </a>
+                <a href="/kb/" class="btn btn-outline-primary">
+                    <i class="fas fa-search me-1"></i>返回知识库首页
+                </a>
+                <button id="showAll" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-1"></i>显示全部记录
+                </button>
+            </div>
+            <div class="view-mode-buttons">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-view="card">
+                        <i class="fas fa-th-large"></i> 卡片视图
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-view="table">
+                        <i class="fas fa-table"></i> 表格视图
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果显示区域 -->
+        <div id="resultsArea">
+            {% if not is_search and records and records|length > 0 %}
+            <!-- 分页信息 -->
+            <div class="pagination-info">
+                <small>
+                    显示第 <strong>{{ showing_start }}</strong> 到 <strong>{{ showing_end }}</strong> 条，
+                    共 <strong>{{ total_count }}</strong> 条记录
+                    （第 {{ page }} / {{ total_pages }} 页）
+                </small>
+            </div>
+            {% endif %}
+
+            {% if records and records|length > 0 %}
+                <!-- 卡片视图 -->
+                <div id="cardView">
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4" id="recordsContainer">
+                        {% for record in records %}
+                        <div class="col">
+                            <div class="card record-card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-database me-2"></i>KB_{{ record.KB_Number }}
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="text-muted">知识库名称</h6>
+                                    <h5 class="card-title mb-4">{{ record.KB_Name }}</h5>
+
+                                    <div class="action-buttons mt-4 btn-group-view">
+                                        {% if record.KB_link and record.KB_link != 'None' %}
+                                        <button class="btn btn-info btn-sm btn-view-content w-100"
+                                                data-kb-number="{{ record.KB_Number }}"
+                                                data-kb-name="{{ record.KB_Name }}"
+                                                data-trilium-url="{{ record.KB_link }}">
+                                            <i class="fas fa-eye me-1"></i>查看内容
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-footer text-muted text-center">
+                                    编号: {{ record.KB_Number }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 表格视图（默认隐藏） -->
+                <div id="tableView" style="display: none;">
+                    <div class="table-container">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>编号</th>
+                                    <th>知识库名称</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records %}
+                                <tr>
+                                    <td><strong>KB_{{ record.KB_Number }}</strong></td>
+                                    <td>{{ record.KB_Name }}</td>
+                                    <td>
+                                        <div class="action-buttons btn-group-view">
+                                            {% if record.KB_link and record.KB_link != 'None' %}
+                                            <button class="btn btn-info btn-sm btn-view-content"
+                                                    data-kb-number="{{ record.KB_Number }}"
+                                                    data-kb-name="{{ record.KB_Name }}"
+                                                    data-trilium-url="{{ record.KB_link }}">
+                                                <i class="fas fa-eye"></i> 查看内容
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-results">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h4>暂无记录</h4>
+                    <p>
+                        {% if is_search %}
+                            未找到匹配的记录
+                        {% else %}
+                            数据库中暂无记录或连接失败
+                        {% endif %}
+                    </p>
+                    <div class="mt-3">
+                        <a href="/debug" target="_blank" class="btn btn-outline-info">
+                            <i class="fas fa-bug me-1"></i> 查看调试信息
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- 分页控件（仅在非搜索且有多页时显示） -->
+            {% if not is_search and total_pages > 1 %}
+            <nav aria-label="分页导航">
+                <ul class="pagination">
+                    <!-- 上一页 -->
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="?page={{ page - 1 }}" aria-label="上一页">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+
+                    <!-- 第一页 -->
+                    {% if page > 3 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">1</a>
+                    </li>
+                    {% endif %}
+
+                    <!-- 省略号 -->
+                    {% if page > 4 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- 当前页附近的页码 -->
+                    {% set start_page = [page - 2, 1]|max %}
+                    {% set end_page = [page + 3, total_pages]|min %}
+                    {% for p in range(start_page, end_page) %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+
+                    <!-- 省略号 -->
+                    {% if page < total_pages - 3 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- 最后一页 -->
+                    {% if page < total_pages - 2 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ total_pages }}">{{ total_pages }}</a>
+                    </li>
+                    {% endif %}
+
+                    <!-- 下一页 -->
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="?page={{ page + 1 }}" aria-label="下一页">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 内容查看模态框 -->
+    <div class="modal fade" id="contentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="contentModalTitle">
+                        <i class="fas fa-book me-2"></i>知识库内容
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="content-info" id="contentInfo">
+                        <i class="fas fa-info-circle me-2"></i>
+                        正在加载内容...
+                    </div>
+                    
+                    <div class="content-loading" id="contentLoading">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>正在加载内容...</p>
+                    </div>
+                    
+                    <div class="content-error" id="contentError" style="display: none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage">加载内容失败</span>
+                    </div>
+                    
+                    <div class="trilium-content" id="contentDisplay" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-outline-primary" id="refreshContent">
+                        <i class="fas fa-sync-alt me-1"></i>刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码模态框 -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key me-2"></i>修改密码
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label">旧密码</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="oldPassword" required
+                                       placeholder="请输入当前密码">
+                                <button type="button" class="btn btn-outline-secondary" id="toggleOldPassword" title="显示/隐藏密码">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">新密码</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <input type="password" class="form-control" id="newPassword" required
+                                       placeholder="请输入新密码（至少6位）" minlength="6">
+                                <button type="button" class="btn btn-outline-secondary" id="toggleNewPassword" title="显示/隐藏密码">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">确认新密码</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirmPassword" required
+                                       placeholder="请再次输入新密码" minlength="6">
+                                <button type="button" class="btn btn-outline-secondary" id="toggleConfirmPassword" title="显示/隐藏密码">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="alert alert-info small mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>密码复杂度要求：</strong>
+                            <ul class="mb-0 ps-3 mt-1" style="font-size: 0.9rem;">
+                                <li>至少 <strong>6</strong> 个字符</li>
+                                <li>建议包含<strong>大写字母</strong>、<strong>小写字母</strong>、<strong>数字</strong>和<strong>特殊符号</strong></li>
+                                <li>不要使用常见密码如：123456、password 等</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitChangePassword">
+                        <i class="fas fa-save me-1"></i>保存修改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 成功消息提示 -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast" role="alert">
+            <div class="toast-header bg-success text-white">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong class="me-auto">成功</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                操作成功！
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/kb/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='kb/js/kb-login-checker.js') }}?v=1.0"></script>
+    <script>
+        // 图片加载错误处理函数
+        function handleImageError(img) {
+            // 创建一个简单的SVG占位图
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjhkN2RhIi8+CiAgICA8dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzcyMWMyNCIgCiAgICAgICAgICB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj7lm77niYflj4vmg4U8L3RleHQ+Cjwvc3ZnPg==';
+            img.style.border = '1px solid #dc3545';
+            img.style.padding = '5px';
+            img.title = '图片加载失败: ' + img.alt || img.src;
+        }
+
+        // 关键词高亮函数
+        function highlightText(text, keyword) {
+            if (!keyword || !text) return text;
+            
+            const regex = new RegExp(`(${escapeRegExp(keyword)})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+        
+        // 转义正则表达式特殊字符
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 返回知识库首页按钮
+            document.querySelector('a[href="/kb/"]')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = '/kb/';
+            });
+
+            // 显示全部按钮（现在是一个链接）
+            document.getElementById('showAll')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = '/kb/';
+            });
+
+            // 刷新按钮
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刷新中...';
+
+                // 获取当前页码
+                const page = document.querySelector('.pagination .active a')?.getAttribute('data-page') || 1;
+
+                fetch(`/?page=${page}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        // 解析返回的HTML并更新内容
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+
+                        // 更新卡片视图
+                        const newCardView = doc.querySelector('#cardView');
+                        if (newCardView) {
+                            document.getElementById('cardView').innerHTML = newCardView.innerHTML;
+                        }
+
+                        // 更新表格视图
+                        const newTableView = doc.querySelector('#tableView');
+                        if (newTableView) {
+                            document.getElementById('tableView').innerHTML = newTableView.innerHTML;
+                        }
+
+                        // 更新分页控件
+                        const newPagination = doc.querySelector('.pagination');
+                        if (newPagination) {
+                            const oldPagination = document.querySelector('.pagination');
+                            if (oldPagination) {
+                                oldPagination.innerHTML = newPagination.innerHTML;
+                            }
+                        }
+
+                        // 更新统计信息
+                        const newTotalCount = doc.querySelector('#totalCount');
+                        if (newTotalCount) {
+                            document.getElementById('totalCount').textContent = newTotalCount.textContent;
+                        }
+
+                        const newShowingCount = doc.querySelector('#showingCount');
+                        if (newShowingCount) {
+                            document.getElementById('showingCount').textContent = newShowingCount.textContent;
+                        }
+
+                        // 重新绑定"查看内容"按钮事件
+                        document.querySelectorAll('.btn-view-content').forEach(btn => {
+                            btn.removeEventListener('click', null); // 移除旧事件
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const kbNumber = this.getAttribute('data-kb-number');
+                                const kbName = this.getAttribute('data-kb-name');
+                                const triliumUrl = this.getAttribute('data-trilium-url');
+                                showContentModal(kbNumber, kbName, triliumUrl);
+                            });
+                        });
+
+                        showToast('刷新成功', 'success');
+                    })
+                    .catch(error => {
+                        console.error('刷新失败:', error);
+                        showToast('刷新失败，请稍后重试', 'error');
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-sync-alt"></i> 刷新';
+                    });
+            });
+
+            // 为服务器端渲染的卡片和表格中的"查看内容"按钮绑定事件
+            document.querySelectorAll('.btn-view-content').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const kbNumber = this.getAttribute('data-kb-number');
+                    const kbName = this.getAttribute('data-kb-name');
+                    const triliumUrl = this.getAttribute('data-trilium-url');
+                    showContentModal(kbNumber, kbName, triliumUrl);
+                });
+            });
+
+            // 视图模式切换
+            const viewButtons = document.querySelectorAll('[data-view]');
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    viewButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const view = this.getAttribute('data-view');
+                    if (view === 'card') {
+                        document.getElementById('cardView').style.display = 'block';
+                        document.getElementById('tableView').style.display = 'none';
+                    } else {
+                        document.getElementById('cardView').style.display = 'none';
+                        document.getElementById('tableView').style.display = 'block';
+                    }
+                });
+            });
+
+            // 按名称搜索
+            document.getElementById('nameSearchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const searchName = document.getElementById('searchName').value;
+
+                if (searchName) {
+                    const formData = new FormData();
+                    formData.append('name', searchName);
+
+                    fetch('/kb/search/name', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultsDiv = document.getElementById('nameSearchResults');
+                        if (data.success) {
+                            if (data.data.count > 0) {
+                                let html = `<div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    找到 ${data.data.count} 条记录
+                                </div>
+                                <div class="list-group">`;
+
+                                data.data.records.forEach(record => {
+                                    html += `
+                                        <div class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">${record.KB_Name}</h6>
+                                                <small class="text-muted">KB_${record.KB_Number}</small>
+                                            </div>
+                                            <div class="mt-2">
+                                                <a href="/search?id=${record.KB_Number}"
+                                                   class="btn btn-sm btn-outline-primary me-2">
+                                                    <i class="fas fa-eye me-1"></i>查看详情
+                                                </a>
+                                                ${record.KB_link && record.KB_link !== 'None' ?
+                                                    `<button class="btn btn-sm btn-info btn-view-content"
+                                                            data-kb-number="${record.KB_Number}"
+                                                            data-kb-name="${record.KB_Name}"
+                                                            data-trilium-url="${record.KB_link}">
+                                                        <i class="fas fa-eye me-1"></i>查看内容
+                                                    </button>` : ''}
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                                html += `</div>`;
+                                resultsDiv.innerHTML = html;
+                                
+                                // 为动态生成的查看内容按钮添加事件
+                                resultsDiv.querySelectorAll('.btn-view-content').forEach(btn => {
+                                    btn.addEventListener('click', function(e) {
+                                        e.stopPropagation();
+                                        const kbNumber = this.getAttribute('data-kb-number');
+                                        const kbName = this.getAttribute('data-kb-name');
+                                        const triliumUrl = this.getAttribute('data-trilium-url');
+                                        showContentModal(kbNumber, kbName, triliumUrl);
+                                    });
+                                });
+                            } else {
+                                resultsDiv.innerHTML = `
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        未找到包含 "${searchName}" 的记录
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            resultsDiv.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    ${data.message}
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('nameSearchResults').innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                搜索失败，请重试
+                            </div>
+                        `;
+                    });
+                }
+            });
+
+            // 按内容搜索
+            document.getElementById('contentSearchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const searchContent = document.getElementById('searchContent').value;
+
+                if (searchContent) {
+                    const resultsDiv = document.getElementById('contentSearchResults');
+                    resultsDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p>正在搜索Trilium笔记内容...</p></div>';
+
+                    fetch(`/kb/MGMT/api/trilium/search?query=${encodeURIComponent(searchContent)}&limit=20`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('内容搜索返回数据:', data);
+                            if (data.success) {
+                                const results = data.data && data.data.results ? data.data.results : [];
+                                if (results.length > 0) {
+                                    let html = `
+                                        <div class="search-result-header">
+                                            <h6><i class="fas fa-search me-2"></i>搜索到 ${results.length} 条相关笔记</h6>
+                                            <p class="search-meta mb-0">关键词: "${searchContent}"</p>
+                                        </div>
+                                        <div class="content-search-results mt-3">`;
+
+                                    results.forEach((note, index) => {
+                                        // 构建Trilium笔记的URL
+                                        const triliumBaseUrl = '{{ trilium_base_url|safe }}';
+                                        const noteUrl = `${triliumBaseUrl}/#root/${note.noteId}`;
+                                        
+                                        // 格式化日期
+                                        const modifiedDate = note.dateModified ? 
+                                            new Date(note.dateModified).toLocaleString() : '未知';
+                                        
+                                        html += `
+                                            <div class="card note-result-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <h6 class="card-title mb-2">${highlightText(note.title, searchContent)}</h6>
+                                                        <span class="badge bg-secondary">${note.type || 'text'}</span>
+                                                    </div>
+                                                    <div class="note-snippet">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-calendar me-1"></i>修改时间: ${modifiedDate}
+                                                        </small>
+                                                    </div>
+                                                    <div class="mt-3 action-buttons">
+                                                        <button class="btn btn-sm btn-info btn-view-note-content"
+                                                                data-note-id="${note.noteId}"
+                                                                data-note-title="${note.title}"
+                                                                data-note-url="${noteUrl}">
+                                                            <i class="fas fa-eye me-1"></i>查看内容
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-secondary find-kb-record"
+                                                                data-note-title="${note.title}"
+                                                                data-note-url="${noteUrl}">
+                                                            <i class="fas fa-search me-1"></i>查找关联记录
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    });
+                                    
+                                    html += `</div>`;
+                                    resultsDiv.innerHTML = html;
+                                    
+                                    // 为查看内容按钮添加事件
+                                    resultsDiv.querySelectorAll('.btn-view-note-content').forEach(btn => {
+                                        btn.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            const noteId = this.getAttribute('data-note-id');
+                                            const noteTitle = this.getAttribute('data-note-title');
+                                            const noteUrl = this.getAttribute('data-note-url');
+                                            
+                                            // 使用通用的内容查看功能
+                                            showContentModal(null, noteTitle, noteUrl);
+                                        });
+                                    });
+                                    
+                                    // 为查找关联记录按钮添加事件
+                                    resultsDiv.querySelectorAll('.find-kb-record').forEach(btn => {
+                                        btn.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            const noteTitle = this.getAttribute('data-note-title');
+                                            const noteUrl = this.getAttribute('data-note-url');
+                                            
+                                            // 在系统中查找相关的知识库记录
+                                            searchKbRecordByNoteUrl(noteUrl, noteTitle);
+                                        });
+                                    });
+                                } else {
+                                    resultsDiv.innerHTML = `
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            未找到包含 "${searchContent}" 的笔记
+                                        </div>
+                                    `;
+                                    resultsDiv.innerHTML = `
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            未找到包含 "${searchContent}" 的笔记
+                                        </div>
+                                    `;
+                                }
+                            } else {
+                                resultsDiv.innerHTML = `
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-times-circle me-2"></i>
+                                        ${data.message}
+                                    </div>
+                                `;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('内容搜索错误:', error);
+                            resultsDiv.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    搜索失败，请检查网络连接或稍后重试
+                                </div>
+                            `;
+                        });
+                } else {
+                    showToast('请输入搜索关键词', 'warning');
+                }
+            });
+
+            // 在系统中查找关联的知识库记录
+            function searchKbRecordByNoteUrl(noteUrl, noteTitle) {
+                showToast(`正在查找关联 "${noteTitle}" 的知识库记录...`, 'info');
+                
+                // 获取所有记录
+                fetch('/api/all')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const records = data.data.records || [];
+                            // 查找匹配的记录
+                            const matchedRecords = records.filter(record => 
+                                record.KB_link && record.KB_link.includes(noteUrl.split('#root/')[1])
+                            );
+                            
+                            if (matchedRecords.length > 0) {
+                                let html = `<div class="alert alert-success mt-3">
+                                    <h6><i class="fas fa-link me-2"></i>找到关联的知识库记录</h6>
+                                    <div class="list-group mt-2">`;
+                                
+                                matchedRecords.forEach(record => {
+                                    html += `
+                                        <div class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">${record.KB_Name}</h6>
+                                                <small class="text-muted">KB_${record.KB_Number}</small>
+                                            </div>
+                                            <p class="mb-1">
+                                                <small>链接: ${record.KB_link || '无'}</small>
+                                            </p>
+                                            <div class="mt-2">
+                                                <a href="/search?id=${record.KB_Number}" 
+                                                   class="btn btn-sm btn-outline-primary me-2">
+                                                    <i class="fas fa-eye me-1"></i>查看详情
+                                                </a>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                                
+                                html += `</div></div>`;
+                                
+                                // 显示结果
+                                const resultsDiv = document.getElementById('contentSearchResults');
+                                const existingResults = resultsDiv.innerHTML;
+                                resultsDiv.innerHTML = existingResults + html;
+                                
+                                showToast(`找到 ${matchedRecords.length} 条关联记录`, 'success');
+                            } else {
+                                showToast('未找到关联的知识库记录', 'warning');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('查找关联记录失败:', error);
+                        showToast('查找关联记录失败', 'error');
+                    });
+            }
+
+            // 查看内容功能的事件绑定已在初始化时完成
+            
+            let currentContentData = {};
+            
+            function showContentModal(kbNumber, kbName, triliumUrl) {
+                // 重置模态框状态
+                document.getElementById('contentLoading').style.display = 'block';
+                document.getElementById('contentError').style.display = 'none';
+                document.getElementById('contentDisplay').style.display = 'none';
+
+                // 更新标题和信息
+                if (kbNumber) {
+                    document.getElementById('contentModalTitle').innerHTML =
+                        `<i class="fas fa-book me-2"></i>${kbName} (KB_${kbNumber})`;
+                } else {
+                    document.getElementById('contentModalTitle').innerHTML =
+                        `<i class="fas fa-book me-2"></i>${kbName || 'Trilium笔记'}`;
+                }
+
+                document.getElementById('contentInfo').innerHTML =
+                    `<i class="fas fa-info-circle me-2"></i>正在加载内容...`;
+
+                // 存储当前内容信息
+                currentContentData = {
+                    kbNumber: kbNumber,
+                    kbName: kbName,
+                    triliumUrl: triliumUrl
+                };
+
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('contentModal'));
+                modal.show();
+                
+                // 加载内容
+                loadTriliumContent(kbNumber, triliumUrl);
+            }
+            
+            function loadTriliumContent(kbNumber, triliumUrl) {
+                // 构建API URL
+                let apiUrl;
+                if (kbNumber) {
+                    apiUrl = `/api/trilium/content?kb_number=${kbNumber}&trilium_url=${encodeURIComponent(triliumUrl)}`;
+                } else {
+                    // 如果只有URL没有kbNumber，直接显示
+                    apiUrl = `/api/trilium/content?trilium_url=${encodeURIComponent(triliumUrl)}`;
+                }
+
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // 显示内容
+                            const contentDisplay = document.getElementById('contentDisplay');
+                            const content = data.data.content;
+
+                            if (!content || content.length === 0) {
+                                console.error('内容为空!');
+                                contentDisplay.innerHTML = '<div class="alert alert-warning">内容为空</div>';
+                            } else {
+                                contentDisplay.innerHTML = content;
+                            }
+                            contentDisplay.style.display = 'block';
+
+                            // 为所有图片添加错误处理
+                            contentDisplay.querySelectorAll('img').forEach(img => {
+                                img.onerror = function() { handleImageError(this); };
+                            });
+
+                            // 为所有外部链接添加target="_blank"
+                            contentDisplay.querySelectorAll('a').forEach(link => {
+                                if (link.href && link.href.startsWith('http')) {
+                                    link.target = '_blank';
+                                    link.rel = 'noopener noreferrer';
+                                }
+                            });
+
+                            // 更新信息
+                            let infoHtml = `<i class="fas fa-info-circle me-2"></i>`;
+                            infoHtml += `<strong>${data.data.title}</strong>`;
+
+                            if (data.data.modified) {
+                                const modifiedDate = new Date(data.data.modified).toLocaleString();
+                                infoHtml += ` | 最后更新: ${modifiedDate}`;
+                            }
+
+                            document.getElementById('contentInfo').innerHTML = infoHtml;
+
+                        } else {
+                            // 如果API返回失败，显示原始链接作为备选方案
+                            console.warn('API加载失败，使用备选方案:', data.message);
+                            const contentDisplay = document.getElementById('contentDisplay');
+                            contentDisplay.innerHTML = `
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>内容加载失败</strong>
+                                    <p class="mb-2">${data.message}</p>
+                                    <p class="mb-0">
+                                        <a href="${triliumUrl}" target="_blank" class="btn btn-sm btn-info">
+                                            <i class="fas fa-external-link-alt me-1"></i>在Trilium中打开
+                                        </a>
+                                    </p>
+                                </div>
+                            `;
+                            contentDisplay.style.display = 'block';
+
+                            // 更新信息
+                            let infoHtml = `<i class="fas fa-info-circle me-2"></i>`;
+                            infoHtml += `<strong>${currentContentData.kbName || '知识库内容'}</strong>`;
+                            document.getElementById('contentInfo').innerHTML = infoHtml;
+                        }
+
+                        document.getElementById('contentLoading').style.display = 'none';
+                        document.getElementById('contentError').style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('加载内容失败:', error);
+                        // 显示错误信息，但提供备选链接
+                        const contentDisplay = document.getElementById('contentDisplay');
+                        contentDisplay.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                <strong>网络错误</strong>
+                                <p class="mb-2">无法加载内容，请检查网络连接</p>
+                                <p class="mb-0">
+                                    <a href="${triliumUrl}" target="_blank" class="btn btn-sm btn-success">
+                                        <i class="fas fa-external-link-alt me-1"></i>在新标签页中打开
+                                    </a>
+                                </p>
+                            </div>
+                        `;
+                        contentDisplay.style.display = 'block';
+
+                        document.getElementById('contentLoading').style.display = 'none';
+                        document.getElementById('contentError').style.display = 'none';
+                    });
+            }
+            
+            // 刷新内容按钮
+            document.getElementById('refreshContent').addEventListener('click', function() {
+                if (currentContentData.triliumUrl) {
+                    document.getElementById('contentLoading').style.display = 'block';
+                    document.getElementById('contentError').style.display = 'none';
+                    document.getElementById('contentDisplay').style.display = 'none';
+                    
+                    loadTriliumContent(currentContentData.kbNumber, currentContentData.triliumUrl);
+                }
+            });
+            
+            // 修改密码功能
+            document.getElementById('submitChangePassword').addEventListener('click', function() {
+                const oldPassword = document.getElementById('oldPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // 验证密码
+                if (newPassword.length < 6) {
+                    alert('新密码长度至少为6位');
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    alert('两次输入的新密码不一致');
+                    return;
+                }
+
+                if (oldPassword === newPassword) {
+                    alert('新密码不能与旧密码相同');
+                    return;
+                }
+
+                // 发送修改密码请求
+                fetch('/auth/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        old_password: oldPassword,
+                        new_password: newPassword
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('密码修改成功！');
+                        // 清空表单
+                        document.getElementById('changePasswordForm').reset();
+                        // 关闭模态框
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+                        modal.hide();
+                    } else {
+                        alert('密码修改失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('修改密码失败:', error);
+                    alert('密码修改失败，请稍后重试');
+                });
+            });
+
+            // 添加一个键盘快捷键：ESC关闭模态框
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && document.getElementById('contentModal').classList.contains('show')) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('contentModal'));
+                    if (modal) modal.hide();
+                }
+            });
+
+            // 显示提示消息
+            function showToast(message, type = 'success') {
+                const toastEl = document.getElementById('successToast');
+                const toastMessage = document.getElementById('toastMessage');
+                
+                // 设置消息和颜色
+                toastMessage.textContent = message;
+                const header = toastEl.querySelector('.toast-header');
+                header.className = type === 'success' ? 
+                    'toast-header bg-success text-white' : 
+                    type === 'warning' ? 'toast-header bg-warning text-dark' :
+                    'toast-header bg-danger text-white';
+                
+                // 显示toast
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            }
+
+            // 密码显示/隐藏切换功能
+            function setupPasswordToggle(toggleId, inputId) {
+                const toggleBtn = document.getElementById(toggleId);
+                const input = document.getElementById(inputId);
+
+                toggleBtn.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                        // 3秒后自动隐藏密码
+                        setTimeout(() => {
+                            if (input.type === 'text') {
+                                input.type = 'password';
+                                icon.classList.remove('fa-eye-slash');
+                                icon.classList.add('fa-eye');
+                            }
+                        }, 3000);
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            }
+
+            // 为三个密码输入框设置显示/隐藏功能
+            setupPasswordToggle('toggleOldPassword', 'oldPassword');
+            setupPasswordToggle('toggleNewPassword', 'newPassword');
+            setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
+
+            // 重置密码显示状态函数
+            function resetPasswordVisibility() {
+                const passwordFields = [
+                    { input: 'oldPassword', toggle: 'toggleOldPassword' },
+                    { input: 'newPassword', toggle: 'toggleNewPassword' },
+                    { input: 'confirmPassword', toggle: 'toggleConfirmPassword' }
+                ];
+
+                passwordFields.forEach(field => {
+                    const input = document.getElementById(field.input);
+                    const toggle = document.getElementById(field.toggle);
+                    const icon = toggle.querySelector('i');
+
+                    // 重置为密码类型
+                    if (input.type === 'text') {
+                        input.type = 'password';
+                    }
+                    // 重置图标
+                    if (icon) {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            }
+
+            // 监听模态框事件
+            const passwordModal = document.getElementById('changePasswordModal');
+            if (passwordModal) {
+                // 模态框打开时重置状态
+                passwordModal.addEventListener('show.bs.modal', function() {
+                    resetPasswordVisibility();
+                    document.getElementById('changePasswordForm').reset();
+                });
+
+                // 模态框关闭时重置状态
+                passwordModal.addEventListener('hidden.bs.modal', function() {
+                    resetPasswordVisibility();
+                    document.getElementById('changePasswordForm').reset();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

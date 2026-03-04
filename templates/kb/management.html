@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理系统</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #52c41a;
+            --warning-color: #faad14;
+            --danger-color: #f5222d;
+            --info-color: #1890ff;
+            --light-bg: #fafafa;
+            --border-color: #e8e8e8;
+            --text-primary: #262626;
+            --text-secondary: #8c8c8c;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color), #6b7c93);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .navbar-brand i {
+            margin-right: 0.5rem;
+        }
+
+        .nav-link-custom {
+            color: rgba(255,255,255,0.9) !important;
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link-custom:hover {
+            background: rgba(255,255,255,0.1);
+            color: white !important;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.primary { background: rgba(74,144,226,0.1); color: var(--primary-color); }
+        .stat-icon.success { background: rgba(82,196,26,0.1); color: var(--success-color); }
+        .stat-icon.warning { background: rgba(250,173,20,0.1); color: var(--warning-color); }
+        .stat-icon.danger { background: rgba(245,34,45,0.1); color: var(--danger-color); }
+        .stat-icon.info { background: rgba(24,144,255,0.1); color: var(--info-color); }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .toolbar {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex: 1;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74,144,226,0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .btn-custom {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-primary:hover { background: #357abd; }
+
+        .btn-success { background: var(--success-color); color: white; }
+        .btn-success:hover { background: #389e0d; }
+
+        .btn-danger { background: var(--danger-color); color: white; }
+        .btn-danger:hover { background: #cf1322; }
+
+        .btn-info { background: var(--info-color); color: white; }
+        .btn-info:hover { background: #0e7ce5; }
+
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
+        .btn-outline:hover { border-color: var(--primary-color); color: var(--primary-color); background: rgba(74,144,226,0.05); }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table thead th {
+            background: #f8f9fa;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 1rem 1.25rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s ease;
+        }
+
+        .table tbody tr:hover td {
+            background: #f8f9fa;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-custom {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pagination {
+            margin: 0;
+        }
+
+        .pagination .page-link {
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 0.875rem;
+            margin: 0 0.25rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .pagination .page-link:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-custom {
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .modal-custom .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), #6b7c93);
+            color: white;
+            border: none;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .modal-custom .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-custom .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-custom .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-custom .form-control {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 0.625rem 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-custom .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74,144,226,0.1);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner-large {
+            width: 3rem;
+            height: 3rem;
+            border-width: 3px;
+        }
+
+        .toast-container-custom {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast-custom {
+            min-width: 300px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            overflow: hidden;
+        }
+
+        .toast-custom .toast-header {
+            padding: 0.75rem 1rem;
+            border: none;
+            color: white;
+            font-weight: 500;
+        }
+
+        .toast-custom .toast-body {
+            padding: 0.75rem 1rem;
+        }
+
+        /* Trilium批量导入样式 */
+        .import-results-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .import-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s ease;
+        }
+
+        .import-item:last-child {
+            border-bottom: none;
+        }
+
+        .import-item:hover {
+            background: #f8f9fa;
+        }
+
+        .import-item.selected {
+            background: #e6f0ff;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .import-item .form-check {
+            margin: 0;
+        }
+
+        .batch-import-stats {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background: transparent;
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar-left,
+            .toolbar-right {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar-custom">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <a class="navbar-brand" href="/kb/">
+                    <i class="fas fa-database"></i>
+                    知识库管理系统
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                    {% if current_user %}
+                    <span class="text-white">
+                        <i class="fas fa-user-circle"></i>
+                        {{ current_user.display_name or current_user.username }}
+                    </span>
+                    {% endif %}
+                    <a href="/" class="nav-link-custom">
+                        <i class="fas fa-home"></i>
+                        首页
+                    </a>
+                    <a href="/kb/auth/logout" class="nav-link-custom">
+                        <i class="fas fa-sign-out-alt"></i>
+                        退出
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="main-content">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">总记录数</div>
+                    <div class="stat-value" id="totalRecords">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">添加记录</div>
+                    <div class="stat-value">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                            添加
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon info">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">批量导入</div>
+                    <div class="stat-value">
+                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#triliumImportModal">
+                            批量导入
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="fas fa-file-export"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">导出数据</div>
+                    <div class="stat-value">
+                        <button class="btn btn-warning btn-sm" id="exportDataBtn">
+                            导出
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="搜索知识库名称..." autocomplete="off">
+                </div>
+                <button class="btn btn-outline btn-custom" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i>
+                    刷新
+                </button>
+            </div>
+            <div class="toolbar-right">
+                <span class="text-secondary me-3">
+                    已选择 <strong id="selectedCount">0</strong> 项
+                </span>
+                <button class="btn btn-outline btn-custom" id="selectAllBtn">
+                    <i class="fas fa-check-square"></i>
+                    全选
+                </button>
+                <button class="btn btn-outline btn-custom" id="selectInverseBtn">
+                    <i class="fas fa-exchange-alt"></i>
+                    反选
+                </button>
+                <button class="btn btn-danger btn-custom" id="batchDeleteBtn" disabled>
+                    <i class="fas fa-trash"></i>
+                    删除选中
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="data-table-container">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">
+                                <input type="checkbox" id="selectAllCheckbox" class="form-check-input">
+                            </th>
+                            <th>编号</th>
+                            <th>名称</th>
+                            <th>链接</th>
+                            <th>更新时间</th>
+                            <th style="width: 180px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- 数据将通过 JavaScript 加载 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">暂无数据</h5>
+                <p class="text-secondary">点击"添加记录"或"批量导入"开始添加知识库条目</p>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination-container">
+            <div class="text-secondary">
+                显示第 <strong id="showingStart">1</strong> 到 <strong id="showingEnd">20</strong> 条，
+                共 <strong id="totalCount">0</strong> 条记录
+            </div>
+            <nav>
+                <ul class="pagination" id="pagination">
+                    <!-- 分页将通过 JavaScript 生成 -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 添加记录模态框 -->
+    <div class="modal fade" id="addModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-custom">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle me-2"></i>添加记录
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm">
+                    <div class="mb-3">
+                        <label class="form-label">知识库编号 *</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="addKBNumber" required
+                                   placeholder="留空自动获取下一个可用编号" min="1">
+                            <button class="btn btn-outline-secondary" type="button" id="autoNumberBtn"
+                                    title="自动获取下一个可用编号">
+                                <i class="fas fa-magic"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">留空将自动获取第一个未被使用的编号</small>
+                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">知识库名称 *</label>
+                            <input type="text" class="form-control" id="addKBName" required
+                                   placeholder="请输入知识库名称">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Trilium 链接</label>
+                            <input type="text" class="form-control" id="addKBLink"
+                                   placeholder="http://trilium.example.com/#root/...">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success" id="saveAddBtn">
+                        <i class="fas fa-save me-1"></i>保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trilium批量导入模态框 -->
+    <div class="modal fade" id="triliumImportModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content modal-custom">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>从Trilium批量导入笔记
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 选项卡 -->
+                    <ul class="nav nav-tabs mb-4" id="triliumImportTabs">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-search">
+                                <i class="fas fa-search me-1"></i>搜索笔记
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-unimported">
+                                <i class="fas fa-clock me-1"></i>未导入笔记
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- 搜索标签页 -->
+                        <div class="tab-pane fade show active" id="tab-search">
+                            <!-- 搜索区域 -->
+                            <div class="mb-4">
+                                <label class="form-label">搜索Trilium笔记</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="triliumSearchInput"
+                                           placeholder="输入关键词搜索笔记（支持标题、内容搜索）...">
+                                    <button class="btn btn-primary" type="button" id="triliumSearchBtn">
+                                        <i class="fas fa-search me-1"></i>搜索
+                                    </button>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    支持最多返回 50 条笔记，可以使用空格分隔多个关键词
+                                </small>
+                            </div>
+
+                            <!-- 统计信息 -->
+                            <div class="batch-import-stats" id="importStats" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>搜索结果：</strong>
+                                        <span class="badge bg-info" id="searchCount">0</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>已选择：</strong>
+                                        <span class="badge bg-success" id="selectedCount">0</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>起始编号：</strong>
+                                        <span id="startNumber">0</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-sm btn-primary" id="selectAllImportBtn">
+                                            <i class="fas fa-check-double me-1"></i>全选
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 搜索结果列表 -->
+                            <div class="import-results-container" id="triliumResults">
+                                <div class="text-center text-muted py-5">
+                                    <i class="fas fa-search fa-3x mb-3"></i>
+                                    <p>输入关键词搜索Trilium笔记</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 未导入标签页 -->
+                        <div class="tab-pane fade" id="tab-unimported">
+                            <div class="mb-4">
+                                <label class="form-label">未导入的Trilium笔记</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="unimportedSearchInput"
+                                           placeholder="筛选未导入笔记（可选）...">
+                                    <button class="btn btn-primary" type="button" id="loadUnimportedBtn">
+                                        <i class="fas fa-sync-alt me-1"></i>刷新
+                                    </button>
+                                    <button class="btn btn-secondary" type="button" id="refreshCacheBtn" title="强制刷新Trilium数据">
+                                        <i class="fas fa-database me-1"></i>清除缓存
+                                    </button>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    显示Trilium中尚未导入到知识库的笔记（系统笔记、配置笔记已自动过滤，数据缓存5分钟）
+                                </small>
+                            </div>
+
+                            <!-- 未导入统计 -->
+                            <div class="batch-import-stats" id="unimportedStats" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>未导入总数：</strong>
+                                        <span class="badge bg-warning" id="unimportedCount">0</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>已选择：</strong>
+                                        <span class="badge bg-success" id="unimportedSelectedCount">0</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>起始编号：</strong>
+                                        <span id="unimportedStartNumber">0</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-sm btn-primary" id="selectAllUnimportedBtn">
+                                            <i class="fas fa-check-double me-1"></i>全选
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 未导入列表 -->
+                            <div class="import-results-container" id="unimportedResults">
+                                <div class="text-center text-muted py-5">
+                                    <i class="fas fa-sync-alt fa-3x mb-3"></i>
+                                    <p>点击"刷新"按钮加载未导入笔记</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <!-- 导入进度显示 -->
+                    <div id="importProgressArea" style="display: none; flex: 1; margin-right: 1rem;">
+                        <div class="mb-2">
+                            <strong>导入进度: <span id="importProgressText">0/0</span></strong>
+                            <button type="button" class="btn btn-sm btn-danger ms-2" id="cancelBatchImportBtn">
+                                <i class="fas fa-times me-1"></i>取消导入
+                            </button>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div id="importProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%">0%</div>
+                        </div>
+                        <div class="mt-2 small">
+                            <span class="text-success">成功: <span id="importSuccessCount">0</span></span>
+                            <span class="ms-3 text-danger">失败: <span id="importFailCount">0</span></span>
+                            <span class="ms-3 text-muted">正在处理: <span id="importCurrentNote">-</span></span>
+                        </div>
+                    </div>
+                    
+                    <!-- 失败详情 -->
+                    <div id="importFailDetails" style="display: none; max-width: 400px; max-height: 200px; overflow-y: auto; margin-right: 1rem;">
+                        <small class="text-danger">
+                            <strong>失败详情:</strong>
+                            <ul id="importFailList" class="mb-0 ps-3"></ul>
+                        </small>
+                    </div>
+                    
+                    <div class="me-auto">
+                        <button type="button" class="btn btn-outline-secondary" id="clearSearchBtn">
+                            <i class="fas fa-eraser me-1"></i>清空搜索
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelImportBtn">取消</button>
+                    <button type="button" class="btn btn-success" id="saveBatchImportBtn" disabled>
+                        <i class="fas fa-check me-1"></i>批量导入 (<span id="importCount">0</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑记录模态框 -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-custom">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>编辑记录
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <div class="mb-3">
+                            <label class="form-label">知识库编号</label>
+                            <input type="number" class="form-control" id="editKBNumber" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">知识库名称 *</label>
+                            <input type="text" class="form-control" id="editKBName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Trilium 链接</label>
+                            <input type="text" class="form-control" id="editKBLink">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveEditBtn">
+                        <i class="fas fa-save me-1"></i>保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-custom">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>确认删除
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-trash-alt fa-4x text-danger mb-3"></i>
+                    <h5>确定要删除选中的记录吗？</h5>
+                    <p class="text-secondary">此操作不可恢复，请谨慎操作</p>
+                    <p class="mt-3">已选择 <strong class="text-danger" id="deleteCount">0</strong> 条记录</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash me-1"></i>确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container-custom" id="toastContainer"></div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner loading-spinner-large text-primary"></div>
+    </div>
+
+    <script src="/static/kb/js/bootstrap.bundle.min.js"></script>
+    <script>
+        console.log('=== 脚本开始加载 ===');
+        // 全局变量 - 从服务器端获取初始值
+        let currentPage = {{ page | default(1) }};
+        let perPage = 20;
+        let totalRecords = {{ total_count | default(0) }};
+        let currentRecords = [];
+        let selectedIds = new Set();
+        let searchQuery = '';
+        let triliumResults = [];  // Trilium搜索结果
+        let selectedTriliumNotes = new Set();  // 选中的Trilium笔记ID
+        let unimportedResults = [];  // 未导入笔记列表
+        let selectedUnimportedNotes = new Set();  // 选中的未导入笔记ID
+        let importCancelled = false;  // 导入取消标志
+
+        // DOM 元素 - 在 DOMContentLoaded 中初始化
+        let dataTableBody = null;
+        let emptyState = null;
+        let loadingOverlay = null;
+        let toastContainer = null;
+        let searchInput = null;
+        let selectedCountEl = null;
+        let selectAllCheckbox = null;
+
+        // 工具函数
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        function showToast(message, type = 'info') {
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const colors = {
+                success: 'bg-success',
+                error: 'bg-danger',
+                warning: 'bg-warning',
+                info: 'bg-info'
+            };
+
+            const toastHtml = `
+                <div class="toast toast-custom" role="alert">
+                    <div class="toast-header ${colors[type]}">
+                        <i class="fas ${icons[type]} me-2"></i>
+                        <strong>提示</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">${message}</div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updateSelectionUI() {
+            const count = selectedIds.size;
+            selectedCountEl.textContent = count;
+
+            // 更新批量删除按钮状态
+            const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+            if (batchDeleteBtn) {
+                batchDeleteBtn.disabled = count === 0;
+            }
+
+            // 更新全选框状态（表头复选框）
+            if (currentRecords.length > 0) {
+                selectAllCheckbox.checked = count === currentRecords.length;
+                selectAllCheckbox.indeterminate = count > 0 && count < currentRecords.length;
+            }
+
+            // 更新全选按钮文本
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            if (selectAllBtn) {
+                if (count > 0 && count === currentRecords.length) {
+                    selectAllBtn.innerHTML = '<i class="fas fa-times"></i> 取消全选';
+                } else {
+                    selectAllBtn.innerHTML = '<i class="fas fa-check-square"></i> 全选';
+                }
+            }
+        }
+
+        function renderTable(records) {
+            console.log('=== renderTable 开始执行 ===');
+            console.log('records 参数:', records);
+            console.log('records 长度:', records ? records.length : 'null/undefined');
+            console.log('dataTableBody:', dataTableBody);
+            console.log('emptyState:', emptyState);
+
+            if (!dataTableBody) {
+                console.error('dataTableBody 为 null！');
+                return;
+            }
+
+            if (!records || records.length === 0) {
+                console.log('没有数据，显示空状态');
+                dataTableBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            console.log('开始生成表格 HTML...');
+            emptyState.style.display = 'none';
+
+            const html = records.map(record => `
+                <tr data-id="${record.KB_Number}">
+                    <td>
+                        <input type="checkbox" class="row-checkbox form-check-input"
+                               value="${record.KB_Number}"
+                               ${selectedIds.has(String(record.KB_Number)) ? 'checked' : ''}>
+                    </td>
+                    <td>
+                        <strong class="text-primary">KB_${record.KB_Number}</strong>
+                    </td>
+                    <td>${record.KB_Name}</td>
+                    <td>
+                        ${record.KB_link && record.KB_link !== 'None' ?
+                            `<a href="${record.KB_link}" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>
+                                <span class="text-truncate" style="max-width: 200px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    ${record.KB_link}
+                                </span>
+                            </a>` :
+                            '<span class="text-muted">-</span>'}
+                    </td>
+                    <td>${formatDate(record.KB_UpdateTime)}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary btn-edit" data-id="${record.KB_Number}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${record.KB_Number}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            console.log('HTML 生成完成，长度:', html.length);
+            console.log('准备设置 innerHTML...');
+
+            dataTableBody.innerHTML = html;
+
+            console.log('innerHTML 已设置');
+            console.log('dataTableBody 子元素数量:', dataTableBody.children.length);
+
+            currentRecords = records;
+            bindTableEvents();
+
+            console.log('=== renderTable 执行完成 ===');
+        }
+
+        function bindTableEvents() {
+            // 复选框事件
+            dataTableBody.querySelectorAll('.row-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const id = this.value;
+                    if (this.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                    updateSelectionUI();
+                });
+            });
+
+            // 编辑按钮事件
+            dataTableBody.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    openEditModal(id);
+                });
+            });
+
+            // 删除按钮事件
+            const deleteButtons = dataTableBody.querySelectorAll('.btn-delete');
+            console.log('绑定删除按钮事件，找到按钮数量:', deleteButtons.length);
+            deleteButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();  // 防止按钮的默认行为
+                    e.stopPropagation();  // 阻止事件冒泡
+                    const id = this.getAttribute('data-id');
+                    console.log('删除按钮点击，ID:', id, '类型:', typeof id, '是否为空:', id === null || id === undefined || id === '');
+                    
+                    // 确保ID是字符串类型
+                    const idToDelete = String(id);
+                    console.log('转换后的ID:', idToDelete, '类型:', typeof idToDelete);
+                    
+                    openDeleteModal([idToDelete]);
+                });
+            });
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(totalRecords / perPage);
+            const showingStart = (currentPage - 1) * perPage + 1;
+            const showingEnd = Math.min(currentPage * perPage, totalRecords);
+
+            document.getElementById('showingStart').textContent = showingStart;
+            document.getElementById('showingEnd').textContent = showingEnd;
+            document.getElementById('totalCount').textContent = totalRecords;
+
+            let html = '';
+
+            // 上一页
+            html += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+
+            // 页码
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    `;
+                }
+            }
+
+            // 下一页
+            html += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+
+            document.getElementById('pagination').innerHTML = html;
+
+            // 绑定分页事件
+            document.querySelectorAll('#pagination .page-link[data-page]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = parseInt(this.getAttribute('data-page'));
+                    loadPage(page);
+                });
+            });
+        }
+
+        function loadPage(page, search = '') {
+            showLoading();
+            currentPage = page;
+            searchQuery = search;
+
+            console.log('开始加载数据，页码:', page, '搜索:', search);
+            fetch(`/kb/MGMT/api/records?page=${page}&per_page=${perPage}&search=${encodeURIComponent(search)}`)
+                .then(response => {
+                    console.log('收到响应，状态:', response.status, response.statusText);
+
+                    // 处理认证错误
+                    if (response.status === 401 || response.status === 403) {
+                        showToast('登录已过期或权限不足，请重新登录', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/kb/auth/login?next=' + encodeURIComponent(window.location.pathname);
+                        }, 2000);
+                        throw new Error('认证失败');
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API返回的数据:', data);
+                    if (data.success) {
+                        console.log('记录数量:', data.records ? data.records.length : 0);
+                        console.log('总记录数:', data.total_count);
+
+                        renderTable(data.records);
+                        totalRecords = data.total_count;
+
+                        // 更新统计卡片中的总记录数
+                        const totalRecordsEl = document.getElementById('totalRecords');
+                        if (totalRecordsEl) {
+                            totalRecordsEl.textContent = totalRecords;
+                            console.log('已更新统计卡片:', totalRecords);
+                        } else {
+                            console.error('找不到 totalRecords 元素');
+                        }
+
+                        // 更新分页区域的总记录数
+                        const totalCountEl = document.getElementById('totalCount');
+                        if (totalCountEl) {
+                            totalCountEl.textContent = totalRecords;
+                            console.log('已更新分页区域:', totalRecords);
+                        }
+
+                        renderPagination();
+                        selectedIds.clear();
+                        updateSelectionUI();
+                    } else {
+                        console.error('API返回失败:', data.message);
+                        showToast(data.message || '加载数据失败', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('加载失败:', error);
+                    if (error.message !== '认证失败') {
+                        showToast(`加载数据失败: ${error.message}`, 'error');
+                    }
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+
+        function openEditModal(id) {
+            const record = currentRecords.find(r => r.KB_Number == id);
+            if (!record) return;
+
+            document.getElementById('editKBNumber').value = record.KB_Number;
+            document.getElementById('editKBName').value = record.KB_Name;
+            document.getElementById('editKBLink').value = record.KB_link || '';
+
+            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+            modal.show();
+        }
+
+        function openDeleteModal(ids) {
+            console.log('打开删除模态框，传入的IDs:', ids, '长度:', ids.length, '类型:', typeof ids);
+            document.getElementById('deleteCount').textContent = ids.length;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+
+            // 保存要删除的 ID - 先存储在全局变量中,避免dataset的问题
+            window.pendingDeleteIds = ids;
+
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            confirmBtn.dataset.ids = JSON.stringify(ids);
+            console.log('设置confirmBtn.dataset.ids为:', confirmBtn.dataset.ids);
+            console.log('同时设置window.pendingDeleteIds为:', window.pendingDeleteIds);
+        }
+
+        // ==================== Trilium批量导入功能 ====================
+        // 批量导入 - 根据当前标签页决定调用哪个函数
+        document.getElementById('saveBatchImportBtn').addEventListener('click', function() {
+            const activeTab = document.querySelector('#triliumImportTabs .nav-link.active');
+            const isUnimportedTab = activeTab && activeTab.textContent.includes('未导入');
+
+            if (isUnimportedTab) {
+                batchImportUnimportedNotes();
+            } else {
+                batchImportTriliumNotes();
+            }
+        });
+
+        // 取消导入
+        document.getElementById('cancelBatchImportBtn').addEventListener('click', function() {
+            if (confirm('确定要取消导入吗？已导入的记录将保留。')) {
+                importCancelled = true;
+                showToast('正在取消导入...', 'warning');
+                this.disabled = true;
+            }
+        });
+
+        // 加载未导入笔记
+        document.getElementById('loadUnimportedBtn').addEventListener('click', function(e) {
+            // 按住Shift键点击可以强制刷新缓存
+            const forceRefresh = e.shiftKey;
+            loadUnimportedNotes(forceRefresh);
+        });
+        document.getElementById('unimportedSearchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadUnimportedNotes();
+            }
+        });
+
+        // 清除缓存
+        document.getElementById('refreshCacheBtn').addEventListener('click', async function() {
+            if (confirm('确定要清除Trilium数据缓存吗？\n\n这将重新从Trilium获取所有笔记，可能需要较长时间。')) {
+                showLoading();
+                try {
+                    const response = await fetch('/kb/MGMT/api/trilium/clear-cache', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('缓存已清除，请刷新数据', 'success');
+                    } else {
+                        showToast('清除缓存失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('清除缓存失败:', error);
+                    showToast('清除缓存失败', 'error');
+                } finally {
+                    hideLoading();
+                }
+            }
+        });
+
+        // 全选未导入笔记
+        document.getElementById('selectAllUnimportedBtn').addEventListener('click', function() {
+            const allChecked = this.textContent.includes('取消');
+            document.querySelectorAll('#unimportedResults .import-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = !allChecked;
+                if (!allChecked) {
+                    selectedUnimportedNotes.add(checkbox.value);
+                } else {
+                    selectedUnimportedNotes.delete(checkbox.value);
+                }
+                updateImportItemUI(checkbox.closest('.import-item'));
+            });
+            updateUnimportedUI();
+        });
+
+        function loadUnimportedNotes(forceRefresh = false) {
+            const search = document.getElementById('unimportedSearchInput').value.trim();
+            showLoading();
+
+            const resultsContainer = document.getElementById('unimportedResults');
+            resultsContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            // 清空之前的选择
+            selectedUnimportedNotes.clear();
+
+            const refreshParam = forceRefresh ? '&refresh=true' : '';
+            fetch(`/kb/MGMT/api/trilium/unimported?search=${encodeURIComponent(search)}&limit=150${refreshParam}`)
+                .then(response => {
+                    console.log('响应状态:', response.status, response.statusText);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('后端返回数据:', data);
+                    console.log('data.success:', data.success);
+                    console.log('data.data:', data.data);
+                    console.log('data.data.results:', data.data?.results);
+                    
+                    if (data.success && data.data && data.data.results && data.data.results.length > 0) {
+                        console.log('渲染未导入笔记列表，数量:', data.data.results.length);
+                        unimportedResults = data.data.results;
+                        renderUnimportedResults(unimportedResults);
+
+                        // 显示详细统计信息
+                        const totalStats = data.data.total || 0;
+                        const importedCount = data.data.imported_count || 0;
+                        const message = totalStats > importedCount
+                            ? `找到 ${unimportedResults.length} 条未导入笔记（Trilium总计 ${totalStats} 条，已导入 ${importedCount} 条）`
+                            : `找到 ${unimportedResults.length} 条未导入笔记（已导入 ${importedCount} 条）`;
+                        showToast(message, 'success');
+                    } else if (data.data && data.data.imported_count > 0) {
+                        // 所有笔记都已导入
+                        console.log('所有笔记已导入');
+                        resultsContainer.innerHTML = `
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                                <p class="mb-2">所有笔记已全部导入</p>
+                                <p class="text-muted">已导入 ${data.data.imported_count} 条笔记</p>
+                            </div>
+                        `;
+                        const unimportedStats = document.getElementById('unimportedStats');
+                        if (unimportedStats) {
+                            unimportedStats.style.display = 'none';
+                        }
+                        unimportedResults = [];
+                        selectedUnimportedNotes.clear();
+                    } else {
+                        console.log('未找到未导入笔记，条件判断失败');
+                        console.log('完整数据结构:', JSON.stringify(data));
+                        resultsContainer.innerHTML = `
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>Trilium中没有找到笔记</p>
+                            </div>
+                        `;
+                        const unimportedStats = document.getElementById('unimportedStats');
+                        if (unimportedStats) {
+                            unimportedStats.style.display = 'none';
+                        }
+                        unimportedResults = [];
+                        selectedUnimportedNotes.clear();
+                    }
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+
+        function renderUnimportedResults(results) {
+            const container = document.getElementById('unimportedResults');
+            const unimportedStats = document.getElementById('unimportedStats');
+            if (unimportedStats) {
+                unimportedStats.style.display = 'block';
+            }
+
+            const html = results.map(result => `
+                <div class="import-item" data-note-id="${result.noteId}">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${result.noteId}"
+                               id="unimported-check-${result.noteId}">
+                        <label class="form-check-label" for="unimported-check-${result.noteId}" style="width: 100%;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <strong>${result.title || '无标题'}</strong>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-id-card me-1"></i>${result.noteId}
+                                        <span class="ms-3">
+                                            <i class="fas fa-tag me-1"></i>${result.type || 'text'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-muted small">
+                                    ${result.dateModified ? formatDate(result.dateModified) : '未知'}
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+            container.innerHTML = html;
+
+            // 绑定复选框事件
+            container.querySelectorAll('.import-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const noteId = this.value;
+                    if (this.checked) {
+                        selectedUnimportedNotes.add(noteId);
+                    } else {
+                        selectedUnimportedNotes.delete(noteId);
+                    }
+                    updateImportItemUI(this.closest('.import-item'));
+                    updateUnimportedUI();
+                });
+            });
+
+            // 初始统计
+            updateUnimportedUI();
+        }
+
+        function updateUnimportedUI() {
+            const count = selectedUnimportedNotes.size;
+
+            // 检查元素是否存在，避免在搜索标签页时报错
+            const unimportedCountEl = document.getElementById('unimportedCount');
+            const unimportedSelectedCountEl = document.getElementById('unimportedSelectedCount');
+            const importCountEl = document.getElementById('importCount');
+            const selectAllBtn = document.getElementById('selectAllUnimportedBtn');
+            const unimportedStartNumberEl = document.getElementById('unimportedStartNumber');
+
+            if (unimportedCountEl) {
+                unimportedCountEl.textContent = unimportedResults.length;
+            }
+            if (unimportedSelectedCountEl) {
+                unimportedSelectedCountEl.textContent = count;
+            }
+            if (importCountEl) {
+                importCountEl.textContent = count;  // 同时更新全局的importCount
+            }
+
+            // 检查当前是否在未导入标签页
+            const importBtn = document.getElementById('saveBatchImportBtn');
+            const activeTab = document.querySelector('#triliumImportTabs .nav-link.active');
+            const isUnimportedTab = activeTab && activeTab.textContent.includes('未导入');
+
+            // 只有在未导入标签页时，才更新按钮状态
+            if (isUnimportedTab) {
+                importBtn.innerHTML = `<i class="fas fa-check me-1"></i>批量导入 (${count})`;
+                importBtn.disabled = count === 0;
+            }
+
+            // 更新全选按钮文本（检查元素是否存在）
+            if (selectAllBtn) {
+                if (count > 0 && count === unimportedResults.length) {
+                    selectAllBtn.innerHTML = '<i class="fas fa-times me-1"></i>取消全选';
+                } else {
+                    selectAllBtn.innerHTML = '<i class="fas fa-check-double me-1"></i>全选';
+                }
+            }
+
+            // 获取下一个可用编号（检查元素是否存在）
+            if (count > 0 && unimportedStartNumberEl) {
+                fetch('/kb/MGMT/api/next-number')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            unimportedStartNumberEl.textContent = data.data.next_number;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('获取起始编号失败:', err);
+                    });
+            }
+        }
+
+        function searchTriliumNotes() {
+            const query = document.getElementById('triliumSearchInput').value.trim();
+            if (!query) {
+                showToast('请输入搜索关键词', 'warning');
+                return;
+            }
+
+            showLoading();
+            const resultsContainer = document.getElementById('triliumResults');
+            resultsContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            // 清空之前的选择
+            selectedTriliumNotes.clear();
+
+            const searchUrl = `/kb/MGMT/api/trilium/search?query=${encodeURIComponent(query)}&limit=100`;
+            console.log('发起Trilium搜索:', searchUrl);
+
+            fetch(searchUrl)
+                .then(response => {
+                    console.log('收到响应, status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('======================');
+                    console.log('搜索返回完整数据:', JSON.stringify(data, null, 2));
+                    console.log('data.success:', data.success);
+                    console.log('data对象键:', Object.keys(data));
+                    
+                    // 检查数据结构
+                    if (data.success) {
+                        if (data.data && Array.isArray(data.data.results)) {
+                            // 格式1: {success: true, data: {results: [...], message: "..."}}
+                            console.log('数据结构1: data.data.results 是数组');
+                            console.log('找到笔记数量:', data.data.results.length);
+                            triliumResults = data.data.results;
+                            renderTriliumSearchResults(triliumResults);
+                            showToast(`找到 ${triliumResults.length} 条笔记`, 'success');
+                        } else if (Array.isArray(data.results)) {
+                            // 格式2: {success: true, results: [...], message: "..."}
+                            console.log('数据结构2: data.results 是数组');
+                            console.log('找到笔记数量:', data.results.length);
+                            triliumResults = data.results;
+                            renderTriliumSearchResults(triliumResults);
+                            showToast(`找到 ${triliumResults.length} 条笔记`, 'success');
+                        } else if (data.data && data.data && data.data.data && Array.isArray(data.data.data.results)) {
+                            // 格式3: {success: true, data: {data: {results: [...]}}}
+                            console.log('数据结构3: data.data.data.results 是数组');
+                            console.log('找到笔记数量:', data.data.data.results.length);
+                            triliumResults = data.data.data.results;
+                            renderTriliumSearchResults(triliumResults);
+                            showToast(`找到 ${triliumResults.length} 条笔记`, 'success');
+                        } else {
+                            // 无法识别的数据结构
+                            console.error('无法识别的数据结构');
+                            console.log('  - data.success:', data.success);
+                            console.log('  - data.data:', data.data);
+                            console.log('  - data.results:', data.results);
+                            resultsContainer.innerHTML = `
+                                <div class="text-center text-warning py-5">
+                                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                    <p>数据结构不匹配,无法显示结果</p>
+                                    <p class="text-muted small">请查看控制台获取详细信息</p>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        console.error('搜索失败: success=false');
+                        resultsContainer.innerHTML = `
+                            <div class="text-center text-danger py-5">
+                                <i class="fas fa-times-circle fa-3x mb-3"></i>
+                                <p>搜索失败</p>
+                                <p class="text-muted">${data.message || '未知错误'}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Trilium搜索失败:', error);
+                    resultsContainer.innerHTML = `
+                        <div class="text-center text-danger py-5">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p>搜索失败，请稍后重试</p>
+                            <p class="text-muted">${error.message || ''}</p>
+                        </div>
+                    `;
+                    showToast('搜索失败', 'error');
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+
+        function renderTriliumSearchResults(results) {
+            const container = document.getElementById('triliumResults');
+            const importStats = document.getElementById('importStats');
+            if (importStats) {
+                importStats.style.display = 'block';
+            }
+
+            const html = results.map(result => `
+                <div class="import-item" data-note-id="${result.noteId}">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${result.noteId}"
+                               id="trilium-check-${result.noteId}">
+                        <label class="form-check-label" for="trilium-check-${result.noteId}" style="width: 100%;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <strong>${result.title || '无标题'}</strong>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-id-card me-1"></i>${result.noteId}
+                                        <span class="ms-3">
+                                            <i class="fas fa-tag me-1"></i>${result.type || 'text'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-muted small">
+                                    ${result.dateModified ? formatDate(result.dateModified) : '未知'}
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+            container.innerHTML = html;
+
+            // 绑定复选框事件
+            container.querySelectorAll('.import-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const noteId = this.value;
+                    if (this.checked) {
+                        selectedTriliumNotes.add(noteId);
+                    } else {
+                        selectedTriliumNotes.delete(noteId);
+                    }
+                    updateImportItemUI(this.closest('.import-item'));
+                    updateImportUI();
+                });
+            });
+
+            // 初始统计
+            updateImportUI();
+        }
+
+        function updateImportItemUI(item) {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+        }
+
+        function updateImportUI() {
+            const count = selectedTriliumNotes.size;
+
+            // 检查元素是否存在，避免在未导入标签页时报错
+            const searchCountEl = document.getElementById('searchCount');
+            const selectedCountEl = document.getElementById('selectedCount');
+            const importCountEl = document.getElementById('importCount');
+            const selectAllBtn = document.getElementById('selectAllImportBtn');
+            const startNumberEl = document.getElementById('startNumber');
+
+            if (searchCountEl) {
+                searchCountEl.textContent = triliumResults.length;
+            }
+            if (selectedCountEl) {
+                selectedCountEl.textContent = count;
+            }
+            if (importCountEl) {
+                importCountEl.textContent = count;
+            }
+
+            // 检查当前是否在搜索标签页
+            const importBtn = document.getElementById('saveBatchImportBtn');
+            const activeTab = document.querySelector('#triliumImportTabs .nav-link.active');
+            const isSearchTab = activeTab && activeTab.textContent.includes('搜索');
+
+            // 只有在搜索标签页时，才基于搜索结果更新按钮状态
+            if (isSearchTab) {
+                importBtn.innerHTML = `<i class="fas fa-check me-1"></i>批量导入 (${count})`;
+                importBtn.disabled = count === 0;
+            }
+
+            // 更新全选按钮文本（检查元素是否存在）
+            if (selectAllBtn) {
+                if (count > 0 && count === triliumResults.length) {
+                    selectAllBtn.innerHTML = '<i class="fas fa-times me-1"></i>取消全选';
+                } else {
+                    selectAllBtn.innerHTML = '<i class="fas fa-check-double me-1"></i>全选';
+                }
+            }
+
+            // 获取下一个可用编号（检查元素是否存在）
+            if (count > 0 && startNumberEl) {
+                fetch('/kb/MGMT/api/next-number')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            startNumberEl.textContent = data.data.next_number;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('获取起始编号失败:', err);
+                    });
+            }
+        }
+
+        function batchImportTriliumNotes() {
+            batchImportNotes(selectedTriliumNotes, triliumResults, 'search');
+        }
+
+        function batchImportUnimportedNotes() {
+            batchImportNotes(selectedUnimportedNotes, unimportedResults, 'unimported');
+        }
+
+        function batchImportNotes(selectedSet, resultsArray, type) {
+            console.log(`开始批量导入，类型: ${type}`);
+            console.log(`selectedSet 类型: ${selectedSet.constructor.name}`);
+            console.log(`selectedSet 内容:`, selectedSet);
+            console.log(`selectedSet size:`, selectedSet.size);
+
+            const selectedNotes = Array.from(selectedSet);
+            if (selectedNotes.length === 0) {
+                showToast('请先选择要导入的笔记', 'warning');
+                return;
+            }
+
+            console.log(`将导入 ${selectedNotes.length} 条笔记`);
+
+            // 显示进度条
+            const importProgressArea = document.getElementById('importProgressArea');
+            const importFailDetails = document.getElementById('importFailDetails');
+            const cancelBtn = document.getElementById('cancelImportBtn');
+            const importBtn = document.getElementById('saveBatchImportBtn');
+
+            importProgressArea.style.display = 'block';
+            importFailDetails.style.display = 'none';
+            cancelBtn.disabled = true;
+            importBtn.disabled = true;
+
+            // 重置取消标志
+            importCancelled = false;
+
+            // 准备批量导入的数据
+            const recordsToImport = selectedNotes.map(noteId => {
+                const note = resultsArray.find(r => r.noteId === noteId);
+                return {
+                    noteId: noteId,
+                    title: note ? (note.title || noteId) : noteId
+                };
+            });
+
+            // 使用新的批量导入API，一次性发送所有数据
+            showLoading();
+            fetch('/kb/MGMT/api/batch-add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    records: recordsToImport
+                })
+            })
+            .then(response => {
+                console.log('批量导入响应状态:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('批量导入响应数据:', data);
+
+                if (data.success) {
+                    const resultData = data.data || {};
+                    const successCount = resultData.success_count || 0;
+                    const failCount = resultData.fail_count || 0;
+                    const failedItems = resultData.failed_items || [];
+
+                    // 更新进度显示
+                    updateProgress(recordsToImport.length, recordsToImport.length, successCount, failCount, '完成');
+
+                    // 显示失败详情（如果有）
+                    if (failCount > 0 && failedItems.length > 0) {
+                        const formattedFailDetails = failedItems.map(item => ({
+                            noteId: item.noteId,
+                            title: item.title,
+                            reason: item.reason
+                        }));
+                        showFailDetails(formattedFailDetails);
+                    }
+
+                    if (successCount > 0) {
+                        const message = failCount > 0
+                            ? `成功导入 ${successCount} 条记录，失败 ${failCount} 条`
+                            : `成功导入 ${successCount} 条记录`;
+
+                        showToast(message, failCount > 0 ? 'warning' : 'success');
+
+                        // 延迟重置进度区域，让用户看到完成状态
+                        setTimeout(() => {
+                            importProgressArea.style.display = 'none';
+                            importFailDetails.style.display = 'none';
+                        }, 2000);
+
+                        // 刷新列表（但不关闭模态框）
+                        searchQuery = '';
+                        searchInput.value = '';
+                        loadPage(1, '');
+
+                        // 清空搜索结果
+                        if (type === 'search') {
+                            clearSearchTab();
+                        } else {
+                            clearUnimportedTab();
+                        }
+                    } else {
+                        showToast('导入失败，请稍后重试', 'error');
+                        setTimeout(() => {
+                            importProgressArea.style.display = 'none';
+                            importFailDetails.style.display = 'none';
+                        }, 2000);
+                    }
+                } else {
+                    showToast(data.message || '导入失败', 'error');
+                    setTimeout(() => {
+                        importProgressArea.style.display = 'none';
+                        importFailDetails.style.display = 'none';
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('批量导入失败:', error);
+                showToast(`导入失败: ${error.message}`, 'error');
+                setTimeout(() => {
+                    importProgressArea.style.display = 'none';
+                    importFailDetails.style.display = 'none';
+                }, 2000);
+            })
+            .finally(() => {
+                hideLoading();
+                cancelBtn.disabled = false;
+                importBtn.disabled = selectedSet.size === 0;
+            });
+        }
+
+        function updateProgress(total, current, success, fail, status) {
+            const progressText = document.getElementById('importProgressText');
+            const progressBar = document.getElementById('importProgressBar');
+            const successCount = document.getElementById('importSuccessCount');
+            const failCount = document.getElementById('importFailCount');
+            const currentNote = document.getElementById('importCurrentNote');
+
+            if (progressText) progressText.textContent = `${current}/${total}`;
+            if (progressBar) progressBar.style.width = `${(current / total) * 100}%`;
+            if (successCount) successCount.textContent = success;
+            if (failCount) failCount.textContent = fail;
+            if (currentNote) currentNote.textContent = status;
+        }
+
+        function showFailDetails(failedItems) {
+            const importFailDetails = document.getElementById('importFailDetails');
+            const importFailList = document.getElementById('importFailList');
+
+            if (importFailDetails && importFailList) {
+                importFailDetails.style.display = 'block';
+                importFailList.innerHTML = failedItems.map(item =>
+                    `<li>${item.title || item.noteId}: ${item.reason}</li>`
+                ).join('');
+            }
+        }
+
+        function clearSearchTab() {
+            document.getElementById('triliumSearchInput').value = '';
+            document.getElementById('triliumResults').innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>输入关键词搜索Trilium笔记</p>
+                </div>
+            `;
+            const importStats = document.getElementById('importStats');
+            if (importStats) importStats.style.display = 'none';
+            triliumResults = [];
+            selectedTriliumNotes.clear();
+            updateImportUI();
+        }
+
+        function clearUnimportedTab() {
+            document.getElementById('unimportedSearchInput').value = '';
+            document.getElementById('unimportedResults').innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-sync-alt fa-3x mb-3"></i>
+                    <p>点击"刷新"按钮加载未导入笔记</p>
+                </div>
+            `;
+            const unimportedStats = document.getElementById('unimportedStats');
+            if (unimportedStats) unimportedStats.style.display = 'none';
+            unimportedResults = [];
+            selectedUnimportedNotes.clear();
+            updateUnimportedUI();
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== 页面加载 - 初始化数据 ===');
+
+            // 初始化 DOM 元素
+            dataTableBody = document.getElementById('dataTableBody');
+            emptyState = document.getElementById('emptyState');
+            loadingOverlay = document.getElementById('loadingOverlay');
+            toastContainer = document.getElementById('toastContainer');
+            searchInput = document.getElementById('searchInput');
+            selectedCountEl = document.getElementById('selectedCount');
+            selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+            console.log('DOM 元素初始化完成');
+            console.log('dataTableBody:', dataTableBody);
+            console.log('emptyState:', emptyState);
+            console.log('totalRecords:', {{ total_count | default(0) }});
+
+            // 更新统计卡片中的总记录数
+            const totalRecordsEl = document.getElementById('totalRecords');
+            if (totalRecordsEl) {
+                totalRecordsEl.textContent = {{ total_count | default(0) }};
+                console.log('已更新总记录数显示:', {{ total_count | default(0) }});
+            } else {
+                console.error('找不到 totalRecords 元素！');
+            }
+
+            // 显示当前页数据（使用后端已序列化的 JSON）
+            console.log('=== 开始处理初始数据 ===');
+            try {
+                const initialRecords = {{ records_json | tojson | safe }};
+                console.log('initialRecords 获取成功');
+                console.log('初始记录数量:', initialRecords.length);
+                console.log('初始记录类型:', typeof initialRecords);
+                console.log('第一条记录:', initialRecords[0]);
+
+                if (initialRecords && initialRecords.length > 0) {
+                    console.log('===== 准备渲染表格 =====');
+                    renderTable(initialRecords);
+                    console.log('===== 准备渲染分页 =====');
+                    renderPagination();
+                    console.log('=== 初始化完成 ===');
+                } else {
+                    console.log('没有初始记录数据，渲染空状态');
+                    renderTable([]);
+                    renderPagination();
+                }
+            } catch (error) {
+                console.error('解析初始记录数据失败:', error);
+                console.error('错误堆栈:', error.stack);
+            }
+
+            // 主搜索框实时搜索（防抖）
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    const searchValue = e.target.value.trim();
+                    loadPage(1, searchValue);
+                }, 300); // 300ms 防抖
+            });
+
+            // Trilium搜索功能
+            const triliumSearchBtn = document.getElementById('triliumSearchBtn');
+            const triliumSearchInput = document.getElementById('triliumSearchInput');
+            const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+            // 防止重复绑定
+            if (!window.triliumSearchEventsBound) {
+                window.triliumSearchEventsBound = true;
+
+                if (triliumSearchBtn) {
+                    triliumSearchBtn.addEventListener('click', searchTriliumNotes);
+                }
+
+                if (triliumSearchInput) {
+                    triliumSearchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            searchTriliumNotes();
+                        }
+                    });
+                }
+
+                if (clearSearchBtn) {
+                    clearSearchBtn.addEventListener('click', function() {
+                        document.getElementById('triliumSearchInput').value = '';
+                        document.getElementById('triliumResults').innerHTML = `
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-search fa-3x mb-3"></i>
+                                <p>输入关键词搜索Trilium笔记</p>
+                            </div>
+                        `;
+                        const importStats = document.getElementById('importStats');
+                        if (importStats) {
+                            importStats.style.display = 'none';
+                        }
+                        triliumResults = [];
+                        selectedTriliumNotes.clear();
+                        updateImportUI();
+                    });
+                }
+
+                console.log('=== Trilium搜索事件绑定完成 ===');
+            }
+
+            // 刷新按钮
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刷新中...';
+                loadPage(1, searchQuery).then(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> 刷新';
+                });
+            });
+
+            // 全选按钮
+            document.getElementById('selectAllBtn').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                console.log('全选按钮点击，找到复选框数量:', checkboxes.length);
+
+                if (checkboxes.length === 0) {
+                    showToast('当前没有数据可选中', 'warning');
+                    return;
+                }
+
+                const allChecked = checkboxes.length > 0 && checkboxes.every(cb => cb.checked);
+                console.log('当前是否全选:', allChecked, '即将设置为:', !allChecked);
+
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = !allChecked;
+                    const id = checkbox.value;
+                    if (!allChecked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                });
+                console.log('更新后 selectedIds:', selectedIds);
+                updateSelectionUI();
+            });
+
+            // 反选按钮
+            document.getElementById('selectInverseBtn').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                console.log('反选按钮点击，找到复选框数量:', checkboxes.length);
+
+                if (checkboxes.length === 0) {
+                    showToast('当前没有数据可选中', 'warning');
+                    return;
+                }
+
+                checkboxes.forEach(checkbox => {
+                    const oldState = checkbox.checked;
+                    checkbox.checked = !oldState;
+                    const id = checkbox.value;
+                    console.log(`反选: id=${id}, 旧状态=${oldState}, 新状态=${checkbox.checked}`);
+
+                    if (checkbox.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                });
+                console.log('更新后 selectedIds:', selectedIds);
+                updateSelectionUI();
+            });
+
+            // 批量删除按钮
+            document.getElementById('batchDeleteBtn').addEventListener('click', function() {
+                const ids = Array.from(selectedIds);
+                console.log('批量删除按钮点击');
+                console.log('selectedIds:', selectedIds, '类型:', typeof selectedIds, '是否为Set:', selectedIds instanceof Set);
+                console.log('转换后的数组:', ids, '类型:', typeof ids, '长度:', ids.length);
+                
+                if (ids.length > 0) {
+                    openDeleteModal(ids);
+                } else {
+                    showToast('请先选择要删除的记录', 'warning');
+                }
+            });
+
+            // 全选复选框（表头）
+            document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+                const checked = this.checked;
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = checked;
+                    const id = checkbox.value;
+                    if (checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                });
+                updateSelectionUI();
+            });
+
+            // 确认删除按钮
+            document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+                // 优先使用全局变量,dataset可能有问题
+                let ids = window.pendingDeleteIds || [];
+                
+                try {
+                    const datasetIds = JSON.parse(this.dataset.ids || '[]');
+                    console.log('从dataset读取的IDs:', datasetIds);
+                    if (datasetIds.length > 0) {
+                        ids = datasetIds;
+                    }
+                } catch (e) {
+                    console.error('解析dataset.ids失败:', e);
+                }
+                
+                console.log('最终使用的IDs:', ids, '类型:', typeof ids, '长度:', ids.length);
+
+                if (ids.length === 0) {
+                    showToast('没有选择要删除的记录', 'error');
+                    return;
+                }
+
+                const requestData = { ids: ids };
+                console.log('发送的请求数据:', requestData);
+                console.log('JSON.stringify后:', JSON.stringify(requestData));
+
+                try {
+                    const response = await fetch('/kb/MGMT/api/batch-delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    console.log('响应状态:', response.status, response.statusText);
+                    const data = await response.json();
+                    console.log('响应数据:', data);
+                    
+                    if (data.success) {
+                        showToast(data.message || '删除成功', 'success');
+                        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                        selectedIds.clear();
+                        updateSelectionUI();
+                        window.pendingDeleteIds = null; // 清空全局变量
+                        loadPage(1, searchQuery);
+                    } else {
+                        showToast(data.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('删除失败:', error);
+                    showToast('删除失败，请重试', 'error');
+                }
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='kb/js/kb-login-checker.js') }}?v=1.0"></script>
+</body>
+</html>

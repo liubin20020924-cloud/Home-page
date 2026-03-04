@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>留言管理 - 云户科技</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='home/images/icon1.png') }}?v=1">
+  <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #0A4DA2;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #A2D93D;
+    }
+
+    .header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 10px;
+      background: #f0f7ff;
+      border-radius: 5px;
+    }
+
+    .total-count {
+      font-size: 18px;
+      color: #0A4DA2;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 8px 15px;
+      margin-right: 10px;
+      background: #0A4DA2;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #083a7a;
+    }
+
+    .btn-success {
+      background: #28a745;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #0A4DA2;
+      color: white;
+      font-weight: bold;
+    }
+
+    tr:hover {
+      background-color: #f5f9ff;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-1 { background-color: #fff3cd; color: #856404; }
+    .status-2 { background-color: #d1ecf1; color: #0c5460; }
+    .status-3 { background-color: #d4edda; color: #155724; }
+
+    .message-content {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px;
+      color: #666;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      list-style: none;
+    }
+
+    .pagination li {
+      margin: 0 5px;
+    }
+
+    .pagination a {
+      display: block;
+      padding: 8px 12px;
+      background: #f0f0f0;
+      color: #333;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+
+    .pagination a:hover {
+      background: #ddd;
+    }
+
+    .pagination .active a {
+      background: #0A4DA2;
+      color: white;
+    }
+
+    .search-box {
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      padding: 10px;
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .search-box button {
+      padding: 10px 15px;
+      background: #0A4DA2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      table {
+        font-size: 14px;
+      }
+
+      th, td {
+        padding: 8px 10px;
+      }
+
+      .header-info {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .search-box input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fa fa-comments"></i> 客户留言管理</h1>
+
+    <div class="header-info">
+      <div class="total-count">
+        <i class="fa fa-database"></i> 总留言数: {{ total_count }}
+      </div>
+      <div>
+        <a href="/" class="btn">
+          <i class="fa fa-home"></i> 返回首页
+        </a>
+        <button onclick="window.location.reload()" class="btn">
+          <i class="fa fa-refresh"></i> 刷新
+        </button>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <form method="GET" action="/admin/messages">
+        <input type="text" name="search" placeholder="搜索姓名、电话或留言内容..."
+               value="{{ search }}">
+        <button type="submit"><i class="fa fa-search"></i> 搜索</button>
+        {% if search %}
+          <a href="/admin/messages" class="btn">清除搜索</a>
+        {% endif %}
+      </form>
+    </div>
+
+    {% if messages %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>姓名</th>
+            <th>电话</th>
+            <th>邮箱</th>
+            <th>留言内容</th>
+            <th>提交时间</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for msg in messages %}
+          <tr>
+            <td>{{ msg.id }}</td>
+            <td>{{ msg.name }}</td>
+            <td>{{ msg.phone }}</td>
+            <td>
+              {% if msg.email %}
+                <a href="mailto:{{ msg.email }}">{{ msg.email }}</a>
+              {% else %}
+                <span style="color:#999;">无</span>
+              {% endif %}
+            </td>
+            <td class="message-content" title="{{ msg.message }}">
+              {{ msg.message[:50] }}{% if msg.message|length > 50 %}...{% endif %}
+            </td>
+            <td>{{ msg.created_at.strftime('%Y-%m-%d %H:%M:%S') if msg.created_at else '' }}</td>
+            <td>
+              {% if msg.status == 1 %}
+                <span class="status-badge status-1">未处理</span>
+              {% elif msg.status == 2 %}
+                <span class="status-badge status-2">已联系</span>
+              {% elif msg.status == 3 %}
+                <span class="status-badge status-3">已完成</span>
+              {% else %}
+                <span class="status-badge status-1">未知</span>
+              {% endif %}
+            </td>
+            <td>
+              <button onclick="viewMessage({{ msg.id }})" class="btn" title="查看详情">
+                <i class="fa fa-eye"></i>
+              </button>
+              <button onclick="callPhone('{{ msg.phone }}')" class="btn btn-success" title="拨打电话">
+                <i class="fa fa-phone"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- 分页 -->
+      {% if pagination.pages > 1 %}
+        <ul class="pagination">
+          {% if pagination.has_prev %}
+            <li>
+              <a href="?page={{ pagination.prev_num }}{% if search %}&search={{ search }}{% endif %}">
+                <i class="fa fa-chevron-left"></i> 上一页
+              </a>
+            </li>
+          {% endif %}
+
+          {% for page_num in pagination.iter_pages() %}
+            {% if page_num %}
+              <li {% if page_num == pagination.page %}class="active"{% endif %}>
+                <a href="?page={{ page_num }}{% if search %}&search={{ search }}{% endif %}">{{ page_num }}</a>
+              </li>
+            {% else %}
+              <li><span>...</span></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if pagination.has_next %}
+            <li>
+              <a href="?page={{ pagination.next_num }}{% if search %}&search={{ search }}{% endif %}">
+                下一页 <i class="fa fa-chevron-right"></i>
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <i class="fa fa-inbox" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+        <h3>暂无留言</h3>
+        <p>还没有客户提交留言，或者搜索结果为空。</p>
+        {% if search %}
+          <a href="/admin/messages" class="btn">查看全部留言</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666;">
+      <p>系统信息: 共 {{ total_count }} 条留言</p>
+      <p>© {{ now.year }} 云户科技 - 留言管理系统</p>
+    </div>
+  </div>
+
+  <script>
+    function viewMessage(id) {
+      alert('查看留言ID: ' + id + '\n功能开发中...');
+    }
+
+    function callPhone(phone) {
+      if (confirm('是否要拨打 ' + phone + '？')) {
+        alert('准备拨打: ' + phone);
+      }
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.keyCode === 116) {
+        e.preventDefault();
+        window.location.reload();
+      }
+      if (e.ctrlKey && e.keyCode === 70) {
+        e.preventDefault();
+        document.querySelector('input[name="search"]').focus();
+      }
+    });
+  </script>
+</body>
+</html>

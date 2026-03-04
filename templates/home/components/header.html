@@ -1,0 +1,285 @@
+<!-- 导航栏 -->
+<header style="position: fixed; top: 0; left: 0; right: 0; background: white; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); z-index: 50; transition: background 0.3s;" class="main-header">
+  <div style="width: 100%; max-width: min(1400px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 24px); height: clamp(60px, 8vh, 72px); display: flex; align-items: center;">
+    <!-- Logo -->
+    <a href="/" style="display: flex; align-items: center; text-decoration: none; margin-right: clamp(16px, 3vw, 40px); flex-shrink: 0;">
+      <picture>
+        <source srcset="{{ url_for('static', filename='home/images/optimized/Logo4.webp') }}" type="image/webp">
+        <img src="{{ url_for('static', filename='home/images/Logo4.png') }}" alt="云户科技 Logo" style="height: clamp(36px, 6vh, 48px); width: auto; max-width: clamp(120px, 15vw, 200px); object-fit: contain; display: block;" loading="lazy" decoding="async" width="200" height="48">
+      </picture>
+    </a>
+
+    <!-- 右侧导航容器 -->
+    <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
+      <!-- 导航链接 - 桌面端 -->
+      <nav style="display: none; align-items: center; flex-wrap: nowrap;" class="desktop-nav">
+        <a href="/" style="color: #0A4DA2; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">首页</a>
+
+        <!-- 公司介绍下拉菜单 -->
+        <div style="position: relative;" class="dropdown-container">
+          <a href="/about" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); display: flex; align-items: center; white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">
+            关于我们
+            <i class="fa fa-chevron-down" style="margin-left: 6px; font-size: clamp(9px, 0.8vw, 11px); transition: transform 0.3s;"></i>
+          </a>
+          <div class="dropdown-menu" style="position: absolute; left: 0; top: 100%; margin-top: 8px; width: clamp(160px, 18vw, 200px); background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); opacity: 0; visibility: hidden; transition: all 0.3s; transform: translateY(-10px); border: 1px solid #f3f4f6; padding: 8px 0; z-index: 100; pointer-events: auto;">
+            <a href="/about#history" class="dropdown-item" style="display: block; padding: clamp(10px, 1.5vh, 12px) clamp(12px, 1.5vw, 16px); color: #1a202c; text-decoration: none; transition: all 0.3s; border-bottom: 1px solid #f3f4f6; font-size: clamp(12px, 0.9vw, 14px);">
+              <i class="fa fa-history" style="color: #0A4DA2; margin-right: 10px; font-size: clamp(12px, 0.9vw, 14px);"></i>发展历程
+            </a>
+            <a href="/about#culture" class="dropdown-item" style="display: block; padding: clamp(10px, 1.5vh, 12px) clamp(12px, 1.5vw, 16px); color: #1a202c; text-decoration: none; transition: all 0.3s; border-bottom: 1px solid #f3f4f6; font-size: clamp(12px, 0.9vw, 14px);">
+              <i class="fa fa-heart" style="color: #0A4DA2; margin-right: 10px; font-size: clamp(12px, 0.9vw, 14px);"></i>企业文化
+            </a>
+            <a href="/about#team" class="dropdown-item" style="display: block; padding: clamp(10px, 1.5vh, 12px) clamp(12px, 1.5vw, 16px); color: #1a202c; text-decoration: none; transition: all 0.3s; border-bottom: 1px solid #f3f4f6; font-size: clamp(12px, 0.9vw, 14px);">
+              <i class="fa fa-users" style="color: #0A4DA2; margin-right: 10px; font-size: clamp(12px, 0.9vw, 14px);"></i>团队介绍
+            </a>
+            <a href="/about#certificates" class="dropdown-item" style="display: block; padding: clamp(10px, 1.5vh, 12px) clamp(12px, 1.5vw, 16px); color: #1a202c; text-decoration: none; transition: all 0.3s; border-bottom: 1px solid #f3f4f6; font-size: clamp(12px, 0.9vw, 14px);">
+              <i class="fa fa-certificate" style="color: #0A4DA2; margin-right: 10px; font-size: clamp(12px, 0.9vw, 14px);"></i>资质证书
+            </a>
+            <a href="/parts" class="dropdown-item" style="display: block; padding: clamp(10px, 1.5vh, 12px) clamp(12px, 1.5vw, 16px); color: #1a202c; text-decoration: none; transition: all 0.3s; font-size: clamp(12px, 0.9vw, 14px);">
+              <i class="fa fa-cubes" style="color: #0A4DA2; margin-right: 10px; font-size: clamp(12px, 0.9vw, 14px);"></i>备件库
+            </a>
+          </div>
+        </div>
+
+        <a href="#services" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">业务介绍</a>
+        <a href="/cases" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">用户案例</a>
+        <a href="#solutions" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">解决方案</a>
+        <a href="/kb/" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">知识库系统</a>
+        <a href="/case/" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">工单系统</a>
+        <a href="#contact" style="background: #0A4DA2; color: white; padding: clamp(8px, 1vh, 10px) clamp(14px, 2vw, 20px); border-radius: 8px; text-decoration: none; font-weight: 500; transition: background 0.3s; white-space: nowrap; margin-left: clamp(4px, 1vw, 8px); font-size: clamp(13px, 1vw, 15px);">联系我们</a>
+      </nav> 
+
+      <!-- 移动端菜单按钮 -->
+      <button id="mobileMenuBtn" style="display: none; color: #1a202c; font-size: 24px; background: none; border: none; margin-left: 16px; cursor: pointer; padding: 8px;" class="mobile-menu-btn">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 移动端菜单 -->
+  <div id="mobileMenu" style="display: none; background: white; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); position: fixed; top: clamp(60px, 8vh, 72px); left: 0; right: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; z-index: 40;" class="mobile-menu">
+    <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; opacity: 0; transition: opacity 0.3s ease-out;" class="mobile-menu-content">
+      <a href="#home" style="color: #0A4DA2; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">首页</a>
+      <a href="/about" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">关于我们</a>
+      <!-- 移动端子菜单 -->
+      <div style="padding-left: 16px; border-bottom: 1px solid #f3f4f6;">
+        <a href="/about#history" style="display: block; color: rgba(107, 114, 128, 0.8); text-decoration: none; font-weight: 500; padding: 8px 0; transition: color 0.3s; font-size: 14px;" class="mobile-dropdown-item">发展历程</a>
+        <a href="/about#culture" style="display: block; color: rgba(107, 114, 128, 0.8); text-decoration: none; font-weight: 500; padding: 8px 0; transition: color 0.3s; font-size: 14px;" class="mobile-dropdown-item">企业文化</a>
+        <a href="/about#team" style="display: block; color: rgba(107, 114, 128, 0.8); text-decoration: none; font-weight: 500; padding: 8px 0; transition: color 0.3s; font-size: 14px;" class="mobile-dropdown-item">团队介绍</a>
+        <a href="/about#certificates" style="display: block; color: rgba(107, 114, 128, 0.8); text-decoration: none; font-weight: 500; padding: 8px 0; transition: color 0.3s; font-size: 14px;" class="mobile-dropdown-item">资质证书</a>
+        <a href="/parts" style="display: block; color: rgba(107, 114, 128, 0.8); text-decoration: none; font-weight: 500; padding: 8px 0; transition: color 0.3s; font-size: 14px;" class="mobile-dropdown-item">备件库</a>
+      </div>
+      <a href="#services" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">业务介绍</a>
+      <a href="/cases" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">用户案例</a>
+      <a href="#solutions" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">解决方案</a>
+      <a href="/kb/" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">知识库系统</a>
+      <a href="/case/" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">工单系统</a>
+      <a href="#contact" style="background: #0A4DA2; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; text-align: center; transition: background 0.3s;">联系我们</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  /* 桌面端导航显示 */
+  @media (min-width: 768px) {
+    .desktop-nav {
+      display: flex !important;
+      gap: 4px;
+    }
+    .mobile-menu-btn {
+      display: none !important;
+    }
+  }
+
+  /* 移动端菜单按钮显示 */
+  @media (max-width: 767px) {
+    .desktop-nav {
+      display: none !important;
+    }
+    .mobile-menu-btn {
+      display: block !important;
+    }
+  }
+
+  /* 超大屏幕优化 */
+  @media (min-width: 1600px) {
+    .desktop-nav a {
+      padding: 10px 22px !important;
+      font-size: 15px;
+    }
+  }
+
+  /* 大屏幕优化 */
+  @media (min-width: 1400px) and (max-width: 1599px) {
+    .desktop-nav a {
+      padding: 10px 20px !important;
+    }
+  }
+
+  /* 中大屏幕优化 */
+  @media (min-width: 1200px) and (max-width: 1399px) {
+    .desktop-nav a {
+      padding: 10px 18px !important;
+    }
+  }
+
+  /* 中等屏幕优化 */
+  @media (min-width: 992px) and (max-width: 1199px) {
+    .desktop-nav a {
+      padding: 10px 16px !important;
+      font-size: 15px;
+    }
+    .dropdown-menu {
+      width: 180px !important;
+    }
+  }
+
+  /* 中小屏幕优化 */
+  @media (min-width: 768px) and (max-width: 991px) {
+    .desktop-nav a {
+      padding: 8px 14px !important;
+      font-size: 14px;
+    }
+    .dropdown-container a {
+      padding: 8px 12px !important;
+    }
+    .dropdown-menu {
+      width: 160px !important;
+    }
+    .dropdown-item {
+      padding: 10px 14px !important;
+      font-size: 13px !important;
+    }
+  }
+  
+  /* 下拉菜单悬停效果 - 确保桌面端优先显示 */
+  .dropdown-container:hover .dropdown-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+  }
+
+  .dropdown-container .dropdown-menu:hover {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+  }
+
+  .dropdown-container:hover .fa-chevron-down {
+    transform: rotate(180deg);
+  }
+
+  .dropdown-item:hover {
+    background: rgba(10, 77, 162, 0.05);
+    color: #0A4DA2;
+    padding-left: 20px;
+  }
+  
+  /* 导航链接悬停效果 */
+  .desktop-nav a:hover:not([href="#contact"]) {
+    color: #0A4DA2;
+    background: #A2D93D;
+    border-radius: 6px;
+  }
+
+  .desktop-nav a[href="#contact"]:hover {
+    background: rgba(10, 77, 162, 0.9);
+  }
+
+  /* 移动端菜单样式 */
+  .mobile-menu.open {
+    display: block !important;
+    max-height: 1000px !important;
+    overflow-y: auto !important;
+  }
+
+  .mobile-menu.open .mobile-menu-content {
+    opacity: 1 !important;
+  }
+
+  .mobile-menu a:hover:not([href="#contact"]) {
+    color: #0A4DA2;
+    background: #A2D93D;
+    border-radius: 6px;
+    padding-left: 16px;
+  }
+
+  .mobile-menu a[href="#contact"]:hover {
+    background: rgba(10, 77, 162, 0.9);
+  }
+
+  .mobile-dropdown-item:hover {
+    background: #A2D93D;
+    color: #0A4DA2;
+    border-radius: 4px;
+    padding-left: 16px;
+  }
+</style>
+
+<script>
+  // 移动端菜单功能
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      const icon = mobileMenuBtn.querySelector('i');
+      if (mobileMenu.classList.contains('open')) {
+        mobileMenu.style.display = 'block';
+        setTimeout(() => {
+          mobileMenu.style.maxHeight = '1000px';
+        }, 10);
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+      } else {
+        mobileMenu.style.maxHeight = '0';
+        setTimeout(() => {
+          mobileMenu.style.display = 'none';
+        }, 300);
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      }
+    });
+
+    const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+    mobileMenuLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.style.maxHeight = '0';
+        setTimeout(() => {
+          mobileMenu.style.display = 'none';
+        }, 300);
+        mobileMenu.classList.remove('open');
+        const icon = mobileMenuBtn.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.style.maxHeight = '0';
+        setTimeout(() => {
+          mobileMenu.style.display = 'none';
+        }, 300);
+        mobileMenu.classList.remove('open');
+        const icon = mobileMenuBtn.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      }
+    });
+  }
+
+  // 导航栏滚动效果
+  window.addEventListener('scroll', () => {
+    const header = document.querySelector('header');
+    if (header) {
+      if (window.scrollY > 50) {
+        header.style.background = 'rgba(255, 255, 255, 0.95)';
+        header.style.backdropFilter = 'blur(10px)';
+      } else {
+        header.style.background = 'white';
+        header.style.backdropFilter = 'none';
+      }
+    }
+  });
+</script>

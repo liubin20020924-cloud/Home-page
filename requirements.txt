@@ -1,0 +1,47 @@
+# 整合项目依赖文件
+# 官网系统(YHUCCN) + 知识库系统(YHKB) + 工单系统(YHCASE)
+
+# Flask 核心框架
+Flask==3.0.3
+Flask-Cors==4.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Session==0.5.0
+flask-socketio==5.3.6
+python-socketio==5.11.0
+
+# WebSocket 异步驱动（eventlet 优先，gevent 备选）
+eventlet==0.33.3
+gevent==23.9.1
+
+# 数据库相关
+PyMySQL==1.1.0
+mysql-connector-python==8.0.33
+dbutils==3.0.3
+SQLAlchemy==2.0.35
+
+# 其他依赖
+python-dotenv==1.0.0
+cryptography==41.0.7
+werkzeug==3.0.1
+requests==2.31.0
+beautifulsoup4==4.12.2
+bleach==6.0.0
+trilium-py==0.8.5
+pypinyin==0.52.0
+
+# API 文档
+flasgger==0.9.7.1
+
+# 安全增强
+Flask-WTF==1.2.1
+flask-limiter==3.5.0
+
+# 图片优化
+Pillow==10.0.0
+
+# 开发和测试依赖
+pytest==7.4.3
+pytest-cov==4.1.0
+coverage==7.2.7
+
+

@@ -1,0 +1,573 @@
+/* 工单论坛样式 */
+/* 替代实时聊天，使用论坛帖子/回复样式 */
+
+/* 导航栏样式 */
+.navbar {
+    background: linear-gradient(135deg, #2d8a4e 0%, #48bb78 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 12px 0;
+}
+
+.navbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.navbar-brand .logo-img {
+    height: 42px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 5px 8px;
+}
+
+.navbar-brand .brand-text {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-nav {
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: white;
+}
+
+.user-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+:root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+}
+
+/* 论坛帖子容器 */
+.forum-container {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+/* 工单详情区域 */
+.ticket-detail-section {
+    padding: 24px;
+    border-bottom: 2px solid var(--gray-200);
+    background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+}
+
+.ticket-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.ticket-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0 0 12px 0;
+}
+
+.ticket-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 14px;
+    color: var(--gray-600);
+}
+
+.ticket-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ticket-meta-item i {
+    color: var(--gray-500);
+}
+
+/* 状态标签 */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.processing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.closed {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+/* 优先级标签 */
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.priority-badge.urgent {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.priority-badge.high {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.priority-badge.medium {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.priority-badge.low {
+    background: #f3f4f6;
+    color: var(--gray-600);
+}
+
+/* 帖子内容区域 */
+.forum-post {
+    padding: 20px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: white;
+    margin-bottom: 20px;
+}
+
+.forum-post.customer {
+    border-left: 4px solid var(--primary-color);
+}
+
+.forum-post.service {
+    border-left: 4px solid var(--success-color);
+}
+
+/* 帖子头部 */
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.post-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.post-avatar.service {
+    background: var(--success-color);
+}
+
+.post-info {
+    flex: 1;
+}
+
+.post-author {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+}
+
+.post-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: var(--radius-md);
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.post-role.customer {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.post-role.service {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.post-time {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-left: 12px;
+}
+
+.post-time i {
+    margin-right: 4px;
+}
+
+/* 帖子内容 */
+.post-content {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--gray-700);
+    word-wrap: break-word;
+}
+
+.post-content p {
+    margin-bottom: 16px;
+}
+
+.post-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* 回复区域 */
+.replies-section {
+    padding: 24px;
+    background: var(--gray-50);
+}
+
+.replies-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.replies-section-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.replies-count {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* 回复列表 */
+.replies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 回复卡片 */
+.reply-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    transition: all 0.2s ease;
+}
+
+.reply-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.reply-card.customer {
+    border-left: 4px solid var(--primary-color);
+}
+
+.reply-card.service {
+    border-left: 4px solid var(--success-color);
+}
+
+.reply-card.highlight {
+    background: linear-gradient(135deg, #fffbeb 0%, white 100%);
+    border-color: var(--warning-color);
+    border-left-width: 4px;
+    border-left-color: var(--warning-color);
+}
+
+/* 回复框 */
+.reply-box {
+    margin-top: 24px;
+    padding: 20px;
+    background: white;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+}
+
+.reply-box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.reply-box-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.reply-editor {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    line-height: 1.6;
+    resize: vertical;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.reply-editor:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.btn-submit-reply {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-submit-reply:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-submit-reply:disabled {
+    background: var(--gray-300);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 加载状态 */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--gray-500);
+}
+
+.loading-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--primary-color);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 空状态 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--gray-500);
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 16px;
+    color: var(--gray-300);
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    font-size: 14px;
+    color: var(--gray-500);
+    margin: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 8px 0;
+    }
+
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    .navbar-brand .logo-img {
+        height: 36px;
+        max-width: 140px;
+        padding: 4px 6px;
+    }
+
+    .navbar-nav {
+        display: none;
+    }
+
+    .navbar-user {
+        display: none;
+    }
+
+    .ticket-detail-header {
+        flex-direction: column;
+    }
+
+    .ticket-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .post-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .post-time {
+        margin-left: 0;
+        margin-top: 4px;
+    }
+
+    .reply-actions {
+        flex-direction: column;
+    }
+
+    .btn-submit-reply {
+        width: 100%;
+        justify-content: center;
+    }
+}

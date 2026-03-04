@@ -1,0 +1,657 @@
+/* ========================================
+   云户科技网站 - 统一样式表
+   整合官网、知识库、工单三个系统的配色
+   ======================================== */
+
+/* ========================================
+   CSS 变量定义 - 基于 Logo 配色
+   ======================================== */
+:root {
+    /* 主色调 - 亮蓝色系 */
+    --primary-dark: #0f4c81;
+    --primary: #1a5c9e;
+    --primary-light: #2563eb;
+    --primary-lighter: #3b82f6;
+
+    /* 辅助色 - 浅蓝色 */
+    --secondary-dark: #4a5568;
+    --secondary: #718096;
+    --secondary-light: #a0aec0;
+
+    /* 功能色 */
+    --success: #48bb78;
+    --success-light: #9ae6b4;
+    --warning: #ed8936;
+    --danger: #f56565;
+    --info: #4299e1;
+
+    /* 中性色 */
+    --gray-50: #f7fafc;
+    --gray-100: #edf2f7;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e0;
+    --gray-400: #a0aec0;
+    --gray-500: #718096;
+    --gray-600: #4a5568;
+    --gray-700: #2d3748;
+    --gray-800: #1a202c;
+    --gray-900: #171923;
+
+    /* 阴影 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+    /* 圆角 */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* 过渡 */
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   全局样式
+   ======================================== */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+/* 全局图片尺寸控制 */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+body {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    color: var(--gray-700);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, "Microsoft YaHei", "微软雅黑", sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--primary-light);
+}
+
+/* ========================================
+   通用组件样式
+   ======================================== */
+.container {
+    max-width: 1600px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+
+.card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: var(--success-light);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #fc8181;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--gray-300);
+    color: var(--gray-700);
+}
+
+.btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    transition: var(--transition);
+    background: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 92, 158, 0.1);
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* ========================================
+   Logo 样式
+   ======================================== */
+.logo-img {
+    height: 60px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 5px 10px;
+}
+
+.logo-img-large {
+    height: 100px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+/* ========================================
+   工单系统特定样式
+   ======================================== */
+.login-container {
+    background-color: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    margin: 20px auto;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h2 {
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.login-header p {
+    color: var(--gray-500);
+    margin: 0;
+}
+
+/* Tab 样式 */
+.tabs {
+    display: flex;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    cursor: pointer;
+    color: var(--gray-500);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.tab.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+}
+
+.tab:hover:not(.active) {
+    color: var(--gray-700);
+}
+
+/* 工单卡片样式 */
+.ticket-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--primary);
+    transition: var(--transition);
+}
+
+.ticket-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.ticket-card.priority-urgent {
+    border-left-color: var(--danger);
+}
+
+.ticket-card.priority-high {
+    border-left-color: var(--warning);
+}
+
+.ticket-card.priority-medium {
+    border-left-color: var(--info);
+}
+
+.ticket-card.priority-low {
+    border-left-color: var(--success);
+}
+
+/* ========================================
+   聊天消息样式
+   ======================================== */
+.chat-container {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+}
+
+.message {
+    display: flex;
+    margin-bottom: 16px;
+}
+
+.message.admin {
+    justify-content: flex-start;
+}
+
+.message.customer {
+    justify-content: flex-end;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    word-wrap: break-word;
+}
+
+.message.admin .message-bubble {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border-top-left-radius: 4px;
+}
+
+.message.customer .message-bubble {
+    background: var(--primary);
+    color: white;
+    border-top-right-radius: 4px;
+}
+
+.message-time {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
+/* ========================================
+   表格样式
+   ======================================== */
+.table-container {
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.table th,
+.table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.table th {
+    background: var(--gray-50);
+    font-weight: 600;
+    color: var(--gray-700);
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+/* ========================================
+   状态徽章样式
+   ======================================== */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-pending {
+    background: var(--warning);
+    color: white;
+}
+
+.badge-processing {
+    background: var(--info);
+    color: white;
+}
+
+.badge-completed {
+    background: var(--success);
+    color: white;
+}
+
+.badge-closed {
+    background: var(--gray-500);
+    color: white;
+}
+
+.badge-urgent {
+    background: var(--danger);
+    color: white;
+}
+
+.badge-high {
+    background: #fc8181;
+    color: white;
+}
+
+.badge-medium {
+    background: var(--info);
+    color: white;
+}
+
+.badge-low {
+    background: var(--success);
+    color: white;
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .message-bubble {
+        max-width: 85%;
+    }
+}
+
+/* ========================================
+   官网系统特定样式
+   ======================================== */
+.navbar {
+    background: white;
+    box-shadow: var(--shadow-md);
+    padding: 16px 0;
+}
+
+.nav-link {
+    color: var(--gray-700);
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--primary);
+    background: var(--gray-50);
+}
+
+.hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: 80px 0;
+    text-align: center;
+}
+
+.section-title {
+    color: var(--primary);
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+/* 导航栏Logo样式 */
+.img-logo-nav {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* 首页主图容器 */
+.hero-image-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* 首页主图样式 */
+.hero-main-image {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+/* 首页案例图片容器 */
+.case-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 关于页图片样式 */
+.about-image {
+    width: 100%;
+    height: auto;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+/* 缩进段落样式 */
+.indent-para {
+    text-indent: 2em;
+}
+
+/* 分割线样式 */
+.divider {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+    margin: 0 auto;
+    border-radius: 2px;
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+    transition: var(--transition);
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* 移动端菜单样式 */
+.mobile-menu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.mobile-menu.open {
+    max-height: 500px;
+}
+
+/* 下拉菜单样式 */
+.dropdown-item {
+    transition: var(--transition);
+}
+
+.dropdown-item:hover {
+    padding-left: 20px;
+}
+
+.mobile-dropdown-item {
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.mobile-dropdown-item:hover {
+    background: var(--gray-50);
+    color: var(--primary);
+}
+
+/* ========================================
+   知识库系统特定样式
+   ======================================== */
+.kb-sidebar {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+}
+
+.kb-sidebar h3 {
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.kb-list-item {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: 8px;
+}
+
+.kb-list-item:hover {
+    background: var(--gray-50);
+    color: var(--primary);
+}
+
+.kb-detail {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+}
+
+.kb-detail h1 {
+    color: var(--primary);
+    margin-bottom: 24px;
+}
+
+/* ========================================
+   动画效果
+   ======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ========================================
+   打印样式
+   ======================================== */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid var(--gray-200);
+    }
+}
