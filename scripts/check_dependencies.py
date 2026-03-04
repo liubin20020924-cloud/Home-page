@@ -15,7 +15,7 @@ REQUIRED_PACKAGES = {
     'flask_sqlalchemy': 'Flask-SQLAlchemy',
     'flask_session': 'Flask-Session',
     'flask_socketio': 'flask-socketio',
-    'python_socketio': 'python-socketio',
+    'socketio': 'python-socketio',
 
     # WebSocket 异步驱动
     'eventlet': 'eventlet',
