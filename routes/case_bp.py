@@ -2,7 +2,13 @@
 工单系统路由蓝图
 """
 from flask import Blueprint, request, render_template, session, jsonify, redirect
-from common.response import success_response, error_response, unauthorized_response, server_error_response
+from common.response import (
+    success_response,
+    error_response,
+    unauthorized_response,
+    server_error_response,
+    forbidden_response
+)
 from common.unified_auth import get_current_user, authenticate_user
 from common.validators import validate_email, validate_required, validate_phone
 from common.logger import logger, log_request, log_exception
@@ -781,8 +787,7 @@ def get_ticket_detail(ticket_id):
             ticket = cursor.fetchone()
 
         if not ticket:
-            from common.response import not_found_response
-            return not_found_response(message='工单不存在')
+            return error_response(message='工单不存在', code=404)
 
         # customer 角色只能查看自己提交的工单
         if user_role == 'customer' and ticket.get('submit_user') != user_username:
@@ -1096,7 +1101,6 @@ def assign_ticket(ticket_id):
         
         user_role = session.get('role')
         if not user_role or user_role != 'admin':
-            from common.response import forbidden_response
             return forbidden_response(message='无权执行此操作')
         
         data = request.get_json()
@@ -1140,7 +1144,6 @@ def close_ticket(ticket_id):
 
         user_role = session.get('role')
         if not user_role or user_role not in ['admin', 'user']:
-            from common.response import forbidden_response
             return forbidden_response(message='无权执行此操作')
 
         with db_connection('case') as conn:

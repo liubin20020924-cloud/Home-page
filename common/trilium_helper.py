@@ -223,9 +223,9 @@ class TriliumHelper:
                             # 清理内容
                             content = self._clean_content(content)
                             return True, content, '获取成功'
-                        elif response.status_code == 401:
-                            logger.warning("HTTP访问失败，尝试使用get_note方法")
-                            # 回退到 get_note 方法
+                        else:
+                            # get_note_content 返回空，尝试使用 get_note
+                            logger.warning("get_note_content 返回空，尝试使用get_note方法")
                             note_info = ea.get_note(note_id)
                             logger.info(f"Trilium笔记信息: {note_info}")
 
@@ -285,12 +285,6 @@ class TriliumHelper:
                             else:
                                 logger.error(f"get_note 返回了非字典类型: {type(note_info)}")
                                 return False, '', f'笔记数据格式错误: {str(note_info)[:100]}'
-                        elif response.status_code == 404:
-                            logger.error(f"笔记不存在: {note_id}")
-                            return False, '', '笔记不存在'
-                        else:
-                            logger.error(f"HTTP返回错误: {response.status_code}")
-                            return False, '', f'访问失败: HTTP {response.status_code}'
 
                     except Exception as api_error:
                         logger.error(f"获取笔记内容失败: {api_error}", exc_info=True)
