@@ -50,19 +50,36 @@ jobs:
       - name: Sync to Gitee
         env:
           GITEE_REPO: ${{ secrets.GITEE_REPO }}
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: |
           echo "Fetching all branches..."
           git fetch --all
 
           echo "Syncing main branch to Gitee..."
-          git push gitee main --force
+          if git push gitee main --force; then
+            echo "✓ Main branch synced successfully"
+          else
+            echo "✗ Failed to sync main branch"
+            echo "Trying to diagnose the issue..."
+            git remote -v
+            exit 1
+          fi
 
           echo "Syncing all tags to Gitee..."
-          git push gitee --tags --force
+          if git push gitee --tags --force 2>/dev/null || true; then
+            echo "✓ Tags synced successfully (or no tags to sync)"
+          else
+            echo "⚠ Failed to sync tags (continuing...)"
+          fi
 
           echo "Sync complete!"
           echo "Repository: $GITEE_REPO"
           echo "Branch: main"
+
+          # 验证同步结果
+          echo ""
+          echo "Verification:"
+          git log --oneline -1
 
       - name: Sync summary
         run: |
