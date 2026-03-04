@@ -26,7 +26,7 @@ werkzeug==3.0.1
 requests==2.31.0
 beautifulsoup4==4.12.2
 bleach==6.0.0
-trilium-py==0.8.5
+#trilium-py==0.8.5
 pypinyin==0.52.0
 
 # API 文档

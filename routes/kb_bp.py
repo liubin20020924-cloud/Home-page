@@ -519,24 +519,46 @@ def proxy_trilium_attachment(attachment_path):
         attachment_id = parts[0]
         logger.info(f"代理 Trilium 附件: attachment_id={attachment_id}, full_path={attachment_path}")
 
-        # 使用 trilium-py 的 ETAPI 获取附件内容
-        from trilium_py.client import ETAPI
         server_url = config.TRILIUM_SERVER_URL.rstrip('/')
-
-        # 如果没有token，尝试使用密码登录
         token = config.TRILIUM_TOKEN
-        if not token and hasattr(config, 'TRILIUM_LOGIN_PASSWORD'):
-            ea = ETAPI(server_url)
-            token = ea.login(config.TRILIUM_LOGIN_PASSWORD)
-            logger.info("使用密码登录Trilium成功")
-            if not token:
-                from common.response import error_response
-                return error_response('Trilium登录失败，请检查密码配置', 500)
 
-        ea = ETAPI(server_url, token)
+        # 尝试使用 trilium-py 的 ETAPI 获取附件内容
+        try:
+            from trilium_py.client import ETAPI
 
-        # 获取附件内容
-        attachment_content = ea.get_attachment_content(attachment_id)
+            # 如果没有token，尝试使用密码登录
+            if not token and hasattr(config, 'TRILIUM_LOGIN_PASSWORD'):
+                ea = ETAPI(server_url)
+                token = ea.login(config.TRILIUM_LOGIN_PASSWORD)
+                logger.info("使用密码登录Trilium成功")
+                if not token:
+                    from common.response import error_response
+                    return error_response('Trilium登录失败，请检查密码配置', 500)
+
+            ea = ETAPI(server_url, token)
+
+            # 获取附件内容
+            attachment_content = ea.get_attachment_content(attachment_id)
+        except ImportError:
+            # 回退：直接通过API获取附件
+            try:
+                import requests
+                headers = {}
+                if token:
+                    headers['Authorization'] = f'Bearer {token}'
+
+                # Trilium 附件API端点
+                attachment_url = f"{server_url}/api/attachments/{attachment_id}/content"
+                response = requests.get(attachment_url, headers=headers, timeout=10)
+
+                if response.status_code == 200:
+                    attachment_content = response.content
+                else:
+                    logger.error(f"从 Trilium 获取附件失败: HTTP {response.status_code}")
+                    return Response('Attachment not found', status=404)
+            except Exception as api_error:
+                logger.error(f"通过API获取Trilium附件失败: {api_error}")
+                return Response(f'Failed to proxy attachment: {str(api_error)}', status=500)
 
         if attachment_content:
             # 返回图片内容

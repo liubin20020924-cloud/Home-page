@@ -37,6 +37,14 @@
 ### 修复 (Fixed)
 - 修复 `scripts/check_deploy_config.py` 的编码问题 (Windows GBK 兼容)
 - 将 Unicode 符号替换为 ASCII 等效字符
+- 移除已废弃的 trilium-py 依赖，改用直接 API 调用
+  - 注释掉 `requirements.txt` 中的 trilium-py==0.8.5
+  - 注释掉 `check_dependencies.py` 中的 trilium_py 依赖检查
+  - 为所有使用 trilium-py 的代码添加 fallback 机制
+  - 修复 `routes/api_bp.py` 中 Trilium 测试连接的 ImportError 处理
+  - 修复 `routes/kb_bp.py` 中附件代理的 ImportError 处理
+  - 修复 `common/trilium_helper.py` 中递归获取笔记的 ImportError 处理
+  - 所有 Trilium 相关功能现在支持在 trilium-py 未安装时通过 requests 直接调用 API
 
 ---
 

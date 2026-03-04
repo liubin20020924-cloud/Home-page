@@ -34,7 +34,7 @@ REQUIRED_PACKAGES = {
     'requests': 'requests',
     'bs4': 'beautifulsoup4',
     'bleach': 'bleach',
-    'trilium_py': 'trilium-py',
+   # 'trilium_py': 'trilium-py',
 
     # API 文档
     'flasgger': 'flasgger',
