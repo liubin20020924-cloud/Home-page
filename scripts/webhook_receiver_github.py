@@ -127,7 +127,7 @@ def github_webhook():
             # 执行部署脚本
             logger.info(f"Executing deploy script: {DEPLOY_SCRIPT}")
             result = subprocess.run(
-                [DEPLOY_SCRIPT],
+                DEPLOY_SCRIPT,
                 capture_output=True,
                 text=True,
                 timeout=600,  # 10分钟超时
