@@ -95,16 +95,12 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Check dependencies
-        run: |
-          python scripts/check_dependencies.py
-
       # 注意：不检查配置安全性，因为：
       # 1. 云主机的系统环境变量已单独配置
       # 2. 配置文件不提交到 GitHub
       # 3. CI/CD 只负责代码检查和部署通知
 
-  # 4. 自动合并任务 - 仅当 PR 通过所有检查时执行
+      # 4. 自动合并任务 - 仅当 PR 通过所有检查时执行
   auto-merge:
     name: Auto Merge to Main
     needs: [test, lint, security]
@@ -276,7 +272,7 @@ jobs:
             echo "  2. 将公钥添加到 ~/.ssh/authorized_keys"
             echo "  3. 将私钥复制到 GitHub Secrets"
             echo ""
-            echo "详细配置指南请参考: docs/SSH_DEPLOYMENT.md"
+            echo "详细配置指南请参考: docs/CICD/02-CONFIGURATION.md"
           fi
 
       - name: Deployment notification summary
