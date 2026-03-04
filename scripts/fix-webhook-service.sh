@@ -41,37 +41,38 @@ stop_service() {
 
 # 安装Flask
 install_flask() {
-    log_step "安装Flask..."
+    log_step "为虚拟环境安装Flask..."
 
-    # 检查是否已安装
-    if python3 -c "import flask" 2>/dev/null; then
-        log_warn "Flask已安装"
-        python3 -c "import flask; print('Flask版本:', flask.__version__)"
-    else
-        log_info "正在安装Flask..."
+    # 检查虚拟环境
+    if [ ! -d "/opt/Home-page/venv" ]; then
+        log_error "虚拟环境不存在：/opt/Home-page/venv"
+        echo ""
+        echo "请先创建虚拟环境："
+        echo "  cd /opt/Home-page"
+        echo "  python3 -m venv venv"
+        exit 1
+    fi
 
-        # 尝试使用pip3
-        if command -v pip3 &> /dev/null; then
-            pip3 install flask
-            log_info "使用pip3安装完成"
-        # 尝试使用pip
-        elif command -v pip &> /dev/null; then
-            pip install flask
-            log_info "使用pip安装完成"
-        # 尝试使用python3 -m pip
-        else
-            python3 -m pip install flask
-            log_info "使用python3 -m pip安装完成"
-        fi
+    log_info "虚拟环境已存在"
+
+    # 使用虚拟环境安装Flask的脚本
+    if [ -f "/opt/Home-page/scripts/install-flask-venv.sh" ]; then
+        log_info "运行虚拟环境Flask安装脚本..."
+        bash /opt/Home-page/scripts/install-flask-venv.sh
 
         # 验证安装
-        if python3 -c "import flask" 2>/dev/null; then
-            log_info "✓ Flask安装成功"
-            python3 -c "import flask; print('Flask版本:', flask.__version__)"
+        if source venv/bin/activate && python -c "import flask" 2>/dev/null; then
+            log_info "✓ Flask在虚拟环境中已安装"
+            source venv/bin/activate
+            python -c "import flask; print('Flask版本:', flask.__version__)"
+            deactivate
         else
             log_error "✗ Flask安装失败"
             exit 1
         fi
+    else
+        log_error "虚拟环境安装脚本不存在"
+        exit 1
     fi
 }
 
