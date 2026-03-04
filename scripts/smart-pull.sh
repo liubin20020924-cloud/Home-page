@@ -59,8 +59,7 @@ pull_from_gitee() {
 
     # 检查gitee远程仓库是否存在
     if ! git remote | grep -q gitee; then
-        log_error "Gitee远程仓库未配置"
-        log_info "正在添加Gitee远程仓库..."
+        log_info "Gitee远程仓库未配置，正在添加..."
         git remote add gitee https://gitee.com/liubin_studies/Home-page.git
     fi
 
