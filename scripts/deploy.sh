@@ -68,11 +68,24 @@ pull_code() {
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     log_info "当前分支: $CURRENT_BRANCH"
 
-    # 拉取最新代码
-    git fetch origin
-    git reset --hard origin/main
-
-    log_info "代码拉取完成"
+    # 使用智能拉取脚本（自动选择 GitHub 或 Gitee）
+    log_info "使用智能拉取脚本..."
+    if [ -f "./scripts/smart-pull.sh" ]; then
+        bash ./scripts/smart-pull.sh
+        if [ $? -eq 0 ]; then
+            log_info "代码拉取完成"
+        else
+            log_error "智能拉取失败，尝试直接从 GitHub 拉取..."
+            git fetch origin
+            git reset --hard origin/main
+            log_info "代码拉取完成"
+        fi
+    else
+        log_warn "智能拉取脚本不存在，直接从 GitHub 拉取..."
+        git fetch origin
+        git reset --hard origin/main
+        log_info "代码拉取完成"
+    fi
 }
 
 # 更新依赖
