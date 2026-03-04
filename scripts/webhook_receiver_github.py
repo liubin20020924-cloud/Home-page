@@ -68,20 +68,21 @@ def get_version_info():
 @app.route('/webhook/github', methods=['POST'])
 def github_webhook():
     """接收 GitHub Webhook"""
-    # 验证签名
+    # 验证签名（仅在配置了真正的密钥时）
     signature = request.headers.get('X-Hub-Signature-256') or request.headers.get('X-Hub-Signature')
 
-    if signature and signature.startswith('sha256='):
-        payload = request.data
-        expected_signature = 'sha256=' + hmac.new(
-            WEBHOOK_SECRET.encode(),
-            payload,
-            hashlib.sha256
-        ).hexdigest()
+    if signature and WEBHOOK_SECRET != 'your-webhook-secret-here':
+        if signature and signature.startswith('sha256='):
+            payload = request.data
+            expected_signature = 'sha256=' + hmac.new(
+                WEBHOOK_SECRET.encode(),
+                payload,
+                hashlib.sha256
+            ).hexdigest()
 
-        if not hmac.compare_digest(signature, expected_signature):
-            logger.warning("Invalid webhook signature")
-            return jsonify({'error': 'Invalid signature'}), 401
+            if not hmac.compare_digest(signature, expected_signature):
+                logger.warning("Invalid webhook signature")
+                return jsonify({'error': 'Invalid signature'}), 401
 
     # 解析 payload
     try:
