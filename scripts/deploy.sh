@@ -83,11 +83,12 @@ update_dependencies() {
 
     # 激活虚拟环境（如果使用）
     if [ -d "venv" ]; then
+        log_info "检测到虚拟环境，正在激活..."
         source venv/bin/activate
     fi
 
     # 更新依赖
-    pip3 install -r requirements.txt -q
+    pip install -r requirements.txt -q
 
     log_info "依赖更新完成"
 }
@@ -117,8 +118,14 @@ restart_app() {
     pkill -f "app.py" || true
     sleep 2
 
-    # 启动新进程
-    nohup python3 app.py > /var/log/integrate-code/app.log 2>&1 &
+    # 启动新进程（使用虚拟环境，如果存在）
+    if [ -d "venv" ]; then
+        log_info "使用虚拟环境启动应用..."
+        nohup venv/bin/python app.py > /var/log/integrate-code/app.log 2>&1 &
+    else
+        log_info "使用系统Python启动应用..."
+        nohup python3 app.py > /var/log/integrate-code/app.log 2>&1 &
+    fi
 
     # 等待应用启动
     sleep 5
