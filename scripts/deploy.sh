@@ -48,8 +48,15 @@ create_backup() {
 
     mkdir -p "$BACKUP_DIR"
 
-    # 备份代码
-    cp -r "$PROJECT_DIR" "$BACKUP_PATH"
+    # 备份代码 (使用 rsync 避免"复制到自身"错误)
+    if command -v rsync &> /dev/null; then
+        rsync -av --delete "$PROJECT_DIR/" "$BACKUP_PATH/"
+    else
+        # 如果 rsync 不可用,使用 tar
+        cd "$BACKUP_DIR"
+        tar -czf "${BACKUP_NAME}.tar.gz" -C "$PROJECT_DIR" .
+        BACKUP_PATH="${BACKUP_DIR}/${BACKUP_NAME}.tar.gz"
+    fi
 
     # 保留最近 5 个备份
     cd "$BACKUP_DIR"
