@@ -14,7 +14,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Gitee Webhook 密钥 - 请修改为你的密钥
-WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET', 'change-me-in-production')
+# 生产环境建议使用环境变量或随机生成强密钥: python -c "import secrets; print(secrets.token_urlsafe(32))"
+WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET', 'your-webhook-secret-here')
 
 # 部署脚本路径
 DEPLOY_SCRIPT = '/opt/integrate-code/scripts/deploy.sh'

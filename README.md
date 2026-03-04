@@ -115,7 +115,12 @@ Integrate-code/
 │   ├── check_security.py          # 快速安全检查
 │   ├── generate_secure_env.py     # 生成安全配置
 │   ├── optimize_images.py         # 图片优化
-│   └── test_email_config.py       # 邮件配置测试
+│   ├── test_email_config.py       # 邮件配置测试
+│   ├── deploy.sh                  # 自动部署脚本 ⭐
+│   ├── rollback.sh                # 回滚脚本 ⭐
+│   ├── check_and_deploy.sh        # 自动检测部署 ⭐
+│   ├── webhook_receiver.py        # Webhook 接收器 ⭐
+│   └── deploy_service.sh          # 部署服务安装 ⭐
 │
 ├── 📚 文档 (docs/)
 │   ├── README.md                  # 文档索引
@@ -449,14 +454,33 @@ DB_POOL_MAX_SHARED=5        # 最大共享连接
 
 详细文档请查看 [`docs/`](./docs/) 目录：
 
+### 核心文档
+- [快速开始](./docs/QUICK_START.md)
+- [仓库配置快速指南](./docs/REPO_CONFIG_GUIDE.md) ⭐ **新**
+- [版本管理规范](./docs/VERSION_MANAGEMENT_GUIDE.md) ⭐
+- [版本管理快速指南](./docs/QUICK_START_VERSIONING.md) ⭐
+- [自动部署配置](./docs/AUTO_DEPLOY_SETUP.md) ⭐
+
+### 系统文档
 - [官网系统说明](./docs/HOME_SYSTEM_GUIDE.md)
 - [知识库系统说明](./docs/KB_SYSTEM_GUIDE.md)
 - [工单系统说明](./docs/CASE_SYSTEM_GUIDE.md)
 - [统一用户管理说明](./docs/UNIFIED_SYSTEM_GUIDE.md)
+
+### 配置文档
+- [配置详细说明](./docs/CONFIGURATION_GUIDE.md)
+- [配置迁移指南](./docs/CONFIG_MIGRATION_GUIDE.md)
+- [邮件配置指南](./docs/EMAIL_CONFIG_GUIDE.md)
+- [用户注册指南](./docs/USER_REGISTRATION_GUIDE.md)
+
+### 技术文档
 - [API 文档](./docs/API_DOCS.md)
 - [安全改进文档](./docs/SECURITY_IMPROVEMENTS.md)
-- [优化计划](./docs/OPTIMIZATION_PLAN.md)
+- [CI/CD 部署文档](./docs/CI_CD_DEPLOYMENT_GUIDE.md)
 - [代码统计](./docs/CODE_STATISTICS.md)
+
+### 版本信息
+- [变更日志](./CHANGELOG.md) ⭐
 
 ---
 
