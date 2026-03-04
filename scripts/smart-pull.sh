@@ -100,16 +100,34 @@ main() {
     log_info "开始智能拉取..."
     log_info "=========================================="
 
-    # 已迁移到 Gitee，直接从 Gitee 拉取
-    log_info "项目已迁移到 Gitee，直接从 Gitee 拉取..."
+    # 测试GitHub速度
+    log_info "测试GitHub连接速度..."
+    GITHUB_SPEED=$(test_github_speed)
 
-    if pull_from_gitee; then
-        log_info "=========================================="
-        log_info "拉取完成（源: Gitee）"
-        log_info "=========================================="
+    # 转换为KB/s
+    if command -v bc &> /dev/null; then
+        GITHUB_SPEED_KB=$(echo "scale=2; $GITHUB_SPEED / 1024" | bc)
     else
-        log_error "从Gitee拉取失败"
+        GITHUB_SPEED_KB=$(awk "BEGIN {printf \"%.2f\", $GITHUB_SPEED / 1024}")
+    fi
+
+    log_info "GitHub下载速度: ${GITHUB_SPEED_KB} KB/s"
+
+    # 决策逻辑
+    if (( $(echo "$GITHUB_SPEED_KB < 100" | bc -l 2>/dev/null || echo 0) )); then
+        log_warn "GitHub速度慢 (< 100 KB/s)，使用镜像或代理拉取"
+        log_error "无法从GitHub拉取，请配置代理"
         return 1
+    else
+        log_info "GitHub速度正常 (>= 100 KB/s)，使用GitHub拉取"
+        if pull_from_github; then
+            log_info "=========================================="
+            log_info "智能拉取完成（源: GitHub）"
+            log_info "=========================================="
+        else
+            log_error "GitHub拉取失败"
+            return 1
+        fi
     fi
 
     # 获取当前提交信息
