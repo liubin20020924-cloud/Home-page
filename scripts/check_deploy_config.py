@@ -69,13 +69,12 @@ def main():
     
     # 检查核心文件
     print_step("检查核心文件...")
-    all_checks_passed &= check_file_exists('.github/workflows/sync-to-gitee.yml', 'GitHub Action 配置')
     all_checks_passed &= check_file_exists('.github/workflows/ci-cd.yml', 'CI/CD 配置')
     all_checks_passed &= check_file_exists('CHANGELOG.md', '变更日志')
     all_checks_passed &= check_file_exists('scripts/deploy.sh', '部署脚本')
     all_checks_passed &= check_file_exists('scripts/rollback.sh', '回滚脚本')
-    all_checks_passed &= check_file_exists('scripts/check_and_deploy.sh', '自动检测脚本')
-    all_checks_passed &= check_file_exists('scripts/webhook_receiver.py', 'Webhook 接收器')
+    all_checks_passed &= check_file_exists('scripts/check_and_deploy_github.sh', 'GitHub自动检测脚本')
+    all_checks_passed &= check_file_exists('scripts/webhook_receiver_github.py', 'GitHub Webhook 接收器')
     all_checks_passed &= check_file_exists('scripts/deploy_service.sh', '部署服务安装')
     print()
     
@@ -88,41 +87,36 @@ def main():
     
     # 检查配置占位符
     print_step("检查配置占位符...")
-    
+
     webhook_files = [
-        ('scripts/webhook_receiver.py', "WEBHOOK_SECRET = 'your-webhook-secret-here'"),
-        ('scripts/check_and_deploy.sh', 'WEBHOOK_SECRET="your-webhook-secret-here"'),
+        ('scripts/webhook_receiver_github.py', "WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET', 'your-webhook-secret-here')"),
+        ('scripts/check_and_deploy_github.sh', 'WEBHOOK_SECRET="your-webhook-secret-here"'),
     ]
-    
+
     for filepath, placeholder in webhook_files:
         if os.path.exists(filepath):
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
-            if 'your-webhook-secret-here' in content or 'change-me-in-production' in content:
+
+            if 'your-webhook-secret-here' in content:
                 print_warn(f"[!] {filepath} 包含占位符，请修改为实际密钥")
             else:
                 print_info(f"[OK] {filepath} 配置已更新")
-    
+
     print()
-    
+
     # 检查 GitHub Actions 配置
     print_step("检查 GitHub Actions 配置...")
-    
-    if os.path.exists('.github/workflows/sync-to-gitee.yml'):
-        with open('.github/workflows/sync-to-gitee.yml', 'r', encoding='utf-8') as f:
+
+    if os.path.exists('.github/workflows/ci-cd.yml'):
+        with open('.github/workflows/ci-cd.yml', 'r', encoding='utf-8') as f:
             content = f.read()
 
-        if '${{ secrets.SSH_PRIVATE_KEY }}' in content:
-            print_info("[OK] SSH 私钥已配置(使用 GitHub Secrets)")
+        if 'WEBHOOK_URL' in content and 'WEBHOOK_SECRET' in content:
+            print_info("[OK] GitHub Webhook通知已配置(使用 GitHub Secrets)")
         else:
-            print_warn("[!] SSH 私钥配置需要检查")
+            print_warn("[!] GitHub Webhook配置需要检查")
 
-        if '${{ secrets.GITEE_REPO }}' in content:
-            print_info("[OK] Gitee 仓库路径已配置(使用 GitHub Secrets)")
-        else:
-            print_warn("[!] Gitee 仓库路径配置需要检查")
-    
     print()
     
     # 显示下一步操作
@@ -135,19 +129,16 @@ def main():
     print("下一步操作：")
     print()
     print("1. GitHub 配置:")
-    print("   - 生成 SSH 密钥对")
-    print("   - 配置 Gitee SSH 公钥")
-    print("   - 添加 GitHub Secrets:")
-    print("     * SSH_PRIVATE_KEY")
-    print("     * GITEE_REPO")
+    print("   - 生成 Personal Access Token (可选)")
+    print("   - 添加 GitHub Secrets (用于Webhook通知):")
+    print("     * WEBHOOK_URL: http://your-server-ip:9000")
+    print("     * WEBHOOK_SECRET: 云主机Webhook密钥")
     print()
-    print("2. Gitee 配置:")
-    print("   - 配置 Webhook（可选）")
-    print("   - URL: http://your-server-ip:9000/webhook/gitee")
-    print()
-    print("3. 云主机配置:")
-    print("   - 修改 scripts/webhook_receiver.py 中的 WEBHOOK_SECRET")
-    print("   - 修改 scripts/check_and_deploy.sh 中的 WEBHOOK_SECRET")
+    print("2. 云主机配置:")
+    print("   - 克隆GitHub仓库: git clone https://github.com/liubin20020924-cloud/Home-page.git /opt/Home-page")
+    print("   - 配置Git凭据 (Personal Access Token)")
+    print("   - 修改 scripts/webhook_receiver_github.py 中的 WEBHOOK_SECRET")
+    print("   - 修改 scripts/check_and_deploy_github.sh 中的 WEBHOOK_SECRET")
     print("   - 运行: bash scripts/deploy_service.sh")
     print()
     print("详细文档：")

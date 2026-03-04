@@ -456,10 +456,11 @@ DB_POOL_MAX_SHARED=5        # 最大共享连接
 
 ### 核心文档
 - [快速开始](./docs/QUICK_START.md)
-- [仓库配置快速指南](./docs/REPO_CONFIG_GUIDE.md) ⭐ **新**
+- [快速配置指南（简化版）](./docs/QUICK_SETUP_GUIDE.md) ⭐ **推荐**
+- [简化版CI/CD配置](./docs/SIMPLIFIED_CI_CD.md)
 - [版本管理规范](./docs/VERSION_MANAGEMENT_GUIDE.md) ⭐
 - [版本管理快速指南](./docs/QUICK_START_VERSIONING.md) ⭐
-- [自动部署配置](./docs/AUTO_DEPLOY_SETUP.md) ⭐
+- [自动部署配置](./docs/AUTO_DEPLOY_SETUP.md)
 
 ### 系统文档
 - [官网系统说明](./docs/HOME_SYSTEM_GUIDE.md)

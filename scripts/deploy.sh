@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # 云户科技网站 - 自动部署脚本
-# 用于 Gitee Webhook 触发或手动执行
+# 用于 GitHub Webhook 触发或手动执行
 
 set -e  # 遇到错误立即退出
 
 # 配置
-PROJECT_DIR="/opt/integrate-code"
-BACKUP_DIR="/opt/integrate-code/backups"
+PROJECT_DIR="/opt/Home-page"
+BACKUP_DIR="/opt/Home-page/backups"
 LOG_FILE="/var/log/integrate-code/deploy.log"
-REPO_URL="https://gitee.com/your-username/integrate-code.git"
-APP_NAME="integrate-code"
+REPO_URL="https://github.com/liubin20020924-cloud/Home-page.git"
+APP_NAME="Home-page"
 SERVICE_NAME="integrate-code"
 
 # 颜色输出

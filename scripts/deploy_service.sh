@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # 云户科技网站 - 部署服务管理脚本
-# 用于安装、配置和管理云主机自动部署服务
+# 用于安装、配置和管理云主机自动部署服务（GitHub版本）
 
 set -e
 
 # 配置
-PROJECT_DIR="/opt/integrate-code"
+PROJECT_DIR="/opt/Home-page"
 LOG_DIR="/var/log/integrate-code"
 SERVICE_NAME="webhook-receiver"
 WEBHOOK_SECRET="your-webhook-secret-here"
@@ -56,17 +56,18 @@ set_permissions() {
     chmod +x "$PROJECT_DIR/scripts/deploy.sh"
     chmod +x "$PROJECT_DIR/scripts/rollback.sh"
     chmod +x "$PROJECT_DIR/scripts/check_and_deploy.sh"
-    chmod +x "$PROJECT_DIR/scripts/webhook_receiver.py"
+    chmod +x "$PROJECT_DIR/scripts/webhook_receiver_github.py"
+    chmod +x "$PROJECT_DIR/scripts/check_and_deploy_github.sh"
     log_info "权限设置完成"
 }
 
 # 创建 webhook 接收器服务
 create_webhook_service() {
-    log_step "创建 webhook 接收器服务..."
-    
+    log_step "创建 GitHub webhook 接收器服务..."
+
     cat > /etc/systemd/system/$SERVICE_NAME.service << EOF
 [Unit]
-Description=CloudDoors Webhook Receiver
+Description=CloudDoors GitHub Webhook Receiver
 After=network.target
 
 [Service]
@@ -75,7 +76,7 @@ User=root
 WorkingDirectory=$PROJECT_DIR
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 Environment="WEBHOOK_SECRET=$WEBHOOK_SECRET"
-ExecStart=/usr/bin/python3 $PROJECT_DIR/scripts/webhook_receiver.py
+ExecStart=/usr/bin/python3 $PROJECT_DIR/scripts/webhook_receiver_github.py
 Restart=always
 RestartSec=10
 
@@ -93,10 +94,10 @@ EOF
 # 创建自动检测定时任务
 create_cron_job() {
     log_step "配置自动检测定时任务..."
-    
+
     # 添加 crontab 任务（每5分钟检查一次）
-    (crontab -l 2>/dev/null | grep -v "check_and_deploy.sh"; echo "*/5 * * * * $PROJECT_DIR/scripts/check_and_deploy.sh >> $LOG_DIR/auto-deploy.log 2>&1") | crontab -
-    
+    (crontab -l 2>/dev/null | grep -v "check_and_deploy.sh"; echo "*/5 * * * * $PROJECT_DIR/scripts/check_and_deploy_github.sh >> $LOG_DIR/auto-deploy.log 2>&1") | crontab -
+
     log_info "定时任务配置完成（每5分钟检查一次）"
 }
 

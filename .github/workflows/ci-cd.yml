@@ -89,29 +89,26 @@ jobs:
         run: |
           python scripts/check_config.py
   
-  deploy-gitee:
-    name: Deploy to Gitee
+  notify-deployment:
+    name: Notify Cloud Server
     needs: [test, lint, security]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      
-      - name: Setup SSH
+
+      - name: Notify cloud server
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_gitee_rsa
-          chmod 600 ~/.ssh/github_gitee_rsa
-          ssh-keyscan gitee.com >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-      
-      - name: Sync to Gitee
-        run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git remote add gitee git@gitee.com:${{ secrets.GITEE_REPO }}.git || git remote set-url gitee git@gitee.com:${{ secrets.GITEE_REPO }}.git
-          git push gitee main:main --force
+          if [ -n "${{ secrets.WEBHOOK_URL }}" ]; then
+            echo "通知云服务器开始部署..."
+            RESPONSE=$(curl -s -X POST "${{ secrets.WEBHOOK_URL }}/webhook/github" \
+              -H "Content-Type: application/json" \
+              -H "X-Hub-Signature-256: ${{ secrets.WEBHOOK_SECRET }}" \
+              -d '{"ref": "refs/heads/main", "repository": "${{ github.repository }}", "commit": "${{ github.sha }}"}')
+            echo "云服务器响应: $RESPONSE"
+          else
+            echo "未配置WEBHOOK_URL，跳过通知"
+            echo "云服务器将通过定时任务检测更新"
+          fi
