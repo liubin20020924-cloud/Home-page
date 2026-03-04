@@ -48,9 +48,16 @@ create_backup() {
 
     mkdir -p "$BACKUP_DIR"
 
-    # 备份代码 (使用 rsync 避免"复制到自身"错误)
+    # 备份代码 (使用 rsync 并确保路径不包含子目录)
+    # 避免将项目目录复制到自己的子目录导致错误
     if command -v rsync &> /dev/null; then
-        rsync -av --delete "$PROJECT_DIR/" "$BACKUP_PATH/"
+        # 确保备份目录不在项目目录内
+        if [[ "$BACKUP_PATH" != "$PROJECT_DIR/"* ]]; then
+            rsync -av --delete "$PROJECT_DIR/" "$BACKUP_PATH/"
+        else
+            log_error "备份路径在项目目录内,跳过备份"
+            return 1
+        fi
     else
         # 如果 rsync 不可用,使用 tar
         cd "$BACKUP_DIR"
