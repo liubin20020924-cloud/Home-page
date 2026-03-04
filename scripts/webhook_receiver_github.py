@@ -7,6 +7,7 @@ import hmac
 import hashlib
 import json
 from datetime import datetime
+from pathlib import Path
 
 app = Flask(__name__)
 
@@ -17,8 +18,44 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 尝试从 .env 文件加载环境变量
+def load_env_file():
+    """加载 .env 文件中的环境变量"""
+    # 查找 .env 文件的位置
+    possible_env_paths = [
+        '/opt/Home-page/.env',
+        Path(__file__).parent.parent / '.env',
+        '.env'
+    ]
+
+    for env_path in possible_env_paths:
+        if isinstance(env_path, Path):
+            env_path = str(env_path)
+
+        if os.path.exists(env_path):
+            logger.info(f"Loading .env from: {env_path}")
+            with open(env_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    # 跳过注释和空行
+                    if not line or line.startswith('#'):
+                        continue
+                    # 解析 KEY=VALUE 格式
+                    if '=' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        # 如果环境变量不存在,则设置
+                        if key not in os.environ:
+                            os.environ[key] = value
+                            logger.debug(f"Set env var: {key}")
+            break
+
+# 加载环境变量
+load_env_file()
+
 # GitHub Webhook 密钥
-# 生产环境建议使用环境变量或随机生成强密钥: python -c "import secrets; print(secrets.token_urlsafe(32))"
+# 优先使用系统环境变量,其次使用 .env 文件中的配置
 WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET', 'your-webhook-secret-here')
 
 # 部署脚本路径
