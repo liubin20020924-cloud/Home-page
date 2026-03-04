@@ -213,23 +213,88 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
         run: |
-          if [ -n "$SSH_HOST" ] && [ -n "$SSH_USERNAME" ]; then
-            echo "通过SSH通知云服务器部署..."
+          if [ -n "$SSH_HOST" ] && [ -n "$SSH_USERNAME" ] && [ -n "$SSH_PRIVATE_KEY" ]; then
+            echo "=========================================="
+            echo "通过 SSH 通知云服务器部署..."
+            echo "=========================================="
+            echo "SSH Host: $SSH_HOST"
+            echo "SSH Port: $SSH_PORT"
+            echo "SSH Username: $SSH_USERNAME"
+
             # 设置 SSH 密钥
             mkdir -p ~/.ssh
             echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
             chmod 600 ~/.ssh/deploy_key
 
             # 添加主机到 known_hosts
-            ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+            echo "添加主机到 known_hosts..."
+            ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
-            # 远程执行部署触发命令
-            ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USERNAME@$SSH_HOST" \
-              "cd /opt/Home-page && ./scripts/check_and_deploy.sh"
+            # 测试 SSH 连接
+            echo "测试 SSH 连接..."
+            if ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p "$SSH_PORT" -o ConnectTimeout=10 \
+              "$SSH_USERNAME@$SSH_HOST" "echo 'SSH 连接成功'"; then
+
+              echo "SSH 连接测试成功,触发部署..."
+
+              # 远程执行部署脚本
+              echo "执行部署脚本..."
+              ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p "$SSH_PORT" \
+                "$SSH_USERNAME@$SSH_HOST" "cd /opt/Home-page && ./scripts/deploy.sh"
+
+              echo "=========================================="
+              echo "SSH 部署通知已发送"
+              echo "=========================================="
+            else
+              echo "❌ SSH 连接测试失败,跳过 SSH 部署"
+            fi
+
+            # 清理 SSH 密钥
+            rm -f ~/.ssh/deploy_key
           else
-            echo "未配置 SSH_HOST 或 SSH_USERNAME，跳过 SSH 通知"
+            echo "=========================================="
+            echo "SSH 配置不完整,跳过 SSH 通知"
+            echo "=========================================="
+            echo "需要配置的 GitHub Secrets:"
+            echo "  - SSH_HOST (云主机 IP 或域名)"
+            echo "  - SSH_USERNAME (SSH 用户名)"
+            echo "  - SSH_PRIVATE_KEY (SSH 私钥)"
+            echo "  - SSH_PORT (可选,默认 22)"
+            echo ""
+            echo "配置方法:"
+            echo "  1. 在云主机生成 SSH 密钥对"
+            echo "  2. 将公钥添加到 ~/.ssh/authorized_keys"
+            echo "  3. 将私钥复制到 GitHub Secrets"
+            echo ""
+            echo "详细配置指南请参考: docs/SSH_DEPLOYMENT.md"
           fi
+
+      - name: Deployment notification summary
+        if: always()
+        run: |
+          echo "## 📋 部署通知总结" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 方案 | 状态 | 说明 |"
+          echo "|------|------|------|" >> $GITHUB_STEP_SUMMARY
+
+          # Webhook 通知状态
+          if [ -n "$WEBHOOK_URL" ]; then
+            echo "| Webhook | ✅ 已配置 | HTTP webhook 通知 |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Webhook | ❌ 未配置 | 未配置 WEBHOOK_URL |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # SSH 通知状态
+          if [ -n "$SSH_HOST" ] && [ -n "$SSH_USERNAME" ] && [ -n "$SSH_PRIVATE_KEY" ]; then
+            echo "| SSH | ✅ 已配置 | SSH 备用方案 |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| SSH | ❌ 未配置 | 未配置 SSH_HOST/SSH_USERNAME/SSH_PRIVATE_KEY |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**注意**: 至少配置一种部署通知方式(Webhook 或 SSH)" >> $GITHUB_STEP_SUMMARY
 
       - name: Deployment summary
         run: |
