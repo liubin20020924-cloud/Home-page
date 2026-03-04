@@ -269,7 +269,40 @@ def webhook_logs():
 
 
 if __name__ == '__main__':
-    logger.info("Starting GitHub webhook receiver on port 9000...")
-    logger.info(f"Webhook secret configured: {'Yes' if WEBHOOK_SECRET != 'your-webhook-secret-here' else 'No (using default)'}")
-    logger.info(f"Deploy script: {DEPLOY_SCRIPT}")
-    app.run(host='0.0.0.0', port=9000)
+    try:
+        logger.info("="*60)
+        logger.info("Starting GitHub webhook receiver on port 9000...")
+        logger.info("="*60)
+
+        # 检查 Python 版本
+        import sys
+        logger.info(f"Python version: {sys.version}")
+
+        # 检查部署脚本是否存在
+        if os.path.exists(DEPLOY_SCRIPT):
+            logger.info(f"Deploy script exists: {DEPLOY_SCRIPT}")
+        else:
+            logger.error(f"Deploy script NOT found: {DEPLOY_SCRIPT}")
+
+        # 检查日志目录是否可写
+        log_dir = os.path.dirname(DEPLOY_LOG)
+        if os.path.exists(log_dir):
+            if os.access(log_dir, os.W_OK):
+                logger.info(f"Log directory writable: {log_dir}")
+            else:
+                logger.error(f"Log directory NOT writable: {log_dir}")
+        else:
+            logger.error(f"Log directory NOT exists: {log_dir}")
+
+        logger.info(f"Webhook secret configured: {'Yes' if WEBHOOK_SECRET != 'your-webhook-secret-here' else 'No (using default)'}")
+        logger.info(f"Deploy script: {DEPLOY_SCRIPT}")
+        logger.info(f"Version file: {VERSION_FILE}")
+        logger.info(f"Deploy log: {DEPLOY_LOG}")
+        logger.info("="*60)
+
+        app.run(host='0.0.0.0', port=9000)
+    except Exception as e:
+        logger.error(f"Failed to start webhook receiver: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
