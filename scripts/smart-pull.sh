@@ -41,8 +41,27 @@ test_github_speed() {
     local timeout_seconds=5
     local temp_file=$(mktemp)
 
-    # 测试下载速度
-    local speed=$(timeout $timeout_seconds curl -o "$temp_file" -s -w '%{speed_download}' https://github.com 2>/dev/null || echo "0")
+    # 获取 GitHub 代理配置
+    GITHUB_PROXY=$(git config --global --get http.https://github.com.proxy 2>/dev/null)
+    HTTP_PROXY=$(git config --global --get http.proxy 2>/dev/null)
+
+    # 确定使用的代理
+    PROXY_CMD=""
+    if [ -n "$GITHUB_PROXY" ]; then
+        PROXY_CMD="--proxy $GITHUB_PROXY"
+        log_info "使用 GitHub 专用代理: $GITHUB_PROXY"
+    elif [ -n "$HTTP_PROXY" ]; then
+        PROXY_CMD="--proxy $HTTP_PROXY"
+        log_info "使用通用代理: $HTTP_PROXY"
+    fi
+
+    # 测试下载速度 (使用代理)
+    local speed=0
+    if [ -n "$PROXY_CMD" ]; then
+        speed=$(timeout $timeout_seconds curl $PROXY_CMD -o "$temp_file" -s -w '%{speed_download}' https://github.com 2>/dev/null || echo "0")
+    else
+        speed=$(timeout $timeout_seconds curl -o "$temp_file" -s -w '%{speed_download}' https://github.com 2>/dev/null || echo "0")
+    fi
     rm -f "$temp_file"
 
     echo "$speed"
@@ -114,10 +133,48 @@ main() {
     log_info "GitHub下载速度: ${GITHUB_SPEED_KB} KB/s"
 
     # 决策逻辑
-    if (( $(echo "$GITHUB_SPEED_KB < 100" | bc -l 2>/dev/null || echo 0) )); then
-        log_warn "GitHub速度慢 (< 100 KB/s)，使用镜像或代理拉取"
-        log_error "无法从GitHub拉取，请配置代理"
-        return 1
+    if [ "$GITHUB_SPEED_KB" = "0" ] || (( $(echo "$GITHUB_SPEED_KB < 100" | bc -l 2>/dev/null || echo 0) )); then
+        log_warn "GitHub速度慢或无法连接，尝试使用代理拉取..."
+
+        # 获取代理配置
+        GITHUB_PROXY=$(git config --global --get http.https://github.com.proxy 2>/dev/null)
+        HTTP_PROXY=$(git config --global --get http.proxy 2>/dev/null)
+
+        # 确定使用的代理
+        PROXY_CMD=""
+        if [ -n "$GITHUB_PROXY" ]; then
+            PROXY_CMD="--proxy $GITHUB_PROXY"
+        elif [ -n "$HTTP_PROXY" ]; then
+            PROXY_CMD="--proxy $HTTP_PROXY"
+        fi
+
+        if [ -n "$PROXY_CMD" ]; then
+            log_info "使用代理: $PROXY_CMD"
+
+            # 配置代理的拉取
+            cd "$PROJECT_DIR" || {
+                log_error "项目目录不存在: $PROJECT_DIR"
+                return 1
+            }
+
+            # 使用代理从 GitHub 拉取
+            GIT_CURL_VERBOSE=1 git fetch $PROXY_CMD origin
+
+            if [ $? -eq 0 ]; then
+                git reset --hard origin/main
+                log_info "=========================================="
+                log_info "智能拉取完成（源: GitHub + 代理）"
+                log_info "=========================================="
+                return 0
+            else
+                log_error "使用代理从 GitHub 拉取失败"
+                return 1
+            fi
+        else
+            log_error "未配置代理且无法连接 GitHub"
+            log_error "请配置 Git 代理: git config --global http.https://github.com.proxy http://proxy-server:port"
+            return 1
+        fi
     else
         log_info "GitHub速度正常 (>= 100 KB/s)，使用GitHub拉取"
         if pull_from_github; then
