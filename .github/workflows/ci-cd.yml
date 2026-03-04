@@ -242,7 +242,7 @@ jobs:
               # 远程执行部署脚本
               echo "执行部署脚本..."
               ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p "$SSH_PORT" \
-                "$SSH_USERNAME@$SSH_HOST" "cd /opt/Home-page && ./scripts/deploy.sh"
+                "$SSH_USERNAME@$SSH_HOST" "cd /opt/Home-page && chmod +x ./scripts/deploy.sh && bash ./scripts/deploy.sh"
 
               echo "=========================================="
               echo "SSH 部署通知已发送"
