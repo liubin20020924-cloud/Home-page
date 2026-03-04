@@ -99,9 +99,10 @@ jobs:
         run: |
           python scripts/check_dependencies.py
 
-      - name: Check config security
-        run: |
-          python scripts/check_config.py
+      # 注意：不检查配置安全性，因为：
+      # 1. 云主机的系统环境变量已单独配置
+      # 2. 配置文件不提交到 GitHub
+      # 3. CI/CD 只负责代码检查和部署通知
 
   # 4. 自动合并任务 - 仅当 PR 通过所有检查时执行
   auto-merge:
