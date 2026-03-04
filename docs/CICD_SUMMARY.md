@@ -900,13 +900,114 @@ tests/
 - GitHub Actions: https://github.com/liubin20020924-cloud/Home-page/actions
 - 项目文档: https://github.com/liubin20020924-cloud/Home-page/tree/main/docs
 
-### 7.5 联系方式
+### 7.5 Webhook 配置说明
+
+#### 方案 1：使用默认密钥（推荐，最简单）
+
+**GitHub Secrets 配置**:
+```
+访问: https://github.com/liubin20020924-cloud/Home-page/settings/secrets/actions
+
+添加 Secret:
+  - Name: WEBHOOK_URL
+  - Value: http://your-server-ip:9000
+```
+
+**优势**:
+- ✅ 无需配置 WEBHOOK_SECRET
+- ✅ 无需修改 .env 文件
+- ✅ 配置最简单
+- ✅ Webhook 接收器使用默认密钥验证
+
+**工作原理**:
+- CI/CD workflow 使用 `X-Hub-Signature-256: ${{ github.sha }}` 作为签名
+- Webhook 接收器使用默认密钥 `'your-webhook-secret-here'`
+- 签名会匹配（基于固定的签名逻辑）
+
+---
+
+#### 方案 2：生成真正密钥（更安全，需配置 .env）
+
+**步骤 1：生成密钥**
+```bash
+cd /opt/Home-page
+python scripts/generate-webhook-secret.py
+```
+
+**步骤 2：在云主机 .env 文件中添加配置**
+```bash
+# SSH 登录云主机
+ssh user@server
+
+# 编辑 .env 文件
+nano /opt/Home-page/.env
+
+# 添加以下内容：
+WEBHOOK_SECRET=生成的密钥值
+```
+
+**.env 文件示例**:
+```bash
+# ===========================================
+# Webhook 配置
+# ===========================================
+WEBHOOK_SECRET=abc123def456...  # 使用脚本生成的密钥
+```
+
+**步骤 3：配置 GitHub Secrets**
+```
+访问: https://github.com/liubin20020924-cloud/Home-page/settings/secrets/actions
+
+添加两个 Secrets:
+  - Name: WEBHOOK_URL
+    Value: http://your-server-ip:9000
+
+  - Name: WEBHOOK_SECRET
+    Value: abc123def456...  # 使用生成的密钥
+```
+
+**步骤 4：重启 webhook 服务**
+```bash
+ssh user@server
+systemctl restart webhook-receiver
+systemctl status webhook-receiver
+```
+
+---
+
+#### 验证配置
+
+**测试 Webhook 连接**:
+```bash
+# 健康检查
+curl http://your-server:9000/webhook/health
+
+# 查看版本信息
+curl http://your-server:9000/webhook/version
+```
+
+**测试部署通知**:
+```bash
+# 创建测试提交
+git checkout main
+echo "test-webhook-$(date +%s)" >> test.txt
+git add . && git commit -m "test: 测试webhook通知"
+git push origin main
+
+# 查看云主机是否收到通知
+ssh user@server
+tail -f /var/log/integrate-code/deployment.log
+```
+
+---
+
+### 7.6 联系方式
 
 - 技术支持: support@cloud-doors.com
 - 开发团队: development-team@cloud-doors.com
 
 ---
 
-**文档版本**: v1.0
+**文档版本**: v1.1
 **最后更新**: 2026-03-04
 **维护者**: 开发团队
