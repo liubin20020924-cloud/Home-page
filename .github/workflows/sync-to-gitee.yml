@@ -30,16 +30,17 @@ jobs:
         run: |
           if [ -n "$GITEE_REPO" ] && [ -n "$GITEE_TOKEN" ]; then
             echo "Adding Gitee remote..."
+            # 提取 Gitee 仓库地址(去除 https:// 前缀)
+            GITEE_HOST=$(echo "$GITEE_REPO" | sed 's|https://||' | sed 's|http://||')
             # 添加 Gitee 远程仓库(使用 token 进行认证)
-            GITEE_REPO_WITH_TOKEN="https://${GITEE_TOKEN}@${GITEE_REPO#https://}"
+            GITEE_REPO_WITH_TOKEN="https://${GITEE_TOKEN}@${GITEE_HOST}"
             git remote add gitee "$GITEE_REPO_WITH_TOKEN"
 
-            # 显示远程仓库信息
+            # 显示远程仓库信息(隐藏 token)
             echo "GitHub remote:"
             git remote -v | grep origin
-
-            echo "Gitee remote:"
-            git remote -v | grep gitee
+            echo "Gitee remote (with token hidden):"
+            git remote -v | grep gitee | sed "s/${GITEE_TOKEN}/***TOKEN***/g"
           else
             echo "Error: GITEE_REPO or GITEE_TOKEN not configured"
             echo "Please configure these secrets in GitHub repository settings"
