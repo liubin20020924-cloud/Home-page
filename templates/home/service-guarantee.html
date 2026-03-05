@@ -1,0 +1,390 @@
+{% extends "home/base.html" %}
+
+{% block title %}服务保障体系 - 云户科技{% endblock %}
+
+{% block content %}
+  <!-- 导航栏 -->
+  {% include 'home/components/header.html' %}
+
+  <!-- 页面主体 -->
+  <div style="padding-top: clamp(72px, 10vh, 80px); min-height: 100vh;">
+    <!-- Hero区域 -->
+    <section style="padding: clamp(60px, 10vh, 100px) 0; background: linear-gradient(135deg, #0A4DA2 0%, #2563eb 100%); position: relative; overflow: hidden;">
+      <!-- 背景装饰 -->
+      <div style="position: absolute; top: -100px; right: -100px; width: clamp(250px, 30vw, 400px); height: clamp(250px, 30vw, 400px); background: rgba(162, 217, 61, 0.15); border-radius: 50%; filter: blur(80px);"></div>
+      <div style="position: absolute; bottom: -100px; left: -100px; width: clamp(200px, 25vw, 350px); height: clamp(200px, 25vw, 350px); background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(80px);"></div>
+
+      <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px); position: relative; z-index: 10;">
+        <div style="text-align: center; color: white;">
+          <span style="background: rgba(255, 255, 255, 0.2); color: white; padding: clamp(8px, 1vh, 10px) clamp(16px, 2vw, 24px); border-radius: 30px; font-size: clamp(12px, 0.9vw, 14px); font-weight: 600; letter-spacing: 0.5px; margin-bottom: clamp(20px, 3vh, 32px); display: inline-block;">
+            SERVICE GUARANTEE SYSTEM
+          </span>
+          <h1 style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: clamp(16px, 2.5vh, 24px); line-height: 1.2;">
+            3083 服务保障体系
+          </h1>
+          <p style="font-size: clamp(1rem, 1.3vw, 1.25rem); margin-bottom: clamp(32px, 5vh, 48px); max-width: clamp(400px, 70vw, 700px); margin-left: auto; margin-right: auto; line-height: 1.8; opacity: 0.95;">
+            一套确保服务"有回应、有过程、有结果"的方法论
+          </p>
+          <div style="display: flex; justify-content: center; gap: clamp(12px, 2vw, 20px); flex-wrap: wrap;">
+            <a href="#three-level" style="background: white; color: #0A4DA2; padding: clamp(12px, 1.5vh, 16px) clamp(24px, 3vw, 40px); border-radius: 10px; text-decoration: none; font-weight: 600; font-size: clamp(0.9rem, 1vw, 1rem); display: inline-flex; align-items: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transition: all 0.3s;">
+              了解详情 <i class="fa fa-arrow-down" style="margin-left: 10px;"></i>
+            </a>
+            <a href="#contact" style="border: 2px solid white; color: white; padding: clamp(12px, 1.5vh, 16px) clamp(24px, 3vw, 40px); border-radius: 10px; text-decoration: none; font-weight: 600; font-size: clamp(0.9rem, 1vw, 1rem); display: inline-flex; align-items: center; transition: all 0.3s; background: transparent;">
+              联系我们
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3｜三级服务保障 -->
+    <section id="three-level" style="padding: clamp(80px, 12vh, 120px) 0; background: white;">
+      <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px);">
+        <div style="text-align: center; margin-bottom: clamp(48px, 8vh, 72px);">
+          <div style="display: inline-flex; align-items: justify-center; background: linear-gradient(135deg, rgba(10, 77, 162, 0.1), rgba(162, 217, 61, 0.1)); padding: clamp(12px, 2vh, 16px) clamp(28px, 4vw, 40px); border-radius: 16px; margin-bottom: clamp(20px, 3vh, 32px);">
+            <span style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; background: linear-gradient(135deg, #0A4DA2, #A2D93D); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">3</span>
+            <span style="font-size: clamp(1rem, 1.3vw, 1.25rem); color: #6b7280; margin-left: clamp(8px, 1.2vw, 12px); font-weight: 500;">三级服务保障</span>
+          </div>
+          <h2 style="font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(16px, 2.5vh, 24px); line-height: 1.3;">
+            问题逐级升级，直到解决
+          </h2>
+          <p style="color: #6b7280; font-size: clamp(1rem, 1.2vw, 1.1rem); max-width: clamp(400px, 70vw, 700px); margin-left: auto; margin-right: auto; line-height: 1.8;">
+            通过三级保障体系，确保每一个问题都能得到及时、专业的处理和解决
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: clamp(24px, 4vw, 36px);">
+          <!-- 标准支持 -->
+          <div style="background: linear-gradient(135deg, rgba(10, 77, 162, 0.05) 0%, rgba(10, 77, 162, 0.02) 100%); border-radius: 20px; padding: clamp(28px, 4vw, 40px); border: 2px solid rgba(10, 77, 162, 0.1); transition: all 0.35s;" class="guarantee-card">
+            <div style="display: flex; align-items: center; margin-bottom: clamp(16px, 3vh, 24px);">
+              <div style="width: clamp(60px, 8vw, 80px); height: clamp(60px, 8vw, 80px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-right: clamp(16px, 2.5vw, 24px); flex-shrink: 0;">
+                <i class="fa fa-bolt" style="font-size: clamp(24px, 3.5vw, 32px); color: white;"></i>
+              </div>
+              <div>
+                <h3 style="font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 700; color: #1a202c; margin-bottom: 4px;">标准支持</h3>
+                <span style="font-size: clamp(0.85rem, 1vw, 0.95rem); color: #6b7280; background: rgba(10, 77, 162, 0.1); padding: 4px 12px; border-radius: 20px;">Standard Support</span>
+              </div>
+            </div>
+            <p style="color: #374151; line-height: 1.8; margin-bottom: 20px; font-size: clamp(0.95rem, 1.15vw, 1.05rem);">
+              快速定位、常规处理
+            </p>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280; margin-bottom: clamp(8px, 1.2vh, 12px);">
+                <i class="fa fa-check-circle" style="color: #0A4DA2; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>快速响应客户需求
+              </li>
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280; margin-bottom: clamp(8px, 1.2vh, 12px);">
+                <i class="fa fa-check-circle" style="color: #0A4DA2; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>常规问题快速处理
+              </li>
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280;">
+                <i class="fa fa-check-circle" style="color: #0A4DA2; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>标准服务流程保障
+              </li>
+            </ul>
+          </div>
+
+          <!-- 深度支持 -->
+          <div style="background: linear-gradient(135deg, rgba(162, 217, 61, 0.1) 0%, rgba(162, 217, 61, 0.04) 100%); border-radius: 20px; padding: clamp(28px, 4vw, 40px); border: 2px solid rgba(162, 217, 61, 0.15); transition: all 0.35s;" class="guarantee-card">
+            <div style="display: flex; align-items: center; margin-bottom: clamp(16px, 3vh, 24px);">
+              <div style="width: clamp(60px, 8vw, 80px); height: clamp(60px, 8vw, 80px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-right: clamp(16px, 2.5vw, 24px); flex-shrink: 0;">
+                <i class="fa fa-user-md" style="font-size: clamp(24px, 3.5vw, 32px); color: white;"></i>
+              </div>
+              <div>
+                <h3 style="font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 700; color: #1a202c; margin-bottom: 4px;">深度支持</h3>
+                <span style="font-size: clamp(0.85rem, 1vw, 0.95rem); color: #6b7280; background: rgba(162, 217, 61, 0.15); padding: 4px 12px; border-radius: 20px;">Deep Support</span>
+              </div>
+            </div>
+            <p style="color: #374151; line-height: 1.8; margin-bottom: 20px; font-size: clamp(0.95rem, 1.15vw, 1.05rem);">
+              专家介入、专项分析
+            </p>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280; margin-bottom: clamp(8px, 1.2vh, 12px);">
+                <i class="fa fa-check-circle" style="color: #A2D93D; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>资深专家技术介入
+              </li>
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280; margin-bottom: clamp(8px, 1.2vh, 12px);">
+                <i class="fa fa-check-circle" style="color: #A2D93D; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>复杂问题专项分析
+              </li>
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280;">
+                <i class="fa fa-check-circle" style="color: #A2D93D; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>定制化解决方案
+              </li>
+            </ul>
+          </div>
+
+          <!-- 关键保障 -->
+          <div style="background: linear-gradient(135deg, rgba(10, 77, 162, 0.05) 0%, rgba(10, 77, 162, 0.02) 100%); border-radius: 20px; padding: clamp(28px, 4vw, 40px); border: 2px solid rgba(10, 77, 162, 0.1); transition: all 0.35s;" class="guarantee-card">
+            <div style="display: flex; align-items: center; margin-bottom: clamp(16px, 3vh, 24px);">
+              <div style="width: clamp(60px, 8vw, 80px); height: clamp(60px, 8vw, 80px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-right: clamp(16px, 2.5vw, 24px); flex-shrink: 0;">
+                <i class="fa fa-star" style="font-size: clamp(24px, 3.5vw, 32px); color: white;"></i>
+              </div>
+              <div>
+                <h3 style="font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 700; color: #1a202c; margin-bottom: 4px;">关键保障</h3>
+                <span style="font-size: clamp(0.85rem, 1vw, 0.95rem); color: #6b7280; background: rgba(10, 77, 162, 0.1); padding: 4px 12px; border-radius: 20px;">Critical Support</span>
+              </div>
+            </div>
+            <p style="color: #374151; line-height: 1.8; margin-bottom: 20px; font-size: clamp(0.95rem, 1.15vw, 1.05rem);">
+              重点问题、持续跟进
+            </p>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280; margin-bottom: clamp(8px, 1.2vh, 12px);">
+                <i class="fa fa-check-circle" style="color: #0A4DA2; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>重点问题优先处理
+              </li>
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280; margin-bottom: clamp(8px, 1.2vh, 12px);">
+                <i class="fa fa-check-circle" style="color: #0A4DA2; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>持续跟踪问题解决
+              </li>
+              <li style="display: flex; align-items: center; font-size: clamp(13px, 0.95vw, 15px); color: #6b7280;">
+                <i class="fa fa-check-circle" style="color: #0A4DA2; margin-right: clamp(8px, 1.2vw, 12px); font-size: clamp(14px, 1vw, 16px);"></i>高级资源优先保障
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: clamp(40px, 6vh, 56px);">
+          <p style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); color: #1a202c; font-weight: 600; max-width: clamp(400px, 80vw, 800px); margin-left: auto; margin-right: auto; line-height: 1.8; font-style: italic;">
+            不以"回复"为终点，以"问题解决"为终点。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 0｜零中断服务承诺 -->
+    <section id="zero-interruption" style="padding: clamp(80px, 12vh, 120px) 0; background: linear-gradient(to bottom, #f9fafb, #f3f4f6);">
+      <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px);">
+        <div style="text-align: center; margin-bottom: clamp(48px, 8vh, 72px);">
+          <div style="display: inline-flex; align-items: justify-center; background: linear-gradient(135deg, rgba(162, 217, 61, 0.15), rgba(10, 77, 162, 0.1)); padding: clamp(12px, 2vh, 16px) clamp(28px, 4vw, 40px); border-radius: 16px; margin-bottom: clamp(20px, 3vh, 32px);">
+            <span style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; background: linear-gradient(135deg, #A2D93D, #0A4DA2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">0</span>
+            <span style="font-size: clamp(1rem, 1.3vw, 1.25rem); color: #6b7280; margin-left: clamp(8px, 1.2vw, 12px); font-weight: 500;">零中断服务承诺</span>
+          </div>
+          <h2 style="font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(16px, 2.5vh, 24px); line-height: 1.3;">
+            服务不中断，责任不中断
+          </h2>
+          <p style="color: #6b7280; font-size: clamp(1rem, 1.2vw, 1.1rem); max-width: clamp(400px, 70vw, 700px); margin-left: auto; margin-right: auto; line-height: 1.8;">
+            无论时间、人员还是阶段，我们的服务承诺始终如一，从不中断
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: clamp(20px, 3vw, 28px);">
+          <div style="background: white; border-radius: 16px; padding: clamp(24px, 3.5vw, 32px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.35s; border-left: 4px solid #0A4DA2;" class="commitment-card">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; background: rgba(10, 77, 162, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                <i class="fa fa-clock-o" style="color: #0A4DA2; font-size: 20px;"></i>
+              </div>
+              <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c;">服务持续跟进</h3>
+            </div>
+            <p style="color: #6b7280; font-size: clamp(0.9rem, 1.1vw, 1rem); line-height: 1.7;">
+              不因时间中断
+            </p>
+          </div>
+
+          <div style="background: white; border-radius: 16px; padding: clamp(24px, 3.5vw, 32px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.35s; border-left: 4px solid #A2D93D;" class="commitment-card">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; background: rgba(162, 217, 61, 0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                <i class="fa fa-users" style="color: #A2D93D; font-size: 20px;"></i>
+              </div>
+              <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c;">问题持续负责</h3>
+            </div>
+            <p style="color: #6b7280; font-size: clamp(0.9rem, 1.1vw, 1rem); line-height: 1.7;">
+              不因人员中断
+            </p>
+          </div>
+
+          <div style="background: white; border-radius: 16px; padding: clamp(24px, 3.5vw, 32px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); transition: all 0.35s; border-left: 4px solid #0A4DA2;" class="commitment-card">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; background: rgba(10, 77, 162, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                <i class="fa fa-sync" style="color: #0A4DA2; font-size: 20px;"></i>
+              </div>
+              <h3 style="font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 700; color: #1a202c;">进展持续同步</h3>
+            </div>
+            <p style="color: #6b7280; font-size: clamp(0.9rem, 1.1vw, 1rem); line-height: 1.7;">
+              不因阶段中断
+            </p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: clamp(40px, 6vh, 56px);">
+          <p style="font-size: clamp(1.2rem, 1.8vw, 1.4rem); color: #0A4DA2; font-weight: 700; max-width: clamp(400px, 80vw, 800px); margin-left: auto; margin-right: auto; line-height: 1.8; background: rgba(10, 77, 162, 0.05); padding: clamp(16px, 2.5vh, 24px); border-radius: 12px;">
+            一个问题，一个责任人，跟到底。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8｜八个标准服务动作 -->
+    <section id="eight-steps" style="padding: clamp(80px, 12vh, 120px) 0; background: white;">
+      <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px);">
+        <div style="text-align: center; margin-bottom: clamp(48px, 8vh, 72px);">
+          <div style="display: inline-flex; align-items: justify-center; background: linear-gradient(135deg, rgba(10, 77, 162, 0.1), rgba(162, 217, 61, 0.1)); padding: clamp(12px, 2vh, 16px) clamp(28px, 4vw, 40px); border-radius: 16px; margin-bottom: clamp(20px, 3vh, 32px);">
+            <span style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; background: linear-gradient(135deg, #0A4DA2, #A2D93D); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">8</span>
+            <span style="font-size: clamp(1rem, 1.3vw, 1.25rem); color: #6b7280; margin-left: clamp(8px, 1.2vw, 12px); font-weight: 500;">八个标准服务动作</span>
+          </div>
+          <h2 style="font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(16px, 2.5vh, 24px); line-height: 1.3;">
+            全过程可控、可追溯
+          </h2>
+          <p style="color: #6b7280; font-size: clamp(1rem, 1.2vw, 1.1rem); max-width: clamp(400px, 70vw, 700px); margin-left: auto; margin-right: auto; line-height: 1.8;">
+            规范化服务流程，确保每一步都有记录，每一次都有结果
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: clamp(20px, 3vw, 28px);">
+          <div style="background: linear-gradient(135deg, rgba(10, 77, 162, 0.05) 0%, rgba(10, 77, 162, 0.02) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(10, 77, 162, 0.1); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">1</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">接收需求</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">快速响应客户需求</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(162, 217, 61, 0.08) 0%, rgba(162, 217, 61, 0.03) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(162, 217, 61, 0.15); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">2</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">确认范围</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">明确服务范围</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(10, 77, 162, 0.05) 0%, rgba(10, 77, 162, 0.02) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(10, 77, 162, 0.1); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">3</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">分派处理</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">快速分派专业人员</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(162, 217, 61, 0.08) 0%, rgba(162, 217, 61, 0.03) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(162, 217, 61, 0.15); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">4</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">问题分析</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">深入分析问题根因</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(10, 77, 162, 0.05) 0%, rgba(10, 77, 162, 0.02) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(10, 77, 162, 0.1); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">5</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">解决方案</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">制定专业解决方案</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(162, 217, 61, 0.08) 0%, rgba(162, 217, 61, 0.03) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(162, 217, 61, 0.15); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">6</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">实施执行</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">专业团队执行方案</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(10, 77, 162, 0.05) 0%, rgba(10, 77, 162, 0.02) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(10, 77, 162, 0.1); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #0A4DA2, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">7</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">结果验证</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">验证问题解决结果</p>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(162, 217, 61, 0.08) 0%, rgba(162, 217, 61, 0.03) 100%); border-radius: 16px; padding: clamp(20px, 3vw, 28px); text-align: center; border: 2px solid rgba(162, 217, 61, 0.15); transition: all 0.35s;" class="step-card">
+            <div style="width: clamp(50px, 6vw, 60px); height: clamp(50px, 6vw, 60px); background: linear-gradient(135deg, #A2D93D, #b8e65d); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto clamp(12px, 2vh, 16px); font-weight: 700; color: white; font-size: clamp(1.2rem, 2vw, 1.5rem);">8</div>
+            <h3 style="font-size: clamp(1rem, 1.3vw, 1.15rem); font-weight: 600; color: #1a202c; margin-bottom: 8px;">复盘优化</h3>
+            <p style="color: #6b7280; font-size: clamp(0.85rem, 1vw, 0.95rem);">复盘总结持续优化</p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: clamp(40px, 6vh, 56px);">
+          <p style="font-size: clamp(1.1rem, 1.5vw, 1.25rem); color: #6b7280; font-weight: 500; max-width: clamp(400px, 80vw, 800px); margin-left: auto; margin-right: auto; line-height: 1.8;">
+            每一步都有记录，每一次都有结果。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3｜结果交付承诺 -->
+    <section id="delivery-commitment" style="padding: clamp(80px, 12vh, 120px) 0; background: linear-gradient(135deg, #0A4DA2 0%, #2563eb 100%); position: relative; overflow: hidden;">
+      <!-- 背景装饰 -->
+      <div style="position: absolute; top: -50px; right: -50px; width: clamp(200px, 25vw, 300px); height: clamp(200px, 25vw, 300px); background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(60px);"></div>
+      <div style="position: absolute; bottom: -50px; left: -50px; width: clamp(150px, 20vw, 250px); height: clamp(150px, 20vw, 250px); background: rgba(162, 217, 61, 0.15); border-radius: 50%; filter: blur(60px);"></div>
+
+      <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px); position: relative; z-index: 10;">
+        <div style="text-align: center; margin-bottom: clamp(48px, 8vh, 72px);">
+          <div style="display: inline-flex; align-items: justify-center; background: rgba(255, 255, 255, 0.15); padding: clamp(12px, 2vh, 16px) clamp(28px, 4vw, 40px); border-radius: 16px; margin-bottom: clamp(20px, 3vh, 32px);">
+            <span style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; color: white;">3</span>
+            <span style="font-size: clamp(1rem, 1.3vw, 1.25rem); color: rgba(255, 255, 255, 0.9); margin-left: clamp(8px, 1.2vw, 12px); font-weight: 500;">结果交付承诺</span>
+          </div>
+          <h2 style="font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; color: white; margin-bottom: clamp(16px, 2.5vh, 24px); line-height: 1.3;">
+            问题不解决，服务不结束
+          </h2>
+          <p style="color: rgba(255, 255, 255, 0.85); font-size: clamp(1rem, 1.2vw, 1.1rem); max-width: clamp(400px, 70vw, 700px); margin-left: auto; margin-right: auto; line-height: 1.8;">
+            我们坚持以结果为导向，确保每一个问题都能得到彻底解决
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: clamp(24px, 4vw, 36px);">
+          <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: clamp(28px, 4vw, 40px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.35s;" class="delivery-card">
+            <div style="display: flex; align-items: center; margin-bottom: clamp(16px, 3vh, 24px);">
+              <div style="width: clamp(50px, 7vw, 64px); height: clamp(50px, 7vw, 64px); background: rgba(255, 255, 255, 0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-right: clamp(16px, 2.5vw, 24px); flex-shrink: 0;">
+                <i class="fa fa-bullseye" style="font-size: clamp(22px, 3vw, 28px); color: white;"></i>
+              </div>
+              <h3 style="font-size: clamp(1.2rem, 2vw, 1.5rem); font-weight: 700; color: white; margin-bottom: 4px;">明确交付目标</h3>
+            </div>
+            <p style="color: rgba(255, 255, 255, 0.85); font-size: clamp(0.9rem, 1.1vw, 1rem); line-height: 1.8;">
+              在服务开始前，与客户明确交付目标和预期结果，确保双方对服务内容有清晰的认知和共识。
+            </p>
+          </div>
+
+          <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: clamp(28px, 4vw, 40px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.35s;" class="delivery-card">
+            <div style="display: flex; align-items: center; margin-bottom: clamp(16px, 3vh, 24px);">
+              <div style="width: clamp(50px, 7vw, 64px); height: clamp(50px, 7vw, 64px); background: rgba(255, 255, 255, 0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-right: clamp(16px, 2.5vw, 24px); flex-shrink: 0;">
+                <i class="fa fa-check-square" style="font-size: clamp(22px, 3vw, 28px); color: white;"></i>
+              </div>
+              <h3 style="font-size: clamp(1.2rem, 2vw, 1.5rem); font-weight: 700; color: white; margin-bottom: 4px;">明确完成标准</h3>
+            </div>
+            <p style="color: rgba(255, 255, 255, 0.85); font-size: clamp(0.9rem, 1.1vw, 1rem); line-height: 1.8;">
+              制定清晰的完成标准和验收指标，确保服务质量可衡量、可验证，让客户对服务结果充满信心。
+            </p>
+          </div>
+
+          <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: clamp(28px, 4vw, 40px); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.35s;" class="delivery-card">
+            <div style="display: flex; align-items: center; margin-bottom: clamp(16px, 3vh, 24px);">
+              <div style="width: clamp(50px, 7vw, 64px); height: clamp(50px, 7vw, 64px); background: rgba(255, 255, 255, 0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-right: clamp(16px, 2.5vw, 24px); flex-shrink: 0;">
+                <i class="fa fa-clipboard-check" style="font-size: clamp(22px, 3vw, 28px); color: white;"></i>
+              </div>
+              <h3 style="font-size: clamp(1.2rem, 2vw, 1.5rem); font-weight: 700; color: white; margin-bottom: 4px;">明确验收结果</h3>
+            </div>
+            <p style="color: rgba(255, 255, 255, 0.85); font-size: clamp(0.9rem, 1.1vw, 1rem); line-height: 1.8;">
+              与客户共同验证服务结果，确保交付成果符合预期，达成客户满意度的最终目标。
+            </p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: clamp(48px, 8vh, 72px);">
+          <p style="font-size: clamp(1.3rem, 2vw, 1.5rem); color: white; font-weight: 700; max-width: clamp(400px, 80vw, 900px); margin-left: auto; margin-right: auto; line-height: 1.8; background: rgba(255, 255, 255, 0.15); padding: clamp(20px, 3vh, 28px); border-radius: 12px; font-style: italic;">
+            服务的终点，是结果，而不是流程。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA区域 -->
+    <section style="padding: clamp(80px, 12vh, 100px) 0; background: #f9fafb;">
+      <div style="width: 100%; max-width: min(1280px, 95vw); margin: 0 auto; padding: 0 clamp(12px, 2vw, 16px); text-align: center;">
+        <h2 style="font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; color: #1a202c; margin-bottom: clamp(16px, 2.5vh, 24px); line-height: 1.3;">
+          体验专业服务
+        </h2>
+        <p style="color: #6b7280; font-size: clamp(1rem, 1.2vw, 1.1rem); max-width: clamp(400px, 70vw, 700px); margin-left: auto; margin-right: auto; margin-bottom: clamp(32px, 5vh, 48px); line-height: 1.8;">
+          立即联系我们，感受云户科技的服务保障体系
+        </p>
+        <div style="display: flex; justify-content: center; gap: clamp(12px, 2vw, 20px); flex-wrap: wrap;">
+          <a href="/case/" style="background: #0A4DA2; color: white; padding: clamp(12px, 1.5vh, 16px) clamp(28px, 4vw, 48px); border-radius: 10px; text-decoration: none; font-weight: 600; font-size: clamp(0.95rem, 1.1vw, 1.05rem); display: inline-flex; align-items: center; box-shadow: 0 10px 30px rgba(10, 77, 162, 0.25); transition: all 0.3s;">
+            提交工单 <i class="fa fa-ticket" style="margin-left: clamp(8px, 1.2vw, 12px);"></i>
+          </a>
+          <a href="#contact" style="border: 2px solid #0A4DA2; color: #0A4DA2; padding: clamp(12px, 1.5vh, 16px) clamp(28px, 4vw, 48px); border-radius: 10px; text-decoration: none; font-weight: 600; font-size: clamp(0.95rem, 1.1vw, 1.05rem); display: inline-flex; align-items: center; transition: all 0.3s; background: white;">
+            联系我们 <i class="fa fa-phone" style="margin-left: clamp(8px, 1.2vw, 12px);"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 页脚 -->
+  {% include 'home/components/footer.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 卡片悬停效果 */
+  .guarantee-card:hover,
+  .commitment-card:hover,
+  .step-card:hover,
+  .delivery-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* 平滑滚动 */
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+{% endblock %}
