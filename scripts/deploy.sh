@@ -166,6 +166,49 @@ restart_app() {
     fi
 }
 
+# 重启 webhook receiver
+restart_webhook() {
+    log_info "重启 webhook receiver 服务..."
+
+    # 重启 systemd 服务
+    if systemctl is-active --quiet webhook-receiver; then
+        log_info "重启 webhook-receiver 服务..."
+        systemctl restart webhook-receiver
+        sleep 3
+
+        # 检查服务状态
+        if systemctl is-active --quiet webhook-receiver; then
+            log_info "Webhook receiver 重启成功"
+        else
+            log_warn "Webhook receiver 重启失败，尝试手动重启..."
+
+            # 备用方案：手动重启
+            pkill -f "webhook_receiver_github.py" || true
+            sleep 2
+
+            if [ -d "venv" ]; then
+                nohup venv/bin/python scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
+            else
+                nohup python3 scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
+            fi
+
+            sleep 3
+            log_info "Webhook receiver 手动重启完成"
+        fi
+    else
+        log_warn "Webhook receiver 服务未运行，尝试启动..."
+        systemctl start webhook-receiver || {
+            # 备用方案
+            if [ -d "venv" ]; then
+                nohup venv/bin/python scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
+            else
+                nohup python3 scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
+            fi
+            log_info "Webhook receiver 手动启动完成"
+        }
+    fi
+}
+
 # 健康检查
 health_check() {
     log_info "执行健康检查..."
@@ -209,6 +252,9 @@ main() {
 
     # 重启应用
     restart_app
+
+    # 重启 webhook receiver
+    restart_webhook
 
     # 健康检查
     if health_check; then
