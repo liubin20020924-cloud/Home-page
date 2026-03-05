@@ -130,13 +130,23 @@ def github_webhook():
     # 解析 payload
     try:
         raw_payload = request.json
+        # 调试日志：记录原始 payload 类型
+        logger.info(f"Raw payload type: {type(raw_payload)}, isinstance str: {isinstance(raw_payload, str)}")
+        logger.info(f"Raw payload (first 200 chars): {str(raw_payload)[:200] if len(str(raw_payload)) > 200 else str(raw_payload)}")
+
         # request.json 可能返回字符串或字典，统一处理
         if isinstance(raw_payload, str):
+            logger.info("Payload is string, parsing with json.loads()")
             payload = json.loads(raw_payload)
         else:
+            logger.info("Payload is not string, using directly")
             payload = raw_payload
+
+        # 调试日志：记录转换后的 payload 类型
+        logger.info(f"Parsed payload type: {type(payload)}")
     except Exception as e:
         logger.error(f"Failed to parse JSON payload: {str(e)}")
+        logger.error(f"Raw payload type when error occurred: {type(raw_payload)}")
         return jsonify({'error': 'Invalid JSON'}), 400
 
     # 从 payload 提取信息
