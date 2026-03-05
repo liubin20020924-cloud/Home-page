@@ -151,24 +151,11 @@ def github_webhook():
 
     # 从 payload 提取信息
     ref = payload.get('ref', '')
-
-    # 兼容不同的 payload 格式
-    if 'repository' in payload:
-        # GitHub Webhook 标准格式
-        branch = ref.replace('refs/heads/', '') if ref else ''
-        commit = payload.get('after', '')
-        repository = payload.get('repository', {}).get('full_name', '')
-        author = payload.get('pusher', {}).get('name', '')
-        message = payload.get('head_commit', {}).get('message', '')
-        timestamp = payload.get('head_commit', {}).get('timestamp', '')
-    else:
-        # CI/CD 通知格式
-        branch = ref.replace('refs/heads/', '') if ref else ''
-        commit = payload.get('commit', '')
-        repository = payload.get('repository', '')
-        author = payload.get('author', '')
-        message = payload.get('message', '')
-        timestamp = payload.get('timestamp', '')
+    commit = payload.get('commit', '')
+    repository = payload.get('repository', '')
+    author = payload.get('author', '')
+    message = payload.get('message', '')
+    timestamp = payload.get('timestamp', '')
 
     version = payload.get('version', 'latest')
 
