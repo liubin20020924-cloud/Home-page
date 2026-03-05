@@ -172,6 +172,11 @@ def github_webhook():
         deploy_start_time = datetime.now()
 
         try:
+            # 确保 deploy.sh 有执行权限
+            chmod_cmd = f"chmod +x {DEPLOY_SCRIPT}"
+            logger.info(f"Setting execute permission: {chmod_cmd}")
+            subprocess.run(chmod_cmd, shell=True, check=True)
+
             # 执行部署脚本
             logger.info(f"Executing deploy script: {DEPLOY_SCRIPT}")
             result = subprocess.run(
