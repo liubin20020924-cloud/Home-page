@@ -22,6 +22,10 @@ NC='\033[0m' # No Color
 # 日志函数
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    # 设置日志文件权限为仅所有者可读写
+    if [ -f "$LOG_FILE" ]; then
+        chmod 600 "$LOG_FILE"
+    fi
 }
 
 log_info() {
@@ -72,6 +76,29 @@ create_backup() {
     log_info "备份创建完成: $BACKUP_PATH"
 }
 
+# 验证提交签名（如果已配置）
+verify_commit_signature() {
+    log_info "验证提交签名..."
+
+    cd "$PROJECT_DIR"
+
+    # 检查是否配置了 GPG 签名验证
+    if ! git config --get commit.gpgsign >/dev/null 2>&1; then
+        log_warn "未配置 GPG 签名验证，跳过验证步骤"
+        return 0
+    fi
+
+    # 验证最新提交的签名
+    LATEST_COMMIT=$(git rev-parse origin/main)
+    if ! git verify-commit "$LATEST_COMMIT" 2>/dev/null; then
+        log_error "提交签名验证失败，拒绝部署"
+        log_error "提交哈希: $LATEST_COMMIT"
+        exit 1
+    fi
+
+    log_info "提交签名验证通过"
+}
+
 # 拉取最新代码
 pull_code() {
     log_info "拉取最新代码..."
@@ -86,6 +113,8 @@ pull_code() {
     log_info "从 GitHub 拉取最新代码..."
     git fetch origin
     if [ $? -eq 0 ]; then
+        # 验证提交签名（防止代码被篡改）
+        verify_commit_signature
         git reset --hard origin/main
         log_info "代码拉取完成"
         log_info "当前版本: $(git rev-parse --short HEAD)"
@@ -114,6 +143,57 @@ update_dependencies() {
     pip install -r requirements.txt -q
 
     log_info "依赖更新完成"
+}
+
+# 部署前环境检查
+pre_deploy_check() {
+    log_info "预部署检查..."
+
+    # 检查磁盘空间（至少 1GB）
+    AVAILABLE_SPACE=$(df -BG "$PROJECT_DIR" | tail -1 | awk '{print $4}' | sed 's/G//')
+    if [ "$AVAILABLE_SPACE" -lt 1 ]; then
+        log_error "磁盘空间不足，至少需要 1GB，当前: ${AVAILABLE_SPACE}GB"
+        exit 1
+    fi
+    log_info "磁盘空间检查通过: ${AVAILABLE_SPACE}GB 可用"
+
+    # 检查 Python 版本
+    if ! command -v python3 &> /dev/null; then
+        log_error "未找到 Python3"
+        exit 1
+    fi
+    PYTHON_VERSION=$(python3 --version | awk '{print $2}')
+    log_info "Python 版本: $PYTHON_VERSION"
+
+    # 检查 pip
+    if ! command -v pip3 &> /dev/null; then
+        log_error "未找到 pip3"
+        exit 1
+    fi
+    log_info "Pip 检查通过"
+
+    # 检查虚拟环境
+    if [ ! -d "venv" ]; then
+        log_warn "虚拟环境不存在，将使用系统 Python"
+    else
+        log_info "虚拟环境已存在"
+    fi
+
+    # 检查 requirements.txt
+    if [ ! -f "requirements.txt" ]; then
+        log_error "requirements.txt 文件不存在"
+        exit 1
+    fi
+    log_info "requirements.txt 检查通过"
+
+    # 检查部署脚本
+    if [ ! -f "./scripts/deploy.sh" ]; then
+        log_error "部署脚本不存在: ./scripts/deploy.sh"
+        exit 1
+    fi
+    log_info "部署脚本检查通过"
+
+    log_info "预部署检查通过"
 }
 
 # 数据库迁移（如需要）
@@ -190,6 +270,9 @@ main() {
     log_info "========================================"
     log_info "开始部署: $APP_NAME"
     log_info "========================================"
+
+    # 部署前检查
+    pre_deploy_check
 
     # 创建备份
     create_backup

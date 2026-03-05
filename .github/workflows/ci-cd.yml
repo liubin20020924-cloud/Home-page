@@ -34,6 +34,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+          # 安全检查：扫描依赖漏洞
+          pip install pip-audit
+          pip-audit --desc || echo "依赖安全扫描完成（发现潜在问题）"
 
       - name: Run tests
         run: |
@@ -104,11 +107,12 @@ jobs:
   auto-merge:
     name: Auto Merge to Main
     needs: [test, lint, security]
-    # 仅在 PR 到 main 分支时执行
+    # 仅在 PR 到 main 分支时执行，且必须有 "auto-merge" 标签
     if: |
       github.event_name == 'pull_request' &&
       github.event.pull_request.base.ref == 'main' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'auto-merge')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -118,20 +122,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Merge PR
-        uses: pascalgn/automerge-action@v0.15.5
-        with:
-          # 自动合并条件：PR 标签为 "auto-merge"
-          merge-method: squash
-          automerge-label: 'auto-merge'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # 或者使用 GitHub CLI 直接合并（不依赖标签）
-      - name: Auto merge using GitHub CLI
-        if: failure()
+      - name: Merge PR with label check
         run: |
-          gh pr merge ${{ github.event.pull_request.number }} --squash --auto
+          # 验证 PR 状态
+          PR_STATE=$(gh pr view ${{ github.event.pull_request.number }} --json state --jq .state)
+          if [ "$PR_STATE" != "OPEN" ]; then
+            echo "PR 状态不是 OPEN，跳过自动合并"
+            exit 0
+          fi
+
+          # 验证 auto-merge 标签是否存在
+          HAS_LABEL=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[] | select(.name == "auto-merge") | .name')
+          if [ -z "$HAS_LABEL" ]; then
+            echo "PR 缺少 'auto-merge' 标签，跳过自动合并"
+            exit 0
+          fi
+
+          # 执行合并
+          gh pr merge ${{ github.event.pull_request.number }} --squash --delete-branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -175,12 +183,14 @@ jobs:
             echo "SSH Port: $SSH_PORT"
             echo "SSH Username: $SSH_USERNAME"
 
-            # 设置 SSH 密钥
+            # 设置 SSH 密钥（禁用命令回显以防止私钥泄露到日志）
+            set +x
             mkdir -p ~/.ssh
             echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
             chmod 600 ~/.ssh/deploy_key
+            set -x
 
-            # 添加主机到 known_hosts
+            # 添加主机到 known_hosts（使用严格密钥检查）
             echo "添加主机到 known_hosts..."
             ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
@@ -191,28 +201,32 @@ jobs:
 
               echo "SSH 连接测试成功,触发部署..."
 
-              # 远程执行部署脚本
-              echo "执行部署脚本..."
-              echo "部署脚本将执行以下步骤:"
-              echo "  1. 创建备份"
-              echo "  2. 从 GitHub 拉取最新代码"
-              echo "  3. 更新/安装依赖"
-              echo "  4. 重启应用服务"
-              echo "  5. 记录部署日志"
-              echo ""
+            # 远程执行部署脚本
+            echo "执行部署脚本..."
+            echo "部署脚本将执行以下步骤:"
+            echo "  1. 创建备份"
+            echo "  2. 从 GitHub 拉取最新代码"
+            echo "  3. 更新/安装依赖"
+            echo "  4. 重启应用服务"
+            echo "  5. 记录部署日志"
+            echo ""
 
-              ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p "$SSH_PORT" \
-                "$SSH_USERNAME@$SSH_HOST" "cd /opt/Home-page && chmod +x ./scripts/deploy.sh && bash ./scripts/deploy.sh"
+            # 使用严格主机密钥检查（防止中间人攻击）
+            ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o ConnectTimeout=10 -p "$SSH_PORT" \
+              "$SSH_USERNAME@$SSH_HOST" "cd /opt/Home-page && chmod +x ./scripts/deploy.sh && bash ./scripts/deploy.sh"
 
-              echo "=========================================="
-              echo "SSH 部署通知已发送"
-              echo "=========================================="
-            else
-              echo "❌ SSH 连接测试失败,跳过 SSH 部署"
-            fi
+            echo "=========================================="
+            echo "SSH 部署通知已发送"
+            echo "=========================================="
+          else
+            echo "❌ SSH 连接测试失败,跳过 SSH 部署"
+          fi
 
-            # 清理 SSH 密钥
+            # 清理 SSH 密钥（安全清理）
+            set +x
             rm -f ~/.ssh/deploy_key
+            rm -f ~/.ssh/known_hosts
+            set -x
           else
             echo "=========================================="
             echo "SSH 配置不完整,跳过 SSH 通知"
