@@ -87,6 +87,12 @@ def parts():
     return render_template('home/parts.html', now=datetime.now)
 
 
+@home_bp.route('/service-guarantee')
+def service_guarantee():
+    """服务保障体系页面"""
+    return render_template('home/service-guarantee.html', now=datetime.now)
+
+
 @home_bp.route('/cases')
 def cases():
     """用户案例页面"""
