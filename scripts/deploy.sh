@@ -245,6 +245,11 @@ restart_webhook() {
         return 1
     fi
 
+    # 确保 deploy.sh 有执行权限（git pull 可能会重置权限）
+    log_info "设置部署脚本执行权限..."
+    chmod +x ./scripts/deploy.sh
+    log_info "✅ 权限设置完成"
+
     log_info "Webhook receiver 重启完成"
     return 0
 }
