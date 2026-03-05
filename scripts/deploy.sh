@@ -7,11 +7,11 @@ set -e  # 遇到错误立即退出
 
 # 配置
 PROJECT_DIR="/opt/Home-page"
-BACKUP_DIR="/var/backups/Home-page"  # 改为 /var/backups 下的项目目录
-LOG_FILE="/var/log/integrate-code/deploy.log"
+BACKUP_DIR="/var/backups/Home-page"
+LOG_FILE="/var/log/Home-page/deploy.log"
 REPO_URL="https://github.com/liubin20020924-cloud/Home-page.git"
 APP_NAME="Home-page"
-SERVICE_NAME="integrate-code"
+SERVICE_NAME="Home-page"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -144,10 +144,10 @@ restart_app() {
     # 启动新进程（使用虚拟环境，如果存在）
     if [ -d "venv" ]; then
         log_info "使用虚拟环境启动应用..."
-        nohup venv/bin/python app.py > /var/log/integrate-code/app.log 2>&1 &
+        nohup venv/bin/python app.py > /var/log/Home-page/app.log 2>&1 &
     else
         log_info "使用系统Python启动应用..."
-        nohup python3 app.py > /var/log/integrate-code/app.log 2>&1 &
+        nohup python3 app.py > /var/log/Home-page/app.log 2>&1 &
     fi
 
     # 等待应用启动
