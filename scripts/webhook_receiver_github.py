@@ -129,7 +129,12 @@ def github_webhook():
 
     # 解析 payload
     try:
-        payload = request.json
+        raw_payload = request.json
+        # request.json 可能返回字符串或字典，统一处理
+        if isinstance(raw_payload, str):
+            payload = json.loads(raw_payload)
+        else:
+            payload = raw_payload
     except Exception as e:
         logger.error(f"Failed to parse JSON payload: {str(e)}")
         return jsonify({'error': 'Invalid JSON'}), 400
