@@ -239,22 +239,15 @@ jobs:
           echo "| 方案 | 状态 | 说明 |"
           echo "|------|------|------|" >> $GITHUB_STEP_SUMMARY
 
-          # Webhook 通知状态
-          if [ -n "$WEBHOOK_URL" ]; then
-            echo "| Webhook | ✅ 已配置 | HTTP webhook 通知 |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Webhook | ❌ 未配置 | 未配置 WEBHOOK_URL |" >> $GITHUB_STEP_SUMMARY
-          fi
-
           # SSH 通知状态
           if [ -n "$SSH_HOST" ] && [ -n "$SSH_USERNAME" ] && [ -n "$SSH_PRIVATE_KEY" ]; then
-            echo "| SSH | ✅ 已配置 | SSH 备用方案 |" >> $GITHUB_STEP_SUMMARY
+            echo "| SSH | ✅ 已配置 | SSH 远程部署 |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| SSH | ❌ 未配置 | 未配置 SSH_HOST/SSH_USERNAME/SSH_PRIVATE_KEY |" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**注意**: 至少配置一种部署通知方式(Webhook 或 SSH)" >> $GITHUB_STEP_SUMMARY
+          echo "**注意**: 需要配置 SSH 远程部署" >> $GITHUB_STEP_SUMMARY
 
       - name: Deployment summary
         run: |
