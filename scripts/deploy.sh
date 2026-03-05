@@ -82,23 +82,19 @@ pull_code() {
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     log_info "当前分支: $CURRENT_BRANCH"
 
-    # 使用智能拉取脚本（自动选择 GitHub 或 Gitee）
-    log_info "使用智能拉取脚本..."
-    if [ -f "./scripts/smart-pull.sh" ]; then
-        bash ./scripts/smart-pull.sh
-        if [ $? -eq 0 ]; then
-            log_info "代码拉取完成"
-        else
-            log_error "智能拉取失败，尝试直接从 GitHub 拉取..."
-            git fetch origin
-            git reset --hard origin/main
-            log_info "代码拉取完成"
-        fi
-    else
-        log_warn "智能拉取脚本不存在，直接从 GitHub 拉取..."
-        git fetch origin
+    # 直接从 GitHub 拉取（确保获取最新代码）
+    log_info "从 GitHub 拉取最新代码..."
+    git fetch origin
+    if [ $? -eq 0 ]; then
         git reset --hard origin/main
         log_info "代码拉取完成"
+        log_info "当前版本: $(git rev-parse --short HEAD)"
+    else
+        log_error "GitHub 拉取失败，尝试备用方案..."
+        # 如果 smart-pull 存在，使用智能拉取
+        if [ -f "./scripts/smart-pull.sh" ]; then
+            bash ./scripts/smart-pull.sh
+        fi
     fi
 }
 
@@ -170,43 +166,87 @@ restart_app() {
 restart_webhook() {
     log_info "重启 webhook receiver 服务..."
 
+    cd "$PROJECT_DIR"
+
+    # 强制停止所有 webhook 进程
+    log_info "停止所有 webhook 进程..."
+    pkill -9 -f "webhook_receiver_github.py" || true
+    pkill -9 -f "webhook.*receiver" || true
+    sleep 2
+
+    # 确保没有残留进程
+    if pgrep -f "webhook_receiver_github.py" > /dev/null; then
+        log_warn "检测到残留进程，强制清理..."
+        killall -9 python3 || true
+        sleep 2
+    fi
+
     # 重启 systemd 服务
-    if systemctl is-active --quiet webhook-receiver; then
-        log_info "重启 webhook-receiver 服务..."
+    if systemctl list-unit-files | grep -q webhook-receiver; then
+        log_info "使用 systemd 重启 webhook-receiver 服务..."
         systemctl restart webhook-receiver
-        sleep 3
+        sleep 5
 
         # 检查服务状态
         if systemctl is-active --quiet webhook-receiver; then
-            log_info "Webhook receiver 重启成功"
+            log_info "✅ Webhook receiver 服务重启成功"
+            systemctl status webhook-receiver --no-pager | head -5
         else
-            log_warn "Webhook receiver 重启失败，尝试手动重启..."
+            log_warn "⚠️  Webhook receiver 服务启动失败，查看日志:"
+            journalctl -u webhook-receiver -n 20 --no-pager
+            log_info "尝试手动启动..."
 
-            # 备用方案：手动重启
-            pkill -f "webhook_receiver_github.py" || true
-            sleep 2
-
+            # 备用方案：手动启动
             if [ -d "venv" ]; then
+                log_info "使用虚拟环境手动启动..."
                 nohup venv/bin/python scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
             else
+                log_info "使用系统Python手动启动..."
                 nohup python3 scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
             fi
 
             sleep 3
-            log_info "Webhook receiver 手动重启完成"
+
+            # 检查进程
+            if pgrep -f "webhook_receiver_github.py" > /dev/null; then
+                log_info "✅ Webhook receiver 手动启动成功"
+            else
+                log_error "❌ Webhook receiver 启动失败"
+                return 1
+            fi
         fi
     else
-        log_warn "Webhook receiver 服务未运行，尝试启动..."
-        systemctl start webhook-receiver || {
-            # 备用方案
-            if [ -d "venv" ]; then
-                nohup venv/bin/python scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
-            else
-                nohup python3 scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
-            fi
-            log_info "Webhook receiver 手动启动完成"
-        }
+        log_warn "webhook-receiver 服务不存在，手动启动..."
+
+        # 备用方案
+        if [ -d "venv" ]; then
+            nohup venv/bin/python scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
+        else
+            nohup python3 scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
+        fi
+
+        sleep 3
+
+        if pgrep -f "webhook_receiver_github.py" > /dev/null; then
+            log_info "✅ Webhook receiver 手动启动成功"
+        else
+            log_error "❌ Webhook receiver 启动失败"
+            return 1
+        fi
     fi
+
+    # 验证文件是否更新
+    log_info "验证 webhook receiver 代码版本..."
+    if grep -q "isinstance(raw_payload, str)" scripts/webhook_receiver_github.py; then
+        log_info "✅ Webhook receiver 代码已更新（包含类型检查）"
+    else
+        log_error "❌ Webhook receiver 代码未更新！"
+        log_error "请检查代码拉取是否成功"
+        return 1
+    fi
+
+    log_info "Webhook receiver 重启完成"
+    return 0
 }
 
 # 健康检查
