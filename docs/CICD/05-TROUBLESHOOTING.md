@@ -8,11 +8,10 @@
 
 1. [快速诊断](#快速诊断)
 2. [GitHub Actions 问题](#github-actions-问题)
-3. [Webhook 问题](#webhook-问题)
-4. [部署问题](#部署问题)
-5. [服务问题](#服务问题)
-6. [网络问题](#网络问题)
-7. [性能问题](#性能问题)
+3. [部署问题](#部署问题)
+4. [服务问题](#服务问题)
+5. [网络问题](#网络问题)
+6. [性能问题](#性能问题)
 
 ---
 
@@ -32,15 +31,15 @@
     ┌──────────────────────────┬──────────────────────────┐
     │                      │                      │
     ↓                      ↓                      ↓
-┌────────┐         ┌────────┐        ┌────────┐      ┌────────┐
-│GitHub  │         │Webhook │        │ 部署   │      │ 服务   │
-│Actions │         │        │        │        │      │        │
-└────────┘         └────────┘        └────────┘      └────────┘
-     ↓                  ↓                  ↓              ↓
-┌────────┐         ┌────────┐        ┌────────┐      ┌────────┐
-│ 查对应 │         │ 查对应 │        │ 查对应 │      │ 查对应 │
-│ 章节   │         │ 章节   │        │ 章节   │      │ 章节   │
-└────────┘         └────────┘        └────────┘      └────────┘
+┌────────┐         ┌────────┐      ┌────────┐
+│GitHub  │         │ 部署   │      │ 服务   │
+│Actions │         │        │      │        │
+└────────┘         └────────┘      └────────┘
+     ↓                  ↓              ↓
+┌────────┐         ┌────────┐      ┌────────┐
+│ 查对应 │         │ 查对应 │      │ 查对应 │
+│ 章节   │         │ 章节   │      │ 章节   │
+└────────┘         └────────┘      └────────┘
 ```
 
 ### 健康检查命令
@@ -49,26 +48,19 @@
 # 1. GitHub Actions 状态
 # 访问: https://github.com/liubin20020924-cloud/Home-page/actions
 
-# 2. Webhook 健康检查
-curl http://cloud-doors.com:9000/webhook/health
-
-# 3. 应用服务状态
+# 2. 应用服务状态
 sudo systemctl status Home-page
 
-# 4. 应用健康检查
+# 3. 应用健康检查
 curl http://cloud-doors.com:5000/health
 
-# 5. 查看部署日志
+# 4. 查看部署日志
 tail -50 /var/log/Home-page/deploy.log
-
-# 6. 查看 Webhook 日志
-sudo journalctl -u webhook-receiver -n 50
 ```
 
 ### 状态检查清单
 
 - [ ] GitHub Actions 能正常运行
-- [ ] Webhook 服务健康
 - [ ] 应用服务运行中
 - [ ] 网络连接正常
 - [ ] 磁盘空间充足 (> 5GB)
@@ -158,205 +150,6 @@ cat .github/workflows/ci-cd.yml | grep secrets.
 | 优化测试 | 使用并行测试，减少总耗时 |
 | 增加超时 | 在 workflow 中设置 `timeout-minutes` |
 | 优化脚本 | 减少不必要的依赖安装 |
-
----
-
-## Webhook 问题
-
-### 问题 1: Webhook 不触发
-
-**症状：**
-- Push 代码到 main 分支后，云主机无反应
-- Webhook 交付日志显示失败
-- 部署没有自动开始
-
-**诊断步骤：**
-
-```bash
-# 1. 检查 GitHub Webhook 配置
-# GitHub 仓库 → Settings → Webhooks → 查看交付历史
-
-# 2. 检查 Webhook 响应
-curl -v -X POST http://cloud-doors.com:9000/webhook/github \
-  -H "Content-Type: application/json" \
-  -d '{"ref":"refs/heads/main","sha":"test"}'
-
-# 3. 检查云主机服务状态
-sudo systemctl status webhook-receiver
-```
-
-**解决方案：**
-
-| 可能原因 | 解决方案 |
-|---------|----------|
-| Webhook URL 错误 | 检查 URL 是否为 `http://cloud-doors.com:9000/webhook/github` |
-| Secret 不匹配 | GitHub 和云主机的 Secret 必须完全一致 |
-| 防火墙阻挡 | 检查 9000 端口是否开放 |
-| 服务未启动 | 运行 `sudo systemctl start webhook-receiver` |
-| 网络不通 | 检查云主机网络连接 |
-
----
-
-### 问题 4: Payload 解析错误
-
-**症状：**
-- Webhook 日志显示：`AttributeError: 'str' object has no attribute 'get'`
-- Flask 调试器显示 WSGI 错误
-- Webhook 请求返回 500 错误
-- 部署没有触发
-
-**错误信息示例：**
-```
-AttributeError: 'str' object has no attribute 'get'
-File "/opt/Home-page/venv/lib64/python3.11/site-packages/flask/app.py", line 145, in github_webhook
-    repository = payload.get('repository', {}).get('full_name', '')
-```
-
-**原因分析：**
-- Flask 的 `request.json` 方法在某些情况下（特别是当 Content-Type 为 `application/json` 时）可能返回一个 JSON 字符串而不是解析后的字典
-- 代码直接使用 `payload.get()` 方法，导致错误，因为字符串类型没有 `.get()` 方法
-- 这通常发生在 WSGI 服务器（如 Gunicorn）运行 Flask 应用时
-
-**诊断步骤：**
-```bash
-# 1. 查看 Webhook 服务日志
-sudo journalctl -u webhook-receiver -f
-
-# 2. 检查错误信息
-grep -i "AttributeError" /var/log/integrate-code/webhook.log
-
-# 3. 检查 Flask 版本和 WSGI 服务器
-python3 -c "import flask; print(flask.__version__)"
-```
-
-**解决方案：**
-
-**方案 1：使用修复后的代码**（推荐）
-- 已在 `scripts/webhook_receiver_github.py` 中修复
-- 添加了类型检查，统一处理字符串和字典格式
-
-```bash
-# 重启 webhook 服务以应用修复
-sudo systemctl restart webhook-receiver
-```
-
-**方案 2：手动验证修复**
-```bash
-# 测试 webhook 端点
-curl -v -X POST http://localhost:9000/webhook/health \
-  -H "Content-Type: application/json" \
-  -d '{"ref":"refs/heads/main"}'
-
-# 查看返回是否正常
-# 预期：{"status": "healthy", "timestamp": "..."}
-```
-
-**方案 3：如果问题仍然存在**
-
-检查 WSGI 服务器配置（如果使用 Gunicorn）：
-```bash
-# 编辑 gunicorn 配置
-# 确保 --limit-request-line 设置足够大
-# 或者禁用 request line 限制
-```
-
-**修复代码说明：**
-```python
-# 修复前
-try:
-    payload = request.json  # 可能返回字符串
-    repository = payload.get('repository', {}).get('full_name', '')
-
-# 修复后
-try:
-    raw_payload = request.json
-    # 类型检查，统一处理字符串和字典
-    if isinstance(raw_payload, str):
-        payload = json.loads(raw_payload)
-    else:
-        payload = raw_payload
-    # 现在可以安全地使用 .get()
-    repository = payload.get('repository', {}).get('full_name', '')
-```
-
-**预防措施：**
-1. ✅ 使用 `try-except` 包裹所有 JSON 解析操作
-2. ✅ 添加类型检查，确保 payload 是字典
-3. ✅ 记录详细的错误日志，包括原始 payload 类型
-4. ✅ 添加单元测试覆盖不同的 payload 格式
-
-**相关文档：**
-- [Webhook 接收器设计](./04-FEATURES.md#webhook-接收器设计)
-- [脚本使用说明](../SCRIPTS.md#webhook_receiver_githubpy)
-
-### 问题 2: 签名验证失败
-
-**症状：**
-- Webhook 日志显示：`Invalid signature`
-- 返回 401 错误
-
-**诊断步骤：**
-
-```bash
-# 1. 检查 Secret 配置
-grep WEBHOOK_SECRET /opt/Home-page/.env
-
-# 2. 重新测试 Webhook
-curl -X POST http://cloud-doors.com:9000/webhook/github \
-  -H "Content-Type: application/json" \
-  -H "X-Hub-Signature-256: sha256=<测试签名>" \
-  -d '{"ref":"refs/heads/main"}'
-
-# 3. 查看日志
-sudo journalctl -u webhook-receiver -f
-```
-
-**解决方案：**
-
-1. **同步 Secret**
-   - 确保配置文件中的 Secret 与 GitHub 一致
-   - 重启 webhook 服务：`sudo systemctl restart webhook-receiver`
-
-2. **重新生成 Secret**
-   ```bash
-   # 生成新密钥
-   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
-   
-   # 更新 GitHub Secret
-   gh secret set WEBHOOK_SECRET <新密钥>
-   
-   # 更新云主机配置
-   nano /opt/Home-page/.env
-   ```
-
-### 问题 3: Webhook 服务崩溃
-
-**症状：**
-- Webhook 服务频繁重启
-- 无法访问健康检查端点
-- 日志中有未捕获的异常
-
-**诊断步骤：**
-
-```bash
-# 1. 查看服务状态
-sudo systemctl status webhook-receiver
-
-# 2. 查看崩溃日志
-sudo journalctl -u webhook-receiver --since "1 hour ago" -p err
-
-# 3. 查看资源使用
-top -p webhook-receiver
-```
-
-**解决方案：**
-
-| 问题类型 | 解决方案 |
-|---------|----------|
-| 内存泄漏 | 重启服务，监控内存使用 |
-| 未捕获异常 | 查看 Python 错误日志，添加 try-except |
-| 端口冲突 | 检查 9000 端口是否被占用 |
-| 配置错误 | 验证 `.env` 文件格式 |
 
 ---
 
@@ -735,7 +528,7 @@ uname -a
 cat /etc/os-release
 
 # 服务状态
-sudo systemctl status Home-page webhook-receiver
+sudo systemctl status Home-page
 
 # 最近的日志
 tail -100 /var/log/Home-page/deploy.log > deploy_diagnostic.log
@@ -758,7 +551,6 @@ git remote -v
 影响范围：
 -----------
 - [ ] GitHub Actions
-- [ ] Webhook
 - [ ] 部署脚本
 - [ ] 应用服务
 
@@ -783,3 +575,147 @@ git remote -v
 **维护者**: 云户科技技术团队
 
 </div>
+
+---
+
+## 附录: 理想 CI/CD 流水线输出
+
+当所有配置正确、代码无误时，GitHub Actions 的完整输出应该如下：
+
+### 1. 单元测试阶段
+
+```
+✓ pytest tests/ -v
+==================== test session starts ====================
+collected 7 items
+
+tests/test_services.py .....                                  [ 71%]
+tests/test_routes.py ..                                       [100%]
+
+===================== 7 passed in 2.45s ======================
+```
+
+### 2. 代码检查阶段
+
+```
+✓ flake8 --max-line-length=100 app.py routes/ services/ common/
+(无输出表示通过)
+
+✓ pylint app.py routes/ services/ common/ --max-line-length=100
+--------------------------------------------------------------------
+Your code has been rated at 9.50/10 (previous run: 9.50/10, +0.00)
+```
+
+### 3. 通知云服务器部署阶段
+
+```
+==========================================
+通过 SSH 通知云服务器部署...
+==========================================
+SSH Host: your-server-ip
+SSH Port: 22
+SSH Username: root
+添加主机到 known_hosts...
+测试 SSH 连接...
+SSH 连接成功,触发部署...
+执行部署脚本...
+部署脚本将执行以下步骤:
+  1. 创建备份
+  2. 从 GitHub 拉取最新代码
+  3. 更新/安装依赖
+  4. 重启应用服务
+  5. 记录部署日志
+
+[2024-03-05 10:30:15] 开始部署...
+[2024-03-05 10:30:15] 创建备份: backup_20240305_103015.tar.gz
+[2024-03-05 10:30:20] 从 GitHub 拉取最新代码...
+[2024-03-05 10:30:25] 更新 Python 依赖...
+[2024-03-05 10:30:40] 重启 home-page 服务...
+[2024-03-05 10:30:45] 部署成功完成！
+
+==========================================
+SSH 部署通知已发送
+==========================================
+```
+
+### 4. 部署通知摘要
+
+```
+==========================================
+部署通知摘要
+==========================================
+✅ SSH 部署: 成功
+🔄 分支: main
+💾 提交: abc1234
+==========================================
+```
+
+### 完整成功输出示例
+
+```
+Run pytest tests/ -v
+==================== test session starts ====================
+collected 7 items
+
+tests/test_services.py .....                                  [ 71%]
+tests/test_routes.py ..                                       [100%]
+
+===================== 7 passed in 2.45s ======================
+
+Run flake8 --max-line-length=100 app.py routes/ services/ common/
+(无输出，检查通过)
+
+Run pylint app.py routes/ services/ common/ --max-line-length=100
+--------------------------------------------------------------------
+Your code has been rated at 9.50/10
+
+Run notify-cloud-server
+==========================================
+通过 SSH 通知云服务器部署...
+==========================================
+SSH Host: your-server-ip
+SSH Port: 22
+SSH Username: root
+添加主机到 known_hosts...
+测试 SSH 连接...
+SSH 连接成功,触发部署...
+执行部署脚本...
+部署脚本将执行以下步骤:
+  1. 创建备份
+  2. 从 GitHub 拉取最新代码
+  3. 更新/安装依赖
+  4. 重启应用服务
+  5. 记录部署日志
+
+[2024-03-05 10:30:15] 开始部署...
+[2024-03-05 10:30:15] 创建备份: backup_20240305_103015.tar.gz
+[2024-03-05 10:30:20] 从 GitHub 拉取最新代码...
+[2024-03-05 10:30:25] 更新 Python 依赖...
+[2024-03-05 10:30:40] 重启 home-page 服务...
+[2024-03-05 10:30:45] 部署成功完成！
+
+==========================================
+SSH 部署通知已发送
+==========================================
+
+==========================================
+部署通知摘要
+==========================================
+✅ SSH 部署: 成功
+🔄 分支: main
+💾 提交: abc1234
+==========================================
+
+Job completed successfully
+```
+
+---
+
+<div align="center">
+
+**文档版本**: v1.1  
+**更新日期**: 2026-03-05  
+**维护者**: 云户科技技术团队
+
+</div>
+

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 云户科技网站 - 自动部署脚本
-# 用于 GitHub Webhook 触发或手动执行
+# 用于 GitHub Actions SSH 触发或手动执行
 
 set -e  # 遇到错误立即退出
 
@@ -162,98 +162,6 @@ restart_app() {
     fi
 }
 
-# 重启 webhook receiver
-restart_webhook() {
-    log_info "重启 webhook receiver 服务..."
-
-    cd "$PROJECT_DIR"
-
-    # 强制停止所有 webhook 进程
-    log_info "停止所有 webhook 进程..."
-    pkill -9 -f "webhook_receiver_github.py" || true
-    pkill -9 -f "webhook.*receiver" || true
-    sleep 2
-
-    # 确保没有残留进程
-    if pgrep -f "webhook_receiver_github.py" > /dev/null; then
-        log_warn "检测到残留进程，强制清理..."
-        killall -9 python3 || true
-        sleep 2
-    fi
-
-    # 重启 systemd 服务
-    if systemctl list-unit-files | grep -q webhook-receiver; then
-        log_info "使用 systemd 重启 webhook-receiver 服务..."
-        systemctl restart webhook-receiver
-        sleep 5
-
-        # 检查服务状态
-        if systemctl is-active --quiet webhook-receiver; then
-            log_info "✅ Webhook receiver 服务重启成功"
-            systemctl status webhook-receiver --no-pager | head -5
-        else
-            log_warn "⚠️  Webhook receiver 服务启动失败，查看日志:"
-            journalctl -u webhook-receiver -n 20 --no-pager
-            log_info "尝试手动启动..."
-
-            # 备用方案：手动启动
-            if [ -d "venv" ]; then
-                log_info "使用虚拟环境手动启动..."
-                nohup venv/bin/python scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
-            else
-                log_info "使用系统Python手动启动..."
-                nohup python3 scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
-            fi
-
-            sleep 3
-
-            # 检查进程
-            if pgrep -f "webhook_receiver_github.py" > /dev/null; then
-                log_info "✅ Webhook receiver 手动启动成功"
-            else
-                log_error "❌ Webhook receiver 启动失败"
-                return 1
-            fi
-        fi
-    else
-        log_warn "webhook-receiver 服务不存在，手动启动..."
-
-        # 备用方案
-        if [ -d "venv" ]; then
-            nohup venv/bin/python scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
-        else
-            nohup python3 scripts/webhook_receiver_github.py > /var/log/integrate-code/webhook.log 2>&1 &
-        fi
-
-        sleep 3
-
-        if pgrep -f "webhook_receiver_github.py" > /dev/null; then
-            log_info "✅ Webhook receiver 手动启动成功"
-        else
-            log_error "❌ Webhook receiver 启动失败"
-            return 1
-        fi
-    fi
-
-    # 验证文件是否更新
-    log_info "验证 webhook receiver 代码版本..."
-    if grep -q "isinstance(raw_payload, str)" scripts/webhook_receiver_github.py; then
-        log_info "✅ Webhook receiver 代码已更新（包含类型检查）"
-    else
-        log_error "❌ Webhook receiver 代码未更新！"
-        log_error "请检查代码拉取是否成功"
-        return 1
-    fi
-
-    # 确保 deploy.sh 有执行权限（git pull 可能会重置权限）
-    log_info "设置部署脚本执行权限..."
-    chmod +x ./scripts/deploy.sh
-    log_info "✅ 权限设置完成"
-
-    log_info "Webhook receiver 重启完成"
-    return 0
-}
-
 # 健康检查
 health_check() {
     log_info "执行健康检查..."
@@ -297,9 +205,6 @@ main() {
 
     # 重启应用
     restart_app
-
-    # 重启 webhook receiver
-    restart_webhook
 
     # 健康检查
     if health_check; then

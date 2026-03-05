@@ -483,8 +483,7 @@ GitHub (main 分支)
 1. **测试阶段** - 运行单元测试
 2. **代码检查** - flake8 和 pylint 检查
 3. **安全检查** - 依赖安全性扫描
-4. **Webhook 通知** - 通知云主机开始部署（首选）
-5. **SSH 备用部署** - 通过 SSH 直接部署（备用方案）
+4. **SSH 部署** - 通过 SSH 连接到云服务器，执行 deploy.sh 脚本
 
 #### 云主机部署机制
 
@@ -509,25 +508,8 @@ crontab -e
 2. 从 GitHub 拉取最新代码
 3. 更新依赖
 4. 重启应用服务
-5. 重启 webhook receiver 服务
 
 **详细配置文档**: 参考 [CI/CD 部署指南](./CICD/02-CONFIGURATION.md)
-
-**启用服务**:
-
-```bash
-# 重新加载 systemd
-systemctl daemon-reload
-
-# 启用服务
-systemctl enable webhook-receiver
-
-# 启动服务
-systemctl start webhook-receiver
-
-# 查看状态
-systemctl status webhook-receiver
-```
 
 ---
 
