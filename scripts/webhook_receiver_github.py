@@ -159,7 +159,12 @@ def github_webhook():
 
     version = payload.get('version', 'latest')
 
-    logger.info(f"Received GitHub webhook event: branch={branch}, commit={commit[:7]}, version={version}")
+    logger.info(f"Received GitHub webhook event: commit={commit[:7]}, version={version}")
+
+    # 只处理 main 分支的推送（需要获取 branch 信息）
+    # 从 payload 中获取 branch
+    branch_payload = payload.get('branch', payload.get('ref', ''))
+    branch = branch_payload.replace('refs/heads/', '') if branch_payload else ''
 
     # 只处理 main 分支的推送
     if branch == 'main':
