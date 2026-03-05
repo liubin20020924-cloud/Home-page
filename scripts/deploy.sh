@@ -133,13 +133,7 @@ update_dependencies() {
 
     cd "$PROJECT_DIR"
 
-    # 激活虚拟环境（如果使用）
-    if [ -d "venv" ]; then
-        log_info "检测到虚拟环境，正在激活..."
-        source venv/bin/activate
-    fi
-
-    # 更新依赖
+    # 更新依赖（虚拟环境已在 pre_deploy_check 中激活）
     pip install -r requirements.txt -q
 
     log_info "依赖更新完成"
@@ -165,19 +159,27 @@ pre_deploy_check() {
     PYTHON_VERSION=$(python3 --version | awk '{print $2}')
     log_info "Python 版本: $PYTHON_VERSION"
 
-    # 检查 pip
-    if ! command -v pip3 &> /dev/null; then
-        log_error "未找到 pip3"
-        exit 1
-    fi
-    log_info "Pip 检查通过"
-
-    # 检查虚拟环境
+    # 检查并创建虚拟环境
     if [ ! -d "venv" ]; then
-        log_warn "虚拟环境不存在，将使用系统 Python"
+        log_warn "虚拟环境不存在，正在创建虚拟环境..."
+        python3 -m venv venv
+        if [ $? -ne 0 ]; then
+            log_error "创建虚拟环境失败"
+            exit 1
+        fi
+        log_info "虚拟环境创建成功"
     else
         log_info "虚拟环境已存在"
     fi
+
+    # 激活虚拟环境并检查 pip
+    source venv/bin/activate
+    if ! command -v pip &> /dev/null; then
+        log_error "未找到 pip"
+        exit 1
+    fi
+    PIP_VERSION=$(pip --version | awk '{print $2}')
+    log_info "Pip 检查通过 (版本: $PIP_VERSION)"
 
     # 检查 requirements.txt
     if [ ! -f "requirements.txt" ]; then
