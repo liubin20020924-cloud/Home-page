@@ -48,7 +48,7 @@
         <a href="#solutions" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">解决方案</a>
         <a href="/kb/" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">知识库系统</a>
         <a href="/case/" style="color: #1a202c; text-decoration: none; font-weight: 500; transition: color 0.3s; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px); white-space: nowrap; font-size: clamp(13px, 1vw, 15px);">工单系统</a>
-        <a href="#contact" style="background: #0A4DA2; color: white; padding: clamp(8px, 1vh, 10px) clamp(14px, 2vw, 20px); border-radius: 8px; text-decoration: none; font-weight: 500; transition: background 0.3s; white-space: nowrap; margin-left: clamp(4px, 1vw, 8px); font-size: clamp(13px, 1vw, 15px);">联系我们</a>
+        <a href="/#contact" style="background: #0A4DA2; color: white; padding: clamp(8px, 1vh, 10px) clamp(14px, 2vw, 20px); border-radius: 8px; text-decoration: none; font-weight: 500; transition: background 0.3s; white-space: nowrap; margin-left: clamp(4px, 1vw, 8px); font-size: clamp(13px, 1vw, 15px);">联系我们</a>
       </nav> 
 
       <!-- 移动端菜单按钮 -->
@@ -77,7 +77,7 @@
       <a href="#solutions" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">解决方案</a>
       <a href="/kb/" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">知识库系统</a>
       <a href="/case/" style="color: #1a202c; text-decoration: none; font-weight: 500; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">工单系统</a>
-      <a href="#contact" style="background: #0A4DA2; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; text-align: center; transition: background 0.3s;">联系我们</a>
+      <a href="/#contact" style="background: #0A4DA2; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; text-align: center; transition: background 0.3s;">联系我们</a>
     </div>
   </div>
 </header>
@@ -179,13 +179,13 @@
   }
   
   /* 导航链接悬停效果 */
-  .desktop-nav a:hover:not([href="#contact"]) {
+  .desktop-nav a:hover:not([href*="contact"]) {
     color: #0A4DA2;
     background: #A2D93D;
     border-radius: 6px;
   }
 
-  .desktop-nav a[href="#contact"]:hover {
+  .desktop-nav a[href*="contact"]:hover {
     background: rgba(10, 77, 162, 0.9);
   }
 
@@ -200,14 +200,14 @@
     opacity: 1 !important;
   }
 
-  .mobile-menu a:hover:not([href="#contact"]) {
+  .mobile-menu a:hover:not([href*="contact"]) {
     color: #0A4DA2;
     background: #A2D93D;
     border-radius: 6px;
     padding-left: 16px;
   }
 
-  .mobile-menu a[href="#contact"]:hover {
+  .mobile-menu a[href*="contact"]:hover {
     background: rgba(10, 77, 162, 0.9);
   }
 
