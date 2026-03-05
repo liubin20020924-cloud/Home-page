@@ -75,13 +75,13 @@ echo "7. 等待启动完成..."
 sleep 5
 
 if pgrep -f "webhook_receiver_github.py" > /dev/null; then
-    PID=$(pgrep -f "webhook_receiver_github.py")
-    echo "✅ 进程运行中 (PID: $PID)"
+    PID_LIST=$(pgrep -f "webhook_receiver_github.py" | tr '\n' ' ')
+    echo "✅ 进程运行中 (PID: $PID_LIST)"
 
     # 显示进程信息
     echo ""
-    echo "进程详情:"
-    ps -p $PID -o pid,ppid,cmd
+    echo "所有 webhook 进程:"
+    ps aux | grep webhook_receiver_github.py | grep -v grep
     echo ""
 
     # 测试端点

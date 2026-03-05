@@ -81,11 +81,12 @@ echo ""
 # 7. 验证进程启动
 echo "7. 验证进程状态..."
 if pgrep -f "webhook_receiver_github.py" > /dev/null; then
-    PID=$(pgrep -f "webhook_receiver_github.py")
-    echo "✅ Webhook receiver 进程已启动 (PID: $PID)"
+    PID_LIST=$(pgrep -f "webhook_receiver_github.py" | tr '\n' ' ')
+    echo "✅ Webhook receiver 进程已启动 (PID: $PID_LIST)"
 
-    # 显示进程信息
-    ps -p $PID -o pid,ppid,cmd
+    # 显示所有相关进程
+    echo "所有 webhook 进程:"
+    ps aux | grep webhook_receiver_github.py | grep -v grep
 else
     echo "❌ Webhook receiver 进程启动失败"
     echo "查看日志："
