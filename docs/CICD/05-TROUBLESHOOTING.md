@@ -195,6 +195,100 @@ sudo systemctl status webhook-receiver
 | 服务未启动 | 运行 `sudo systemctl start webhook-receiver` |
 | 网络不通 | 检查云主机网络连接 |
 
+---
+
+### 问题 4: Payload 解析错误
+
+**症状：**
+- Webhook 日志显示：`AttributeError: 'str' object has no attribute 'get'`
+- Flask 调试器显示 WSGI 错误
+- Webhook 请求返回 500 错误
+- 部署没有触发
+
+**错误信息示例：**
+```
+AttributeError: 'str' object has no attribute 'get'
+File "/opt/Home-page/venv/lib64/python3.11/site-packages/flask/app.py", line 145, in github_webhook
+    repository = payload.get('repository', {}).get('full_name', '')
+```
+
+**原因分析：**
+- Flask 的 `request.json` 方法在某些情况下（特别是当 Content-Type 为 `application/json` 时）可能返回一个 JSON 字符串而不是解析后的字典
+- 代码直接使用 `payload.get()` 方法，导致错误，因为字符串类型没有 `.get()` 方法
+- 这通常发生在 WSGI 服务器（如 Gunicorn）运行 Flask 应用时
+
+**诊断步骤：**
+```bash
+# 1. 查看 Webhook 服务日志
+sudo journalctl -u webhook-receiver -f
+
+# 2. 检查错误信息
+grep -i "AttributeError" /var/log/integrate-code/webhook.log
+
+# 3. 检查 Flask 版本和 WSGI 服务器
+python3 -c "import flask; print(flask.__version__)"
+```
+
+**解决方案：**
+
+**方案 1：使用修复后的代码**（推荐）
+- 已在 `scripts/webhook_receiver_github.py` 中修复
+- 添加了类型检查，统一处理字符串和字典格式
+
+```bash
+# 重启 webhook 服务以应用修复
+sudo systemctl restart webhook-receiver
+```
+
+**方案 2：手动验证修复**
+```bash
+# 测试 webhook 端点
+curl -v -X POST http://localhost:9000/webhook/health \
+  -H "Content-Type: application/json" \
+  -d '{"ref":"refs/heads/main"}'
+
+# 查看返回是否正常
+# 预期：{"status": "healthy", "timestamp": "..."}
+```
+
+**方案 3：如果问题仍然存在**
+
+检查 WSGI 服务器配置（如果使用 Gunicorn）：
+```bash
+# 编辑 gunicorn 配置
+# 确保 --limit-request-line 设置足够大
+# 或者禁用 request line 限制
+```
+
+**修复代码说明：**
+```python
+# 修复前
+try:
+    payload = request.json  # 可能返回字符串
+    repository = payload.get('repository', {}).get('full_name', '')
+
+# 修复后
+try:
+    raw_payload = request.json
+    # 类型检查，统一处理字符串和字典
+    if isinstance(raw_payload, str):
+        payload = json.loads(raw_payload)
+    else:
+        payload = raw_payload
+    # 现在可以安全地使用 .get()
+    repository = payload.get('repository', {}).get('full_name', '')
+```
+
+**预防措施：**
+1. ✅ 使用 `try-except` 包裹所有 JSON 解析操作
+2. ✅ 添加类型检查，确保 payload 是字典
+3. ✅ 记录详细的错误日志，包括原始 payload 类型
+4. ✅ 添加单元测试覆盖不同的 payload 格式
+
+**相关文档：**
+- [Webhook 接收器设计](./04-FEATURES.md#webhook-接收器设计)
+- [脚本使用说明](../SCRIPTS.md#webhook_receiver_githubpy)
+
 ### 问题 2: 签名验证失败
 
 **症状：**
