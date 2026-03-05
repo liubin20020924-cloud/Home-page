@@ -1,1 +1,0 @@
-"Test complete CI/CD flow with Gitee sync and webhook deployment"  
