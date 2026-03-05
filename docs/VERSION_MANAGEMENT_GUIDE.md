@@ -465,58 +465,30 @@ git-changelog -o CHANGELOG.md
 ```
 本地开发
     ↓ git push
-GitHub (2.2 分支)
+GitHub (develop/2.2 分支)
     ↓ Pull Request
 GitHub (main 分支)
-    ↓ GitHub Action
-Gitee (main 分支)
-    ↓ 云主机检测
-云主机自动部署
+    ↓ GitHub Action (CI/CD)
+云主机 (Webhook/SSH 部署)
+应用自动部署
 ```
 
-### GitHub → Gitee 同步
+### CI/CD 自动部署
 
-#### 方案 1: GitHub Action 自动同步（推荐）
+#### GitHub Action 工作流
 
-**配置文件**: `.github/workflows/sync-to-gitee.yml`
+**配置文件**: `.github/workflows/ci-cd.yml`
 
-```yaml
-name: Sync to Gitee
+完整的 CI/CD 流程包括：
+1. **测试阶段** - 运行单元测试
+2. **代码检查** - flake8 和 pylint 检查
+3. **安全检查** - 依赖安全性扫描
+4. **Webhook 通知** - 通知云主机开始部署（首选）
+5. **SSH 备用部署** - 通过 SSH 直接部署（备用方案）
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+#### 云主机部署机制
 
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Sync to Gitee
-        uses: wearerequired/git-mirror-action@master
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        with:
-          source-repo: "git@github.com:your-username/integrate-code.git"
-          destination-repo: "git@gitee.com:your-username/integrate-code.git"
-```
-
-#### 方案 2: 手动同步
-
-```bash
-# 添加 Gitee 远程仓库
-git remote add gitee https://gitee.com/your-username/integrate-code.git
-
-# 推送到 Gitee
-git push gitee main
-```
-
-### 云主机自动部署
-
-#### 自动检测机制
-
-云主机通过 cron 定时任务检测 Gitee 更新：
+云主机接收 GitHub Actions 的部署通知：
 
 ```bash
 # 编辑 crontab
@@ -528,118 +500,18 @@ crontab -e
 
 **检测脚本**: `scripts/check_and_deploy.sh`
 
-```bash
-#!/bin/bash
+### 部署脚本配置
 
-# 云户科技网站 - 自动检测并部署脚本
-# 定时检查 Gitee 更新，自动触发部署
+**部署脚本**: `scripts/deploy.sh`
 
-set -e
+自动部署流程包括：
+1. 创建备份
+2. 从 GitHub 拉取最新代码
+3. 更新依赖
+4. 重启应用服务
+5. 重启 webhook receiver 服务
 
-# 配置
-PROJECT_DIR="/opt/integrate-code"
-LOG_FILE="/var/log/integrate-code/auto-deploy.log"
-WEBHOOK_URL="http://localhost:9000/webhook/gitee"
-
-# 日志函数
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
-}
-
-log_info() {
-    echo "[INFO] $1" | tee -a "$LOG_FILE"
-    log "INFO: $1"
-}
-
-# 检查远程更新
-check_updates() {
-    cd "$PROJECT_DIR"
-    
-    # 获取本地最新提交
-    LOCAL_COMMIT=$(git rev-parse HEAD)
-    
-    # 获取远程最新提交
-    git fetch origin main
-    REMOTE_COMMIT=$(git rev-parse origin/main)
-    
-    # 比较提交
-    if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]; then
-        log_info "检测到新版本"
-        log_info "本地: $LOCAL_COMMIT"
-        log_info "远程: $REMOTE_COMMIT"
-        return 0  # 有更新
-    else
-        log_info "已是最新版本"
-        return 1  # 无更新
-    fi
-}
-
-# 触发部署
-trigger_deployment() {
-    log_info "触发部署..."
-    
-    # 调用 Webhook 触发部署
-    RESPONSE=$(curl -s -X POST "$WEBHOOK_URL" \
-        -H "X-Gitee-Token: ${WEBHOOK_SECRET}" \
-        -H "Content-Type: application/json" \
-        -d '{"ref": "refs/heads/main"}')
-    
-    if echo "$RESPONSE" | grep -q "Deployment started"; then
-        log_info "部署已触发"
-        return 0
-    else
-        log_info "部署触发失败: $RESPONSE"
-        return 1
-    fi
-}
-
-# 主流程
-main() {
-    log_info "=========================================="
-    log_info "开始检查更新..."
-    log_info "=========================================="
-    
-    # 检查更新
-    if check_updates; then
-        # 有更新，触发部署
-        trigger_deployment
-    fi
-    
-    log_info "检查完成"
-}
-
-# 执行
-main
-```
-
-### 云主机服务配置
-
-#### Webhook 接收器服务
-
-**systemd 服务文件**: `/etc/systemd/system/webhook-receiver.service`
-
-```ini
-[Unit]
-Description=CloudDoors Webhook Receiver
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/integrate-code
-Environment="PATH=/usr/local/bin:/usr/bin:/bin"
-Environment="WEBHOOK_SECRET=your-webhook-secret-here"
-ExecStart=/usr/bin/python3 /opt/integrate-code/scripts/webhook_receiver.py
-Restart=always
-RestartSec=10
-
-# 日志
-StandardOutput=append:/var/log/integrate-code/webhook.log
-StandardError=append:/var/log/integrate-code/webhook-error.log
-
-[Install]
-WantedBy=multi-user.target
-```
+**详细配置文档**: 参考 [CI/CD 部署指南](./CICD/02-CONFIGURATION.md)
 
 **启用服务**:
 
