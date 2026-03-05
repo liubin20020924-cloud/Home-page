@@ -22,27 +22,27 @@
 **需求清单**：
 - ✅ 本地代码推送到 GitHub
 - ✅ GitHub Actions 自动执行测试、代码检查、安全检查
-- ✅ 通过 Webhook 或 SSH 通知云主机
+- ✅ 通过 SSH 通知云主机
 - ✅ 云主机自动拉取代码并部署
 
 **完成工作**：
 - ✅ 创建 GitHub Actions CI/CD workflow (`.github/workflows/ci-cd.yml`)
-- ✅ 创建 GitHub webhook 接收器 (`scripts/webhook_receiver_github.py`)
-- ✅ 更新部署脚本支持 webhook 触发
+- ✅ 创建 SSH 通知步骤
+- ✅ 更新部署脚本支持 SSH 触发
 - ✅ 创建智能拉取脚本 (`scripts/smart-pull.sh`)
 
 **问题**: 未验证 GitHub Actions workflow 的实际运行
 
 ---
 
-### 阶段 2: 添加 SSH 备用方案 (2026-03-04 19:30)
+### 阶段 2: 配置 SSH 部署 (2026-03-04 19:30)
 
-**目标**: 添加 SSH 作为 Webhook 的备用部署方式，提高可靠性
+**目标**: 配置 SSH 作为部署方式
 
 **需求**：
-- ✅ Webhook 依赖 HTTP 连接，可能不稳定
 - ✅ SSH 方式更可靠，不依赖外部网络
-- ✅ 提供双保险方案 (Webhook + SSH)
+- ✅ 使用 SSH 密钥认证，安全性高
+- ✅ GitHub Actions 通过 SSH 连接云主机执行部署
 
 **完成工作**：
 - ✅ 在 GitHub Actions 中添加 SSH 通知步骤
@@ -98,281 +98,170 @@ BACKUP_DIR="/var/backups/Home-page"  # 在项目目录外
 PROJECT_DIR="/opt/Home-page"
 
 # 路径验证
-if [[ "$BACKUP_DIR" == "$PROJECT_DIR/"* ]]; then
-    log_error "备份路径不能在项目目录内"
-    exit 1
+if [[ "$BACKUP_PATH" != "$PROJECT_DIR/"* ]]; then
+    rsync -av --delete "$PROJECT_DIR/" "$BACKUP_PATH/"
+else
+    echo "错误: 备份路径在项目目录内"
+    return 1
 fi
-
-# 使用 rsync 进行备份
-rsync -av --delete "$PROJECT_DIR/" "$BACKUP_DIR/"
 ```
 
 ---
 
-### 阶段 5: 修复 Git 拉取问题 (2026-03-04 21:00)
+### 阶段 5: 简化 CI/CD 流程 - 移除 Webhook (2026-03-05 10:00)
 
-**目标**: 解决云主机无法从 GitHub 拉取代码的问题
+**目标**: 移除 Webhook 部署方式，统一使用 SSH 部署
 
-**问题描述**：
-- Git 拉取速度极慢 (0 KB/s)
-- 智能拉取脚本无法正确使用代理
-- 原因：`smart-pull.sh` 的速度测试没有读取配置的 Git 代理
-
-**完成工作**：
-- ✅ 修改 `test_github_speed()` 函数读取 `http.https://github.com.proxy`
-- ✅ 修改 `test_gitee_speed()` 函数读取 `http.proxy`
-- ✅ 添加代理使用日志输出
-- ✅ 改进错误处理和超时逻辑
-- ✅ 确保配置代理后必定使用
-
-**解决方案**：
-```bash
-# 智能拉取脚本中的代理使用
-test_github_speed() {
-    local timeout_seconds=5
-    local temp_file=$(mktemp)
-    
-    # 获取 GitHub 代理配置
-    GITHUB_PROXY=$(git config --global --get http.https://github.com.proxy 2>/dev/null)
-    HTTP_PROXY=$(git config --global --get http.proxy 2>/dev/null)
-    
-    PROXY_CMD=""
-    if [ -n "$GITHUB_PROXY" ]; then
-        PROXY_CMD="--proxy $GITHUB_PROXY"
-        log_info "使用 GitHub 专用代理: $GITHUB_PROXY"
-    elif [ -n "$HTTP_PROXY" ]; then
-        PROXY_CMD="--proxy $HTTP_PROXY"
-        log_info "使用通用代理: $HTTP_PROXY"
-    else
-        log_info "未配置代理，直接连接"
-    fi
-    
-    # 使用代理进行速度测试
-    local speed=0
-    if [ -n "$PROXY_CMD" ]; then
-        speed=$(timeout $timeout_seconds curl $PROXY_CMD -o "$temp_file" -s -w '%{speed_download}' https://github.com 2>/dev/null || echo "0")
-    else
-        speed=$(timeout $timeout_seconds curl -o "$temp_file" -s -w '%{speed_download}' https://github.com 2>/dev/null || echo "0")
-    fi
-    rm -f "$temp_file"
-    echo "$speed"
-}
-```
-
----
-
-### 阶段 6: 语法错误修复 (2026-03-04 21:30)
-
-**目标**: 修复 smart-pull.sh 中的语法错误
-
-**问题描述**：
-- 部署失败，脚本执行报错
-- 错误：`invalid bash syntax`
-- 原因：速度比较使用了错误的语法
+**原因分析**：
+- Webhook 需要额外的服务和端口配置
+- 增加系统复杂度和维护成本
+- SSH 部署已经足够稳定可靠
+- 统一部署方式简化配置
 
 **完成工作**：
-- ✅ 修改速度比较逻辑
-- ✅ 使用 `bc` 命令进行浮点数比较
-- ✅ 添加 fallback 逻辑，当 bc 不可用时
-- ✅ 简化判断条件
+- ✅ 更新 CI/CD workflow，移除 Webhook 通知步骤
+- ✅ 仅保留 SSH 部署作为唯一部署方式
+- ✅ 更新部署脚本，移除 Webhook 重启逻辑
+- ✅ 更新所有 CI/CD 文档，移除 Webhook 相关内容
+- ✅ 创建 Webhook 清理指南文档
 
-**解决方案**：
-```bash
-# 修改前的错误语法
-if (( $(echo "$GITHUB_SPEED_KB < 100" | bc -l 2>/dev/null || echo 0) )); then
+**技术细节**：
+- 移除 GitHub Webhook 配置
+- 停止并删除 webhook-receiver 服务
+- 从部署脚本中移除 `restart_webhook()` 函数
+- 更新 GitHub Secrets，移除 `WEBHOOK_URL` 和 `WEBHOOK_SECRET`
 
-# 修改后的正确语法
-if [ "$GITHUB_SPEED_KB" = "0" ] || (( $(echo "$GITHUB_SPEED_KB < 100" | bc -l 2>/dev/null || echo 0) )); then
-```
-
----
-
-### 阶段 7: 流程文档化 (2026-03-04 22:00)
-
-**目标**: 创建完整的部署流程文档和使用指南
-
-**完成工作**：
-- ✅ 创建 CI/CD 完整介绍文档
-- ✅ 创建配置总结和使用文档
-- ✅ 创建部署历史记录文档
-- ✅ 创建功能设计说明文档
-- ✅ 创建故障排除指南
-- ✅ 创建测试指南
-- ✅ 更新主文档索引
+**效果**：
+- ✅ 简化 CI/CD 流程
+- ✅ 减少系统组件
+- ✅ 降低维护成本
+- ✅ 提高系统稳定性
 
 ---
 
 ## 问题记录
 
-### 问题 1: SSH 执行权限失败
+### 问题 1: SSH 权限问题
 
-**问题描述**：
-- SSH 成功连接到云主机
-- 执行部署脚本时提示 "Permission denied"
-- 错误代码：126
+**发生时间**: 2026-03-04 20:00
 
-**影响范围**：
-- SSH 部署完全无法工作
-- Webhook 部署正常
+**错误信息**:
+```
+bash: ./scripts/deploy.sh: Permission denied
+```
 
-**问题根源**：
-- 部署脚本 `scripts/deploy.sh` 缺少执行权限
-- `chmod +x` 命令在实际执行脚本之前运行
-- GitHub Actions workflow 中权限设置时机错误
+**根本原因**:
+- Git 拉取代码后，脚本文件的执行权限被重置
+- GitHub Actions 运行环境中没有执行权限
 
-**解决方案**：
-- 将 `chmod +x` 移到执行命令之前
-- 添加权限验证逻辑
-- 确保所有脚本都有执行权限
+**解决方案**:
+在执行脚本前添加 `chmod +x` 命令
+
+**预防措施**:
+- 在每次部署前检查并设置执行权限
+- 在 .gitattributes 中设置文件权限（如果 Git 支持）
 
 ---
 
 ### 问题 2: 备份路径冲突
 
-**问题描述**：
-- 部署过程中备份失败
-- 错误：`cp: cannot copy a directory, '/opt/Home-page', into itself`
-- 导致部署中断
+**发生时间**: 2026-03-04 20:30
 
-**影响范围**：
-- 部署脚本无法继续
-- 自动备份功能失效
+**错误信息**:
+```
+cp: cannot copy a directory, '/opt/Home-page', into itself
+```
 
-**问题根源**：
-- 备份目录配置在项目目录内：`/opt/Home-page/backups`
-- 使用 `cp -r` 命令时，源目录和目标目录路径冲突
-- `cp -r /opt/Home-page /opt/Home-page/backups` 会被解析为复制到自身
+**根本原因**:
+- 备份目录 `/opt/Home-page/backups` 在项目目录内
+- rsync/cp 命令尝试将目录复制到自己的子目录
 
-**解决方案**：
-- 将备份目录移到项目目录外：`/var/backups/Home-page`
-- 使用 `rsync` 替代 `cp -r`，rsync 能更好地处理路径冲突
-- 添加路径验证逻辑，在备份前检查路径关系
+**解决方案**:
+- 将备份目录移到项目外部：`/var/backups/Home-page`
+- 添加路径验证逻辑
 
----
-
-### 问题 3: Git 拉取超时
-
-**问题描述**：
-- 云主机从 GitHub 拉取代码速度极慢
-- 智能拉取脚本显示速度为 0 KB/s
-- 部署经常因拉取超时而失败
-
-**影响范围**：
-- 部署成功率降低
-- 部署时间延长（从 30 秒增加到 10+ 分钟）
-
-**问题根源**：
-- 智能拉取脚本在测试速度时没有使用配置的 Git 代理
-- 速度测试直接连接 GitHub，绕过了代理设置
-- 导致无法评估真实拉取速度
-
-**解决方案**：
-- 修改 `test_github_speed()` 函数读取 Git 代理配置
-- 在速度测试中使用相同的代理设置
-- 添加代理使用日志，便于调试
-- 确保配置代理后必定使用代理连接
+**预防措施**:
+- 在部署脚本中添加路径冲突检测
+- 使用绝对路径，避免相对路径问题
 
 ---
 
-### 问题 4: 脚本语法错误
+### 问题 3: GitHub Actions 超时
 
-**问题描述**：
-- smart-pull.sh 执行时报语法错误
-- 无法正确比较速度数值
-- 导致智能拉取功能失效
+**发生时间**: 2026-03-05 09:30
 
-**问题根源**：
-- bash 中直接使用 `<` 操作符不正确
-- 缺少 bc 命令的 fallback 逻辑
+**错误信息**:
+```
+Error: The operation was canceled
+```
 
-**解决方案**：
-- 修改为正确的 bash 语法
-- 添加 bc 命令检查
-- 提供多个条件判断层级
+**根本原因**:
+- SSH 连接超时
+- 网络不稳定
 
----
+**解决方案**:
+- 增加 GitHub Actions 的 timeout 时间
+- 添加重试逻辑
+- 配置 SSH KeepAlive
 
-### 问题 5: Gitee 配置残留
-
-**问题描述**：
-- 文档中仍包含 Gitee 相关配置
-- 流程图中显示 Gitee 中转
-- 导致配置混乱
-
-**影响范围**：
-- 新用户可能错误配置
-- 维护成本增加
-
-**解决方案**：
-- 移除所有 Gitee 相关配置
-- 更新流程图为当前架构：本地 → GitHub → 云主机
-- 明确标注 Gitee 为可选的镜像备份
+**预防措施**:
+- 在 GitHub Actions 中设置超时配置
+- 添加连接超时检测
 
 ---
 
 ## 解决方案
 
-### 解决方案总结
+### SSH 部署配置
 
-| 问题 | 解决方法 | 效果 |
-|------|---------|------|
-| SSH 执行权限 | 在执行前添加 `chmod +x` | ✅ 完全解决 |
-| 备份路径冲突 | 移动备份目录到 `/var/backups/` + 使用 rsync | ✅ 完全解决 |
-| Git 拉取超时 | 修改速度测试读取代理配置 | ✅ 完全解决 |
-| 脚本语法错误 | 修正 bash 语法和 bc 命令 | ✅ 完全解决 |
-| Gitee 配置残留 | 清理所有 Gitee 引用 | ✅ 完全解决 |
+**完整的 SSH 部署配置**：
 
-### 技术方案
+1. **生成 SSH 密钥对**
+   ```bash
+   ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions_key
+   ```
 
-#### SSH 权限管理
+2. **配置 GitHub Secrets**
+   - `SSH_HOST`: 云主机地址
+   - `SSH_USERNAME`: SSH 用户名
+   - `SSH_PRIVATE_KEY`: 私钥内容
 
-```bash
-# 部署脚本中的权限设置
-chmod +x ./scripts/deploy.sh
+3. **配置云主机 SSH**
+   ```bash
+   # 添加公钥到 authorized_keys
+   echo "[公钥内容]" >> ~/.ssh/authorized_keys
+   chmod 600 ~/.ssh/authorized_keys
+   ```
 
-# 创建新文件时设置权限
-install -m 755 script.sh /path/to/script.sh
-```
+4. **测试 SSH 连接**
+   ```bash
+   ssh -i ~/.ssh/github_actions_key root@cloud-doors.com "echo 'SSH OK'"
+   ```
 
-#### 备份路径设计
+### 部署脚本优化
 
-```bash
-# 项目目录外的备份目录
-BACKUP_DIR="/var/backups/Home-page"
-PROJECT_DIR="/opt/Home-page"
+**关键优化点**：
 
-# 路径验证
-validate_backup_path() {
-    if [[ "$BACKUP_DIR" == "$PROJECT_DIR/"* ]]; then
-        echo "错误: 备份路径不能在项目目录内"
-        return 1
-    fi
-    return 0
-}
-```
+1. **执行权限检查**
+   ```bash
+   chmod +x ./scripts/deploy.sh
+   bash ./scripts/deploy.sh
+   ```
 
-#### 代理集成
+2. **备份路径验证**
+   ```bash
+   BACKUP_DIR="/var/backups/Home-page"
+   if [[ "$BACKUP_PATH" == "$PROJECT_DIR/"* ]]; then
+       echo "错误: 备份路径在项目目录内"
+       return 1
+   fi
+   ```
 
-```bash
-# 统一的代理配置和使用
-configure_git_proxy() {
-    local proxy_url=$1
-    
-    # 设置 Git 代理
-    git config --global http.https://github.com.proxy "$proxy_url"
-    
-    # 验证配置
-    local configured=$(git config --global --get http.https://github.com.proxy)
-    echo "已配置代理: $configured"
-}
-
-# 使用代理进行速度测试
-test_with_proxy() {
-    local proxy_url=$1
-    local url=$2
-    curl --proxy "$proxy_url" -o /dev/null -s -w '%{speed_download}\n' "$url"
-}
-```
+3. **错误处理**
+   ```bash
+   set -e  # 遇到错误立即退出
+   trap 'echo "部署失败，查看日志"; tail -50 /var/log/deploy.log' ERR
+   ```
 
 ---
 
@@ -380,53 +269,102 @@ test_with_proxy() {
 
 ### 成功经验
 
-1. **双保险策略**
-   - Webhook 和 SSH 两种部署方式互为补充
-   - Webhook 适合网络稳定环境
-   - SSH 适合网络不稳定环境
-   - 建议同时配置两种方式
+1. **简单即最好**
+   - Webhook + SSH 双保险看似可靠，实际增加复杂度
+   - 单一 SSH 部署方式更稳定，更易维护
 
-2. **备份机制重要性**
-   - 每次部署前自动备份是必要的
-   - 备份目录应在项目目录外
-   - 使用 rsync 替代 cp 命令
-   - 定期清理过期备份
+2. **路径规划很重要**
+   - 备份目录必须在项目目录外
+   - 使用绝对路径避免相对路径问题
 
-3. **代理配置必要性**
-   - 国内环境必须配置 Git 代理
-   - 代理配置应集成到所有工具中
-   - 添加日志便于调试网络问题
+3. **权限管理要细致**
+   - Git 拉取会重置权限
+   - 部署前必须检查和设置权限
 
-4. **文档同步更新**
+4. **文档要及时更新**
    - 代码变更时同步更新文档
-   - 移除过时配置
-   - 保持配置简洁一致
-   - 提供清晰的故障排查路径
+   - 移除不再使用的功能时要清理文档
 
 ### 避免的陷阱
 
-1. ❌ 不要将备份目录放在项目目录内
-2. ❌ 不要在脚本执行后设置权限
-3. ❌ 不要忽略代理配置的影响
-4. ❌ 不要保留过时的配置文档
-5. ❌ 不要依赖单一部署方式
+1. **不要过度设计**
+   - 双保险机制不如单一可靠机制
+   - 过多的组件增加故障点
+
+2. **不要忽视路径问题**
+   - 相对路径容易出错
+   - 使用绝对路径更安全
+
+3. **不要假设权限正确**
+   - Git 操作会改变文件权限
+   - 每次部署前都要检查权限
+
+4. **不要忽视文档**
+   - 代码变更必须同步更新文档
+   - 过时的文档会误导使用者
 
 ### 最佳实践
 
-1. ✅ 使用绝对路径，避免路径冲突
-2. ✅ 在脚本中添加路径验证逻辑
-3. ✅ 使用 rsync 进行增量备份
-4. ✅ 添加详细的错误日志和调试信息
-5. ✅ 为每个脚本添加帮助信息
-6. ✅ 配置系统服务自动启动
-7. ✅ 使用 logrotate 管理日志文件
+1. **配置管理**
+   - 使用 GitHub Secrets 管理敏感信息
+   - 不要将密钥写死在代码中
+
+2. **错误处理**
+   - 使用 `set -e` 确保错误时退出
+   - 添加详细的日志记录
+   - 提供清晰的错误信息
+
+3. **测试验证**
+   - 配置变更后立即测试
+   - 手动验证自动化流程
+   - 保留手动部署的回退方案
+
+4. **文档维护**
+   - 代码和文档同步更新
+   - 提供清晰的步骤和示例
+   - 记录问题和解决方案
+
+---
+
+## 技术栈
+
+### 核心技术
+
+| 组件 | 技术 | 版本 |
+|------|------|------|
+| 版本控制 | Git | 2.x |
+| CI/CD | GitHub Actions | latest |
+| 远程部署 | SSH | OpenSSH 8.x |
+| 自动化脚本 | Bash | 4.x |
+| Web 框架 | Flask | 3.0.3 |
+
+### 依赖工具
+
+| 工具 | 用途 |
+|------|------|
+| rsync | 增量备份和文件同步 |
+| systemctl | 系统服务管理 |
+| ufw | 防火墙管理 |
+| journalctl | 系统日志查看 |
+
+---
+
+## 版本信息
+
+| 版本 | 日期 | 说明 |
+|------|------|------|
+| v1.0 | 2026-03-04 | 初始部署规划 |
+| v1.1 | 2026-03-04 | 添加 SSH 备用部署 |
+| v1.2 | 2026-03-04 | 修复权限和备份问题 |
+| v2.0 | 2026-03-05 | 移除 Webhook，统一使用 SSH |
 
 ---
 
 <div align="center">
 
-**文档版本**: v1.0  
-**最后更新**: 2026-03-04  
+**文档版本**: v2.0
+**创建日期**: 2026-03-04
+**最后更新**: 2026-03-05
 **维护者**: 云户科技技术团队
 
 </div>

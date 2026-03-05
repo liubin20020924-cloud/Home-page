@@ -98,506 +98,455 @@ pytest tests/ -n auto
 - [ ] 无代码风格警告
 - [ ] 无类型检查错误
 - [ ] 无安全漏洞警告
-- [ ] 应用可以正常启动
-- [ ] 所有核心功能正常
-- [ ] 数据库连接正常
-- [ ] 文件上传功能正常
-- [ ] 用户认证功能正常
+- [ ] 集成测试全部通过
+- [ ] 手动测试关键功能
 
 ---
 
 ## CI 测试
 
-### GitHub Actions 测试验证
+### GitHub Actions 测试
 
-#### 检查 1: 代码质量检查
+#### 1. 代码检查测试
 
 ```yaml
-# 验证步骤
-1. Push 代码到功能分支
-2. 查看 Actions 标签页
-3. 等待 "Code Check" 完成
-4. 查看检查结果
+# .github/workflows/ci-cd.yml
+- name: Code Check
+  run: |
+    python -m py_compile app.py routes/ services/
+    flake8 --max-line-length=120 routes/
 ```
 
-**预期结果：**
-- ✅ 语法检查通过
+**测试内容：**
+- ✅ Python 语法正确性
 - ✅ 代码风格符合 PEP 8
-- ✅ 无严重警告
-- ⚠️ 警告已记录
+- ✅ 无明显的代码问题
 
-#### 检查 2: 单元测试
-
-```yaml
-# 验证步骤
-1. 查看 "Run Tests" 任务
-2. 等待测试完成
-3. 查看测试报告
-```
-
-**预期结果：**
-- ✅ 所有测试通过
-- ✅ 覆盖率 > 80%
-- ✅ 无测试超时
-- ✅ 测试结果已上传
-
-#### 检查 3: 安全扫描
+#### 2. 单元测试
 
 ```yaml
-# 验证步骤
-1. 查看 "Security Check" 任务
-2. 等待扫描完成
-3. 查看安全报告
+- name: Run Tests
+  run: |
+    pip install -r requirements-dev.txt
+    pytest tests/ -v --cov=. --cov-report=xml
 ```
 
-**预期结果：**
-- ✅ 无严重漏洞
-- ✅ 无中危漏洞
-- ⚠️ 低危漏洞已记录
-- ✅ SQL 注入检查通过
+**测试内容：**
+- ✅ 所有单元测试通过
+- ✅ 测试覆盖率达标
+- ✅ 无测试失败或跳过
 
-#### 检查 4: 自动合并
+#### 3. 代码质量检查
 
 ```yaml
-# 验证步骤
-1. 确保 PR 标签包含 `auto-merge`
-2. 等待 "Auto Merge" 任务
-3. 确认代码已合并到 main
+- name: Code Quality
+  run: |
+    pip install pylint
+    pylint app.py routes/ services/ --max-line-length=120
 ```
 
-**预期结果：**
-- ✅ PR 已合并
-- ✅ main 分支已更新
-- ✅ 触发部署流程
+**测试内容：**
+- ✅ 代码质量评分 > 8.0
+- ✅ 无严重质量问题
+- ✅ 无潜在的 bug
 
-### Actions 测试命令
+#### 4. 安全扫描
 
-```bash
-# 本地触发测试 workflow
-gh workflow run ci-cd.yml --ref main
-
-# 查看最近运行
-gh run list --workflow=ci-cd.yml --limit 5
-
-# 查看特定运行的日志
-gh run view <run-id>
-
-# 下载运行日志
-gh run download <run-id>
+```yaml
+- name: Security Scan
+  run: |
+    pip install bandit
+    bandit -r app/ routes/ services/ -f json -o security-report.json
 ```
+
+**测试内容：**
+- ✅ 无高风险漏洞
+- ✅ 无中风险漏洞（除非确认可接受）
+- ✅ 安全问题已修复或记录
 
 ### CI 测试清单
 
-- [ ] Code Check 通过
-- [ ] 所有 Lint 检查通过
-- [ ] 测试通过（所有用例）
-- [ ] 测试覆盖率达标
-- [ ] Security Check 通过
-- [ ] 无严重安全漏洞
-- [ ] Auto Merge 成功执行
-- [ ] 部署通知已触发
-- [ ] Actions 日志正常
+- [ ] 代码检查通过
+- [ ] 单元测试全部通过
+- [ ] 测试覆盖率 > 80%
+- [ ] 代码质量检查通过
+- [ ] 安全扫描无高风险
+- [ ] CI workflow 执行时间 < 10 分钟
+- [ ] 所有 artifact 正常生成
 
 ---
 
 ## CD 测试
 
-### Webhook 测试
+### SSH 部署测试
 
-#### 测试 1: 健康检查
+#### 1. SSH 连接测试
 
 ```bash
-# 测试 Webhook 服务健康状态
-curl http://cloud-doors.com:9000/webhook/health
+# 测试 SSH 密钥配置
+ssh -i ~/.ssh/github_actions_key root@cloud-doors.com "echo 'SSH OK'"
 
-# 预期响应
-{
-  "status": "healthy",
-  "version": "x.x.x",
-  "last_deployment": "2026-03-04T12:00:00Z"
-}
+# 预期输出
+# SSH OK
 ```
 
-**验证点：**
-- ✅ HTTP 状态码为 200
-- ✅ 响应包含 `status: healthy`
-- ✅ 响应时间 < 1 秒
+**测试内容：**
+- ✅ SSH 密钥配置正确
+- ✅ 连接云主机成功
+- ✅ 认证方式正确
 
-#### 测试 2: 手动触发部署
-
-```bash
-# 模拟 GitHub Webhook 请求
-curl -X POST http://cloud-doors.com:9000/webhook/github \
-  -H "Content-Type: application/json" \
-  -H "X-Hub-Signature-256: sha256=<测试签名>" \
-  -d '{
-    "ref": "refs/heads/main",
-    "repository": {
-      "name": "Home-page",
-      "full_name": "liubin20020924-cloud/Home-page"
-    },
-    "pusher": {
-      "name": "Test User"
-    },
-    "sender": {
-      "login": "test-user"
-    }
-  }'
-```
-
-**验证点：**
-- ✅ 返回 200 OK
-- ✅ 部署日志开始记录
-- ✅ 部署流程正常执行
-- ✅ 最终应用成功更新
-
-#### 测试 3: 版本查询
+#### 2. 部署脚本测试
 
 ```bash
-# 查询当前部署版本
-curl http://cloud-doors.com:9000/webhook/version
+# SSH 登录云主机
+ssh root@cloud-doors.com
 
-# 预期响应
-{
-  "version": "Home-page_20260304_120000",
-  "sha": "abc123...",
-  "time": "2026-03-04T12:00:00Z",
-  "git_ref": "refs/heads/main"
-}
-```
-
-### 部署测试
-
-#### 测试 1: 完整部署流程
-
-```bash
-# 1. 本地创建测试提交
-git commit --allow-empty -m "test: 部署测试"
-
-# 2. 推送到 GitHub
-git push origin main
-
-# 3. 监控部署过程
-tail -f /var/log/Home-page/deploy.log
-
-# 4. 等待部署完成（约 2-5 分钟）
-# 5. 验证应用更新
-curl http://cloud-doors.com:5000/health
-```
-
-**验证点：**
-- ✅ 备份成功创建
-- ✅ 代码成功拉取
-- ✅ 依赖成功更新
-- ✅ 服务成功重启
-- ✅ 应用健康检查通过
-- ✅ 功能验证正常
-
-#### 测试 2: 回滚测试
-
-```bash
-# 1. 查看可用备份
-ls -lh /var/backups/Home-page/
-
-# 2. 执行回滚
+# 进入项目目录
 cd /opt/Home-page
-./scripts/rollback.sh Home-page_20260303_120000
 
-# 3. 验证回滚成功
-curl http://cloud-doors.com:5000/health
+# 手动执行部署脚本
+bash scripts/deploy.sh
 
-# 4. 检查应用功能
+# 查看部署日志
+tail -f /var/log/integrate-code/deploy.log
 ```
 
-**验证点：**
-- ✅ 备份文件成功恢复
-- ✅ 服务成功重启
-- ✅ 应用使用回滚版本
-- ✅ 功能验证正常
-- ✅ 无数据丢失
+**测试内容：**
+- ✅ 备份创建成功
+- ✅ 代码拉取成功
+- ✅ 依赖更新成功
+- ✅ 服务重启成功
+- ✅ 健康检查通过
 
-#### 测试 3: 备份验证
+### 部署验证
+
+#### 1. 验证代码更新
 
 ```bash
-# 1. 创建测试文件
-echo "test content $(date)" > /opt/Home-page/test.txt
+# SSH 登录云主机
+ssh root@cloud-doors.com
 
-# 2. 触发部署
-# 通过 Push 或 Webhook
+# 查看最新提交
+cd /opt/Home-page
+git log -1
 
-# 3. 验证备份存在
-ls -lh /var/backups/Home-page/Home-page_*/
-
-# 4. 验证备份文件内容
-grep "test content" /var/backups/Home-page/Home-page_*/test.txt
+# 验证文件更新
+ls -la
 ```
 
-**验证点：**
-- ✅ 备份目录存在
-- ✅ 时间戳备份目录已创建
-- ✅ 备份包含所有文件
-- ✅ 备份文件内容正确
-- ✅ rsync 增量备份工作
+**验证内容：**
+- ✅ Git 记录显示最新提交
+- ✅ 文件修改时间正确
+- ✅ 新文件已存在
+
+#### 2. 验证服务状态
+
+```bash
+# 查看服务状态
+sudo systemctl status Home-page
+
+# 验证进程运行
+ps aux | grep app.py
+
+# 查看服务日志
+sudo journalctl -u Home-page -n 50
+```
+
+**验证内容：**
+- ✅ 服务状态为 active (running)
+- ✅ 进程正在运行
+- ✅ 日志无错误
+
+#### 3. 验证应用可访问
+
+```bash
+# 测试本地访问
+curl http://localhost:5000
+
+# 测试外部访问
+curl http://cloud-doors.com:5000
+
+# 测试健康检查
+curl http://cloud-doors.com:5000/health
+```
+
+**验证内容：**
+- ✅ HTTP 响应状态码 200
+- ✅ 页面内容正常
+- ✅ 健康检查返回 OK
+
+### 回滚测试
+
+```bash
+# 1. 列出可用备份
+ls -lt /var/backups/Home-page/
+
+# 2. 选择一个备份
+BACKUP_NAME="Home-page_20260304_120000"
+
+# 3. 执行回滚
+cd /opt/Home-page
+bash scripts/rollback.sh $BACKUP_NAME
+
+# 4. 验证回滚成功
+git log -1
+curl http://localhost:5000
+```
+
+**测试内容：**
+- ✅ 备份文件存在
+- ✅ 回滚脚本执行成功
+- ✅ 代码已恢复到备份版本
+- ✅ 服务正常运行
 
 ### CD 测试清单
 
-- [ ] Webhook 健康检查通过
-- [ ] 手动触发部署成功
-- [ ] 版本查询 API 正常
-- [ ] 完整部署流程成功
-- [ ] 回滚功能正常
-- [ ] 备份机制正常
+- [ ] SSH 连接测试通过
+- [ ] 部署脚本测试通过
+- [ ] 备份创建成功
+- [ ] 代码拉取成功
+- [ ] 依赖更新成功
 - [ ] 服务重启成功
-- [ ] 应用健康检查通过
-- [ ] 功能验证正常
-- [ ] 部署日志完整
+- [ ] 应用可正常访问
+- [ ] 健康检查通过
+- [ ] 回滚功能正常
+- [ ] 部署时间 < 5 分钟
 
 ---
 
 ## 集成测试
 
-### 端到端测试
+### 端到端测试流程
 
-#### 测试 1: 用户注册 → 工单提交
+#### 测试 1: 完整部署流程
 
-```bash
-# 1. 测试用户注册
-curl -X POST http://cloud-doors.com:5000/unified/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "testuser",
-    "password": "Test@123",
-    "email": "test@example.com"
-  }'
+1. **本地代码修改**
+   ```bash
+   # 修改测试文件
+   echo "# Test $(date)" >> README.md
+   
+   # 提交并推送
+   git add README.md
+   git commit -m "test: integration test"
+   git push origin main
+   ```
 
-# 2. 使用返回的 token 提交工单
-TOKEN="返回的jwt_token"
-curl -X POST http://cloud-doors.com:5000/case/tickets \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "测试工单",
-    "description": "这是一个测试工单",
-    "priority": "normal"
-  }'
-```
+2. **观察 GitHub Actions**
+   - 访问 Actions 页面
+   - 查看 workflow 执行状态
+   - 查看日志输出
 
-#### 测试 2: 知识库搜索 → 文件下载
+3. **验证云主机部署**
+   ```bash
+   # SSH 登录
+   ssh root@cloud-doors.com
+   
+   # 验证代码更新
+   cd /opt/Home-page
+   git log -1
+   tail README.md
+   ```
 
-```bash
-# 1. 搜索知识库
-curl http://cloud-doors.com:5000/kb/search?q=测试
+4. **验证应用功能**
+   ```bash
+   # 测试应用访问
+   curl http://cloud-doors.com:5000
+   
+   # 测试关键功能
+   curl http://cloud-doors.com:5000/kb
+   curl http://cloud-doors.com:5000/case
+   ```
 
-# 2. 下载文档
-curl http://cloud-doors.com:5000/kb/download/1 -o test.pdf
-```
+**预期结果：**
+- ✅ GitHub Actions 自动触发
+- ✅ CI 测试全部通过
+- ✅ SSH 部署成功执行
+- ✅ 云主机代码已更新
+- ✅ 应用功能正常
 
-### 跨浏览器测试
+#### 测试 2: 部署失败恢复
 
-```bash
-# 使用 pytest 和 Playwright 进行跨浏览器测试
-pytest tests/test_browser.py --browser=chromium
-pytest tests/test_browser.py --browser=firefox
+1. **模拟部署失败**
+   ```bash
+   # SSH 登录
+   ssh root@cloud-doors.com
+   
+   # 修改部署脚本制造失败
+   cd /opt/Home-page
+   echo "exit 1" >> scripts/deploy.sh
+   ```
 
-# 或使用 Selenium 进行兼容性测试
-pytest tests/test_selenium.py
-```
+2. **触发部署**
+   ```bash
+   # 本地提交
+   echo "# Test failure" >> README.md
+   git add .
+   git commit -m "test: deploy failure"
+   git push origin main
+   ```
 
-### API 兼容性测试
+3. **观察失败**
+   - GitHub Actions 显示失败
+   - 云主机代码未更新
 
-```bash
-# 测试 API 版本兼容性
-curl -H "API-Version: v1" http://cloud-doors.com:5000/api/users
-curl -H "API-Version: v2" http://cloud-doors.com:5000/api/users
+4. **修复并重新部署**
+   ```bash
+   # SSH 登录
+   ssh root@cloud-doors.com
+   
+   # 恢复部署脚本
+   git checkout scripts/deploy.sh
+   
+   # 重新部署
+   bash scripts/deploy.sh
+   ```
 
-# 测试响应格式
-curl -H "Accept: application/json" http://cloud-doors.com:5000/api/data
-curl -H "Accept: application/xml" http://cloud-doors.com:5000/api/data
-```
+**预期结果：**
+- ✅ 部署失败能被检测
+- ✅ 修复后能成功部署
+- ✅ 不影响系统稳定性
 
 ### 集成测试清单
 
-- [ ] 用户注册登录流程正常
-- [ ] 工单系统完整流程正常
-- [ ] 知识库搜索下载正常
-- [ ] 跨浏览器兼容性正常
-- [ ] API 兼容性正常
-- [ ] 系统间数据一致性正常
-- [ ] 无功能回归问题
+- [ ] 完整部署流程正常
+- [ ] 失败场景处理正确
+- [ ] 回滚机制有效
+- [ ] 所有系统集成正常
+- [ ] 错误日志记录完整
+- [ ] 监控告警正常
 
 ---
 
 ## 性能测试
 
-### 响应时间测试
+### 部署性能
 
 ```bash
-# 测试应用响应时间
+# 测量部署时间
+time bash scripts/deploy.sh
+
+# 记录各阶段耗时
+START_TIME=$(date +%s)
+# ... 部署过程 ...
+END_TIME=$(date +%s)
+ELAPSED=$((END_TIME - START_TIME))
+echo "部署耗时: ${ELAPSED} 秒"
+```
+
+**性能指标：**
+- ✅ 部署总时间 < 5 分钟
+- ✅ 备份时间 < 30 秒
+- ✅ 代码拉取 < 2 分钟
+- ✅ 依赖更新 < 1 分钟
+- ✅ 服务重启 < 30 秒
+
+### 应用性能
+
+```bash
+# 测试响应时间
 for i in {1..10}; do
-  time curl http://cloud-doors.com:5000/health
-  sleep 1
+  curl -w "@curl-format.txt" -o /dev/null -s http://cloud-doors.com:5000
 done
 
-# 测试 Webhook 响应时间
-for i in {1..10}; do
-  time curl http://cloud-doors.com:9000/webhook/health
-  sleep 1
-done
-
-# 计算平均响应时间
-# 平均响应时间应 < 1 秒
+# curl-format.txt 内容
+# time_namelookup:  %{time_namelookup}\n
+# time_connect:     %{time_connect}\n
+# time_appconnect:  %{time_appconnect}\n
+# time_pretransfer: %{time_pretransfer}\n
+# time_starttransfer: %{time_starttransfer}\n
+# ----------\n
+# time_total:      %{time_total}\n
 ```
 
-### 并发测试
-
-```bash
-# 使用 Apache Bench 进行并发测试
-ab -n 1000 -c 10 http://cloud-doors.com:5000/
-
-# 或使用 wrk
-wrk -t 30 -c 10 http://cloud-doors.com:5000/
-
-# 预期结果
-# 请求/秒: > 50
-# 失败率: < 1%
-# 95% 百分位响应时间: < 500ms
-```
-
-### 负载测试
-
-```bash
-# 使用 Locust 进行负载测试
-locust -f locustfile.py --host=http://cloud-doors.com:5000 --users=50 --spawn-rate=10 --run-time=1m
-
-# 监控指标
-# 平均响应时间
-# RPS (每秒请求数)
-# 失败率
-```
-
-### 资源使用监控
-
-```bash
-# 监控 CPU 使用
-top -b -n 1 | grep app.py
-
-# 监控内存使用
-ps aux | grep app.py | awk '{print $6}'
-
-# 监控网络使用
-netstat -tuln | grep 5000
-
-# 监控磁盘 I/O
-iostat -x 1 5
-```
-
-### 性能测试清单
-
-- [ ] 应用响应时间 < 1 秒
-- [ ] Webhook 响应时间 < 1 秒
-- [ ] 并发处理能力 > 50 req/s
-- [ ] 负载测试失败率 < 1%
-- [ ] CPU 使用 < 80%
-- [ ] 内存使用 < 80%
-- [ ] 无内存泄漏
-- [ ] 数据库查询优化
-- [ ] 静态资源加载优化
+**性能指标：**
+- ✅ 平均响应时间 < 500ms
+- ✅ 最大响应时间 < 2s
+- ✅ 99% 请求 < 1s
 
 ---
 
 ## 测试报告
 
-### 测试报告模板
+### 自动化报告
+
+#### 覆盖率报告
+
+```bash
+# 生成覆盖率报告
+pytest tests/ --cov=. --cov-report=html --cov-report=xml
+
+# 查看报告
+open htmlcov/index.html
+
+# 上传到 Codecov
+# 在 GitHub Actions 中自动上传
+```
+
+报告包含：
+- 总体覆盖率
+- 每个文件的覆盖率
+- 未覆盖的代码行
+- 覆盖趋势
+
+#### 安全报告
+
+```bash
+# 生成安全报告
+bandit -r app/ routes/ services/ -f json -o security-report.json
+
+# 查看报告
+cat security-report.json
+```
+
+报告包含：
+- 高风险漏洞
+- 中风险漏洞
+- 低风险漏洞
+- 修复建议
+
+### 手动测试报告
+
+创建测试报告模板：
 
 ```markdown
-# CI/CD 测试报告
+# 部署测试报告
 
-**测试日期**: 2026-03-04
-**测试人员**: [姓名]
-**测试环境**: [开发/测试/生产]
+## 测试环境
+- 测试时间: 2026-03-05 10:00
+- 测试人员: xxx
+- 云主机: cloud-doors.com
+- Git 版本: xxxxx
 
-## 测试概览
+## 测试项目
 
-| 测试类型 | 测试用例数 | 通过数 | 失败数 | 通过率 |
-|---------|----------|-------|--------|--------|
-| 单元测试 | 50 | 50 | 0 | 100% |
-| 集成测试 | 20 | 19 | 1 | 95% |
-| 部署测试 | 5 | 5 | 0 | 100% |
-| 回滚测试 | 3 | 3 | 0 | 100% |
-| 性能测试 | 10 | 10 | 0 | 100% |
+### CI 测试
+- [x] 代码检查
+- [x] 单元测试
+- [x] 代码质量
+- [x] 安全扫描
 
-## 详细测试结果
-
-### 单元测试
-- ✅ 所有测试通过
-- ✅ 覆盖率: 85%
-- ✅ 无严重问题
+### CD 测试
+- [x] SSH 连接
+- [x] 部署脚本
+- [x] 服务重启
+- [x] 健康检查
 
 ### 集成测试
-- ✅ 用户注册流程正常
-- ✅ 工单提交流程正常
-- ✅ 知识库功能正常
-- ⚠️ 回滚功能有 1 个小问题
+- [x] 完整流程
+- [x] 回滚测试
+- [x] 性能测试
 
-### 部署测试
-- ✅ Webhook 触发正常
-- ✅ 部署流程完成
-- ✅ 备份机制正常
-- ✅ 回滚功能正常
-
-### 性能测试
-- ✅ 响应时间达标
-- ✅ 并发能力达标
-- ⚠️ 高负载下响应稍慢
+## 测试结果
+- 总测试数: 10
+- 通过数: 10
+- 失败数: 0
+- 通过率: 100%
 
 ## 问题和建议
+- 无
 
-### 发现的问题
-1. 回滚时有个别文件权限问题
-   - 影响范围: 中
-   - 状态: 已记录
-
-### 改进建议
-1. 优化高负载下的响应时间
-2. 增加性能自动化测试
-3. 完善回滚后的权限修复
-
-## 测试结论
-
-✅ 所有核心功能测试通过
-✅ CI/CD 流程验证成功
-✅ 部署机制稳定可靠
-✅ 回滚功能正常
-⚠️ 发现 1 个小问题，建议后续优化
-
-**总体评价**: 通过
-```
-
-### 自动化测试报告
-
-```bash
-# 生成测试报告
-pytest tests/ --html=reports/test-report.html --self-contained-html
-
-# 生成覆盖率报告
-pytest tests/ --cov=. --cov-report=html --html=reports/coverage-report.html
-
-# 打开报告
-open reports/test-report.html
-open reports/coverage-report.html
-```
-
-### 测试数据收集
-
-```bash
-# 收集测试指标
-pytest tests/ -v --tb=no 2>&1 | tee test_results.log
-
-# 解析测试结果
-grep -E "PASSED|FAILED|ERROR" test_results.log
-
-# 生成统计报告
-python scripts/generate_test_report.py test_results.log
+## 结论
+部署系统运行正常，可以投入使用。
 ```
 
 ---
@@ -606,48 +555,61 @@ python scripts/generate_test_report.py test_results.log
 
 ### 测试原则
 
-1. **测试驱动开发 (TDD)**
-   - 先写测试，再写代码
-   - 确保每个功能都有测试
+1. **自动化优先**
+   - 自动化所有可自动化的测试
+   - 集成到 CI/CD 流程
+   - 定期更新测试用例
 
-2. **金字塔原则**
-   - 大量单元测试（70%）
-   - 适量集成测试（20%）
-   - 少量端到端测试（10%）
+2. **覆盖全面**
+   - 覆盖所有核心功能
+   - 覆盖边界条件
+   - 覆盖错误场景
 
-3. **独立性**
-   - 每个测试独立运行
-   - 不依赖其他测试
-   - 不依赖外部状态
+3. **快速反馈**
+   - 单元测试快速执行
+   - CI 结果及时通知
+   - 问题立即报告
 
 4. **可重复性**
-   - 测试结果稳定
-   - 不随机失败
-   - 相同输入相同输出
+   - 测试环境一致
+   - 测试数据稳定
+   - 测试结果可重现
 
-### CI/CD 测试规范
+### 测试建议
 
-1. **测试自动化**
-   - 所有测试集成到 CI/CD
-   - 自动化执行，无需手动
-   - 结果自动上报
+1. **本地充分测试**
+   - 推送前本地运行所有测试
+   - 确保测试通过再推送
+   - 减少 CI 失败率
 
-2. **快速反馈**
-   - 测试 < 5 分钟完成
-   - 失败立即告警
-   - 修复后快速验证
+2. **持续改进**
+   - 定期审查测试覆盖率
+   - 优化慢速测试
+   - 移除过时的测试
 
-3. **持续监控**
-   - 监控测试通过率
-   - 监控部署成功率
-   - 及时发现和修复问题
+3. **文档记录**
+   - 记录测试用例
+   - 记录已知问题
+   - 记录测试结果
+
+---
+
+## 相关文档
+
+- [CI/CD 快速使用指南](./00-QUICK_START.md)
+- [CI/CD 完整介绍](./01-INTRODUCTION.md)
+- [CI/CD 配置指南](./02-CONFIGURATION.md)
+- [CI/CD 部署历史](./03-DEPLOYMENT_HISTORY.md)
+- [CI/CD 功能设计](./04-FEATURES.md)
+- [CI/CD 故障排除](./05-TROUBLESHOOTING.md)
 
 ---
 
 <div align="center">
 
-**文档版本**: v1.0  
-**创建日期**: 2026-03-04  
+**文档版本**: v2.0
+**创建日期**: 2026-03-04
+**最后更新**: 2026-03-05
 **维护者**: 云户科技技术团队
 
 </div>

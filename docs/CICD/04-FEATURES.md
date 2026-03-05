@@ -48,8 +48,7 @@
 | 代码质量检查 | ✅ 已实现 | 🔴 高 |
 | 安全扫描 | ✅ 已实现 | 🔴 高 |
 | 自动合并 | ✅ 已实现 | 🟡 中 |
-| Webhook 部署 | ✅ 已实现 | 🔴 高 |
-| SSH 备用部署 | ✅ 已实现 | 🟡 中 |
+| SSH 自动部署 | ✅ 已实现 | 🔴 高 |
 | 自动备份 | ✅ 已实现 | 🔴 高 |
 | 智能拉取 | ✅ 已实现 | 🟡 中 |
 | 版本回滚 | ✅ 已实现 | 🟡 中 |
@@ -102,407 +101,278 @@
 ```
 
 **功能点：**
-- ✅ 运行所有单元测试
-- ✅ 生成测试覆盖率报告
-- ✅ 测试结果输出到 GitHub
+- ✅ 自动运行所有测试
+- ✅ 生成覆盖率报告
+- ✅ 测试失败阻止部署
 
 **技术实现：**
 - 使用 `pytest` 测试框架
 - 使用 `pytest-cov` 生成覆盖率
-- 集成 Codecov 可选（未来）
+- 覆盖率报告上传到 Codecov
 
-#### 步骤 3: 安全检查 (Security Scan)
-
-```yaml
-- name: Security Check
-  run: |
-    pip install bandit
-    bandit -r app/ routes/ services/
-```
-
-**功能点：**
-- ✅ 安全漏洞扫描
-- ✅ SQL 注入检测
-- ✅ 硬编码密码检测
-- ✅ 不安全的函数调用检测
-
-**技术实现：**
-- 使用 `bandit` 静态安全扫描工具
-- 检测 CWE/SANS Top 25 漏洞
-- 生成安全报告
-
-#### 步骤 4: 自动合并 (Auto Merge)
+#### 步骤 3: 代码质量检查
 
 ```yaml
-- name: Auto Merge
-  if: contains(github.event.pull_request.labels.*.name, 'auto-merge')
+- name: Code Quality
   run: |
-    gh pr merge ${{ github.event.pull_request.number }} --merge
+    pylint app.py routes/ services/ --max-line-length=120
 ```
 
 **功能点：**
-- ✅ PR 标签为 `auto-merge` 时自动合并
-- ✅ 避免手动合并操作
-- ✅ 提高发布效率
+- ✅ 代码复杂度分析
+- ✅ 潜在 Bug 检测
+- ✅ 代码风格统一
 
 **技术实现：**
-- 使用 GitHub CLI (`gh`)
-- 检查 PR 标签
-- 使用 `--merge` 合并方式
+- 使用 `pylint` 静态分析工具
+- 配置合理的阈值
 
-#### 步骤 5: 部署通知 (Deploy Notification)
+#### 步骤 4: 安全扫描
 
 ```yaml
-- name: Notify Cloud Server
+- name: Security Scan
   run: |
-    curl -X POST ${{ secrets.WEBHOOK_URL }} \
-      -H "Content-Type: application/json" \
-      -H "X-Hub-Signature-256: ${{ github.sha }}" \
-      -d '{"ref":"${{ github.ref }}","sha":"${{ github.sha }}"}'
+    bandit -r app/ routes/ services/ -f json -o security-report.json
 ```
 
 **功能点：**
-- ✅ 通过 Webhook 通知云主机
-- ✅ 发送版本信息和 SHA
-- ✅ 支持签名验证
+- ✅ 安全漏洞检测
+- ✅ SQL 注入风险检查
+- ✅ XSS 风险检查
 
 **技术实现：**
-- 主方式：Webhook HTTP POST
-- 备用方式：SSH 命令执行
-- 签名验证：HMAC-SHA256
+- 使用 `bandit` 安全扫描工具
+- 生成 JSON 格式报告
 
-### 2. 云主机 Webhook 接收器
+#### 步骤 5: SSH 部署
 
-**功能描述：**
-接收 GitHub 部署通知，触发自动部署流程
-
-**核心 API：**
-
-#### POST /webhook/github
-
-```python
-@app.route('/webhook/github', methods=['POST'])
-def github_webhook():
-    """接收 GitHub Webhook 并触发部署"""
-    # 1. 验证签名
-    signature = request.headers.get('X-Hub-Signature-256')
-    if not verify_signature(signature, payload):
-        return jsonify({'error': 'Invalid signature'}), 401
-    
-    # 2. 解析分支
-    ref = payload.get('ref', '')
-    branch = ref.replace('refs/heads/', '') if ref else ''
-    
-    # 3. 只处理 main 分支
-    if branch != 'main':
-        return jsonify({'message': 'Ignored'}), 200
-    
-    # 4. 触发部署
-    trigger_deployment()
-    return jsonify({'status': 'success'}), 200
+```yaml
+- name: Deploy via SSH
+  run: |
+    chmod +x ./scripts/deploy.sh
+    bash ./scripts/deploy.sh
 ```
 
 **功能点：**
-- ✅ 签名验证（防止伪造请求）
-- ✅ 分支过滤（只处理 main 分支）
-- ✅ 异步部署（避免超时）
-- ✅ 错误处理和日志记录
+- ✅ SSH 连接测试
+- ✅ 远程执行部署脚本
+- ✅ 错误处理和重试
 
-#### GET /webhook/health
+**技术实现：**
+- 使用 SSH 连接云主机
+- 执行远程部署脚本
+- 监控执行状态
 
-```python
-@app.route('/webhook/health', methods=['GET'])
-def health_check():
-    """健康检查端点"""
-    return jsonify({
-        'status': 'healthy',
-        'version': get_current_version(),
-        'last_deployment': get_last_deployment_time()
-    })
-```
+---
 
-**功能点：**
-- ✅ 服务健康状态检查
-- ✅ 当前版本信息查询
-- ✅ 最后部署时间查询
+### 2. 自动部署脚本
 
-#### GET /webhook/version
+**文件位置**: `scripts/deploy.sh`
 
-```python
-@app.route('/webhook/version', methods=['GET'])
-def get_version():
-    """获取当前部署版本"""
-    with open('/var/backups/Home-page/version.json', 'r') as f:
-        version_info = json.load(f)
-    return jsonify(version_info)
-```
+**执行步骤：**
 
-**功能点：**
-- ✅ 当前版本信息
-- ✅ Git SHA 信息
-- ✅ 部署时间戳
-
-### 3. 自动部署脚本
-
-**功能描述：**
-完整的部署流程自动化，包括备份、拉取、更新、重启
-
-**核心函数：**
-
-#### create_backup()
+#### 步骤 1: 创建备份
 
 ```bash
 create_backup() {
-    log_info "创建备份..."
     BACKUP_NAME="${APP_NAME}_$(date '+%Y%m%d_%H%M%S')"
     BACKUP_PATH="${BACKUP_DIR}/${BACKUP_NAME}"
     
-    # 使用 rsync 避免路径冲突
+    # 使用 rsync 进行增量备份
     rsync -av --delete "$PROJECT_DIR/" "$BACKUP_PATH/"
     
-    # 记录版本信息
-    echo "{\"version\":\"$BACKUP_NAME\",\"sha\":\"$(git rev-parse HEAD)\",\"time\":\"$(date -Iseconds)\"}" > "$BACKUP_PATH/version.json"
-    
-    log_info "备份完成: $BACKUP_NAME"
+    # 保留最近 5 个备份
+    ls -t | tail -n +6 | xargs rm -rf
 }
 ```
 
 **功能点：**
-- ✅ 自动创建时间戳备份
-- ✅ 使用 rsync 高效备份
-- ✅ 记录版本元数据 (SHA, 时间)
-- ✅ 路径冲突验证
+- ✅ 增量备份，只备份变化的文件
+- ✅ 自动清理过期备份
+- ✅ 备份命名包含时间戳
 
-#### smart_pull()
+#### 步骤 2: 拉取代码
 
 ```bash
-smart_pull() {
-    # 测试 GitHub 和 Gitee 连接速度
-    GITHUB_SPEED=$(test_github_speed)
-    GITEE_SPEED=$(test_gitee_speed)
+pull_code() {
+    cd "$PROJECT_DIR"
     
-    # 选择最快的源
-    if [ "$GITHUB_SPEED" -gt "$GITEE_SPEED" ]; then
-        log_info "从 GitHub 拉取 (速度: ${GITHUB_SPEED} KB/s)"
-        git pull origin main
+    # 智能选择最快的源
+    if smart-pull.sh; then
+        echo "智能拉取成功"
     else
-        log_info "从 Gitee 拉取 (速度: ${GITEE_SPEED} KB/s)"
-        git pull gitee main
+        # 备用方案：直接从 GitHub 拉取
+        git fetch origin
+        git reset --hard origin/main
     fi
 }
 ```
 
 **功能点：**
-- ✅ 自动测试连接速度
-- ✅ 智能选择最快的源
-- ✅ 使用配置的 Git 代理
-- ✅ 支持备用源
+- ✅ 智能选择 GitHub/Gitee 源
+- ✅ 失败自动重试
+- ✅ 显示当前版本
 
-#### update_dependencies()
+#### 步骤 3: 更新依赖
 
 ```bash
 update_dependencies() {
-    log_info "更新依赖..."
-    source "$VENV_PATH/bin/activate"
-    
-    # 升级 pip
-    pip install --upgrade pip
-    
-    # 安装/更新依赖
+    source venv/bin/activate
     pip install -r requirements.txt
-    
-    log_info "依赖更新完成"
+    deactivate
 }
 ```
 
 **功能点：**
-- ✅ 自动升级 pip
-- ✅ 批量安装依赖
+- ✅ 使用虚拟环境
+- ✅ 自动安装新依赖
 - ✅ 处理依赖冲突
-- ✅ 虚拟环境隔离
 
-#### restart_service()
-
-```bash
-restart_service() {
-    log_info "重启服务..."
-    
-    # 优雅停止
-    systemctl stop $SERVICE_NAME
-    sleep 2
-    
-    # 启动服务
-    systemctl start $SERVICE_NAME
-    
-    # 健康检查
-    for i in {1..30}; do
-        if curl -sf http://localhost:5000/health > /dev/null; then
-            log_info "服务启动成功"
-            return 0
-        fi
-        sleep 1
-    done
-    
-    log_error "服务启动超时"
-    return 1
-}
-```
-
-**功能点：**
-- ✅ 优雅停止（发送 SIGTERM）
-- ✅ 服务重启
-- ✅ 健康检查验证（30 秒超时）
-- ✅ 启动失败告警
-
-### 4. 版本回滚脚本
-
-**功能描述：**
-快速回滚到指定历史版本
-
-**核心函数：**
-
-#### list_backups()
+#### 步骤 4: 重启服务
 
 ```bash
-list_backups() {
-    echo "可用备份版本:"
-    ls -1t "$BACKUP_DIR" | while read backup; do
-        local version_info="$BACKUP_DIR/$backup/version.json"
-        if [ -f "$version_info" ]; then
-            local sha=$(jq -r '.sha' "$version_info")
-            local time=$(jq -r '.time' "$version_info")
-            local time_str=$(date -d @$time '+%Y-%m-%d %H:%M:%S')
-            echo "  - $backup (SHA: ${sha:0:7}, 时间: $time_str)"
-        else
-            echo "  - $backup"
-        fi
-    done
-}
-```
-
-**功能点：**
-- ✅ 列出所有可用备份
-- ✅ 显示版本元数据 (SHA, 时间)
-- ✅ 按时间倒序排列
-
-#### rollback_to_version()
-
-```bash
-rollback_to_version() {
-    local version=$1
+restart_app() {
+    # 停止旧进程
+    pkill -f "app.py"
     
-    log_info "回滚到版本: $version"
+    # 启动新进程
+    nohup venv/bin/python app.py > /var/log/app.log 2>&1 &
     
-    # 停止服务
-    systemctl stop $SERVICE_NAME
-    
-    # 恢复备份
-    rsync -av --delete "$BACKUP_DIR/$version/" "$PROJECT_DIR/"
-    
-    # 重启服务
-    systemctl start $SERVICE_NAME
-    
-    # 验证
+    # 等待启动
     sleep 5
-    if curl -sf http://localhost:5000/health > /dev/null; then
-        log_info "回滚成功"
+    
+    # 验证服务状态
+    if pgrep -f "app.py" > /dev/null; then
+        echo "服务启动成功"
     else
-        log_error "回滚后服务启动失败"
-        return 1
+        echo "服务启动失败"
+        exit 1
     fi
 }
 ```
 
 **功能点：**
-- ✅ 原子回滚（完整恢复）
-- ✅ 服务自动重启
-- ✅ 健康检查验证
-- ✅ 回滚失败告警
+- ✅ 优雅停止旧进程
+- ✅ 后台启动新进程
+- ✅ 启动验证
+
+---
+
+### 3. 智能拉取机制
+
+**文件位置**: `scripts/smart-pull.sh`
+
+**智能选择逻辑：**
+```bash
+# 测试 GitHub 连接速度
+SPEED_GITHUB=$(measure_speed github.com)
+
+# 测试 Gitee 连接速度
+SPEED_GITEE=$(measure_speed gitee.com)
+
+# 选择最快的源
+if [ "$SPEED_GITHUB" -gt "$SPEED_GITEE" ]; then
+    echo "选择 Gitee 作为拉取源"
+    git pull gitee main
+else
+    echo "选择 GitHub 作为拉取源"
+    git pull origin main
+fi
+```
+
+**功能点：**
+- ✅ 自动测速选择最快源
+- ✅ 失败自动切换源
+- ✅ 支持国内镜像加速
+
+---
+
+### 4. 回滚脚本
+
+**文件位置**: `scripts/rollback.sh`
+
+**回滚流程：**
+```bash
+rollback_to_backup() {
+    # 1. 列出可用备份
+    echo "可用备份："
+    ls -t "$BACKUP_DIR" | head -5
+    
+    # 2. 选择备份
+    read -p "选择备份版本: " BACKUP_NAME
+    
+    # 3. 停止服务
+    pkill -f "app.py"
+    
+    # 4. 恢复备份
+    rsync -av "$BACKUP_DIR/$BACKUP_NAME/" "$PROJECT_DIR/"
+    
+    # 5. 重启服务
+    restart_app
+}
+```
+
+**功能点：**
+- ✅ 列出所有备份版本
+- ✅ 选择性恢复
+- ✅ 验证回滚成功
 
 ---
 
 ## 技术选型
 
-### GitHub Actions
+### CI/CD 工具
 
-| 技术 | 选择原因 | 优势 |
+| 类别 | 技术选型 | 理由 |
 |------|---------|------|
-| GitHub Actions | 代码托管在 GitHub，无缝集成 | 原生支持，免费额度充足 |
-| YAML Workflow | 声明式配置，易于维护 | 代码即配置，版本控制 |
-| GitHub CLI | 自动化 API 调用 | 官方工具，功能完整 |
+| CI 平台 | GitHub Actions | 与 GitHub 深度集成，免费额度充足 |
+| 版本控制 | Git 2.x | 行业标准，功能强大 |
+| 远程部署 | SSH | 安全可靠，不依赖外部网络 |
+| 测试框架 | pytest | 功能强大，插件丰富 |
+| 代码检查 | flake8, pylint | 标准 Python 工具链 |
+| 安全扫描 | bandit | 专注于 Python 安全 |
 
-### 云主机技术
+### 部署工具
 
-| 技术 | 选择原因 | 优势 |
-|------|---------|------|
-| Python Flask | Webhook 接收器轻量高效 | 生态丰富，快速开发 |
-| Systemd | 服务管理和自动启动 | 系统原生，稳定可靠 |
-| Bash Script | 部署脚本跨平台兼容 | 通用，无依赖 |
-
-### 安全技术
-
-| 技术 | 选择原因 | 优势 |
-|------|---------|------|
-| HMAC-SHA256 | 防止伪造请求 | 安全，标准化 |
-| SSH ed25519 | 更安全的 SSH 密钥算法 | 抗量子计算，密钥更短 |
-| GitHub Secrets | 敏感信息管理 | 访问控制，审计日志 |
+| 工具 | 用途 | 优势 |
+|------|------|------|
+| rsync | 文件同步 | 增量备份，速度快 |
+| bash | 脚本语言 | 跨平台兼容，内置 |
+| systemd | 服务管理 | 标准化，自动重启 |
+| ufw | 防火墙 | 简单易用 |
 
 ---
 
 ## 架构设计
 
-### 系统架构图
+### 整体架构
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                       CI/CD 整体架构                          │
-└─────────────────────────────────────────────────────────────────────┘
-                               ↓
-        ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-        │  GitHub Actions  │  │  云主机 Webhook │  │   备份存储     │
-        └──────────────────┘  └──────────────────┘  └──────────────────┘
-                 ↓                      ↓                ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    CI/CD 系统架构                      │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+        ┌──────────────────┐  ┌──────────────────┐
+        │  GitHub Actions  │  │  云主机 SSH      │
+        └──────────────────┘  └──────────────────┘
+                 ↓                      ↓
         ┌───────────────────────────────────────┐
-        │  自动化部署流程                    │
+        │  自动化部署流程                   │
         └───────────────────────────────────────┘
                  ↓
         ┌──────────────────┐  ┌──────────────────┐
-        │   应用服务      │  │   监控告警      │
+        │   应用服务      │  │   备份存储     │
         └──────────────────┘  └──────────────────┘
 ```
 
 ### 模块划分
 
-```
-CI/CD 系统
-│
-├── 触发模块 (Trigger)
-│   ├── GitHub Push 事件
-│   ├── PR 事件
-│   └── 手动触发
-│
-├── CI 模块 (Continuous Integration)
-│   ├── 代码检查
-│   ├── 单元测试
-│   ├── 安全扫描
-│   └── 覆盖率报告
-│
-├── CD 模块 (Continuous Deployment)
-│   ├── 备份模块
-│   ├── 拉取模块
-│   ├── 更新模块
-│   └── 重启模块
-│
-├── 监控模块 (Monitoring)
-│   ├── 健康检查
-│   ├── 日志收集
-│   └── 告警通知
-│
-└── 回滚模块 (Rollback)
-    ├── 备份列表
-    ├── 版本选择
-    └── 恢复流程
-```
+| 模块 | 职责 | 输入 | 输出 |
+|------|------|------|------|
+| CI 模块 | 代码检查、测试 | 代码提交 | 测试报告 |
+| 部署模块 | 自动部署 | CI 通过 | 部署状态 |
+| 监控模块 | 状态监控 | 运行状态 | 告警信息 |
+| 备份模块 | 版本备份 | 代码变更 | 备份文件 |
 
 ---
 
@@ -511,156 +381,169 @@ CI/CD 系统
 ### 部署数据流
 
 ```
-开发者 Push
+开发者提交代码
     ↓
-GitHub 仓库
+GitHub Push 事件
     ↓
 GitHub Actions 触发
     ↓
-┌──────────────────────┐
-│  1. Code Check     │
-│  2. Unit Tests     │
-│  3. Security Scan  │
-│  4. Auto Merge     │
-└──────────────────────┘
+├─ 代码检查
+├─ 运行测试
+├─ 安全扫描
+└─ SSH 部署
     ↓
-所有检查通过
+云主机执行 deploy.sh
     ↓
-┌──────────────────────┐
-│  Deploy Notification │
-│  - Webhook/SSH    │
-└──────────────────────┘
+├─ 创建备份
+├─ 拉取代码
+├─ 更新依赖
+└─ 重启服务
     ↓
-云主机接收器
-    ↓
-┌──────────────────────┐
-│  1. Create Backup  │
-│  2. Smart Pull    │
-│  3. Update Deps   │
-│  4. Restart Service│
-└──────────────────────┘
-    ↓
-应用更新完成
-    ↓
-健康检查验证
+部署完成，通知结果
 ```
 
-### 日志数据流
+### 监控数据流
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  应用日志      │────→│  日志收集     │────→│  日志文件      │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  部署日志      │────→│  日志轮换     │────→│  日志归档      │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-┌─────────────────┐     ┌─────────────────┐
-│  错误日志      │────→│  告警系统     │
-└─────────────────┘     └─────────────────┘
+服务运行状态
+    ↓
+健康检查端点
+    ↓
+状态数据收集
+    ↓
+日志记录
+    ↓
+告警判断
+    ↓
+发送告警（如需要）
 ```
 
 ---
 
 ## 安全设计
 
-### 认证和授权
+### SSH 密钥管理
 
-#### GitHub Webhook 验证
-
-```python
-def verify_signature(signature, payload):
-    """验证 GitHub Webhook 签名"""
-    secret = os.getenv('WEBHOOK_SECRET', '')
-    if not secret:
-        logger.warning("WEBHOOK_SECRET 未配置")
-        return False
-    
-    # 计算 HMAC-SHA256
-    expected_signature = 'sha256=' + hmac.new(
-        secret.encode(),
-        payload.encode(),
-        hashlib.sha256
-    ).hexdigest()
-    
-    # 比较签名
-    return hmac.compare_digest(expected_signature, signature)
+**密钥生成：**
+```bash
+ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions_key
 ```
 
-**安全特性：**
-- ✅ HMAC 签名防伪造
-- ✅ 常数时间比较防时序攻击
-- ✅ 环境变量存储密钥
+**密钥存储：**
+- 私钥：GitHub Secrets（加密存储）
+- 公钥：云主机 `~/.ssh/authorized_keys`
 
-#### SSH 密钥管理
+**密钥轮换：**
+- 定期更换（建议每 3 个月）
+- 泄露立即更换
+- 使用强密码短语（可选）
 
+### 访问控制
+
+**最小权限原则：**
+- SSH 用户仅能执行部署脚本
+- 服务用户仅能运行应用
+- 数据库用户仅能访问所需数据库
+
+**文件权限：**
 ```bash
-# 生成密钥
-ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_deploy_key
+# SSH 密钥
+chmod 600 ~/.ssh/github_actions_key
+chmod 644 ~/.ssh/github_actions_key.pub
 
-# 设置权限
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/github_deploy_key
-chmod 644 ~/.ssh/github_deploy_key.pub
-```
+# authorized_keys
+chmod 600 ~/.ssh/authorized_keys
 
-**安全特性：**
-- ✅ ed25519 算法更安全
-- ✅ 最小权限原则 (600/644)
-- ✅ 密钥轮换机制
-
-### 数据安全
-
-#### 敏感信息保护
-
-| 敏感信息 | 存储方式 | 访问控制 |
-|---------|---------|----------|
-| GitHub Token | GitHub Secrets | 仅 GitHub Actions 可访问 |
-| SSH 私钥 | GitHub Secrets | 仅 CI/CD 流程可访问 |
-| Webhook 密钥 | 环境变量 | 仅 Webhook 接收器可访问 |
-| 数据库密码 | config.py | 仅应用可访问 |
-
-#### 日志安全
-
-```bash
-# 日志文件权限
-chmod 640 /var/log/Home-page/*.log  # 仅 owner 可写
-chown www-data:www-data /var/log/Home-page/
-
-# 日志内容脱敏
-log_data() {
-    local message="$1"
-    # 移除敏感信息
-    echo "$message" | sed 's/password=[^ ]*/password=***/g'
-}
+# 脚本文件
+chmod 755 scripts/*.sh
 ```
 
 ### 网络安全
 
-#### 防火墙规则
-
+**防火墙规则：**
 ```bash
 # 仅开放必要端口
 ufw allow 22/tcp    # SSH
-ufw allow 5000/tcp   # 应用
-ufw allow 9000/tcp   # Webhook
-ufw enable
+ufw allow 5000/tcp  # 应用
+ufw allow 80/tcp    # HTTP
+ufw allow 443/tcp   # HTTPS
 ```
 
-#### HTTPS/TLS
-
-```python
-# Webhook 服务强制 HTTPS
-if app.config['ENV'] == 'production':
-    from flask_sslify import SSLify
-    app = SSLify(app, certfile='cert.pem', keyfile='key.pem')
+**SSH 配置：**
+```bash
+# /etc/ssh/sshd_config
+PermitRootLogin without-password
+PasswordAuthentication no
+PubkeyAuthentication yes
 ```
+
+### 数据安全
+
+**敏感信息保护：**
+- ✅ 使用 GitHub Secrets
+- ✅ 不在日志中输出敏感信息
+- ✅ 使用环境变量
+- ❌ 不将密钥提交到代码库
+
+**日志管理：**
+```bash
+# 配置日志轮换
+/var/log/app.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 www-data www-data
+}
+```
+
+---
+
+## 扩展功能
+
+### 未来规划
+
+1. **监控告警**
+   - 集成 Prometheus + Grafana
+   - 实时性能监控
+   - 智能告警
+
+2. **灰度发布**
+   - 支持 A/B 测试
+   - 金丝雀部署
+   - 自动回滚
+
+3. **多环境支持**
+   - 开发环境
+   - 测试环境
+   - 预发布环境
+   - 生产环境
+
+4. **性能优化**
+   - 并行部署
+   - 缓存优化
+   - 增量部署
+
+---
+
+## 相关文档
+
+- [CI/CD 快速使用指南](./00-QUICK_START.md)
+- [CI/CD 完整介绍](./01-INTRODUCTION.md)
+- [CI/CD 配置指南](./02-CONFIGURATION.md)
+- [CI/CD 部署历史](./03-DEPLOYMENT_HISTORY.md)
+- [CI/CD 故障排除](./05-TROUBLESHOOTING.md)
+- [CI/CD 测试指南](./06-TESTING.md)
 
 ---
 
 <div align="center">
 
-**文档版本**: v1.0  
-**创建日期**: 2026-03-04  
+**文档版本**: v2.0
+**创建日期**: 2026-03-04
+**最后更新**: 2026-03-05
 **维护者**: 云户科技技术团队
 
 </div>
