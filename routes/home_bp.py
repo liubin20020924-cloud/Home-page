@@ -131,7 +131,7 @@ def view_messages():
 def contact():
     """联系表单提交
 
-    提交官网联系表单，自动创建禁用客户账户（系统生成随机密码），并发送邮件到企业微信邮箱
+    提交官网联系表单，根据咨询类型决定是否创建账户，并发送邮件到企业邮箱
     ---
     tags:
       - 官网
@@ -149,6 +149,7 @@ def contact():
             - email
             - company_name
             - message
+            - inquiry_type
           properties:
             name:
               type: string
@@ -171,6 +172,11 @@ def contact():
               type: string
               description: 留言内容
               example: 这是测试消息
+            inquiry_type:
+              type: string
+              enum: [account, technical]
+              description: 咨询类型：account=开通账户, technical=技术咨询
+              example: account
     responses:
       200:
         description: 提交成功
@@ -192,7 +198,7 @@ def contact():
         logger.info(f"收到联系表单数据: {data}")
 
         # 验证必填字段
-        is_valid, errors = validate_required(data, ['name', 'email', 'company_name', 'message'])
+        is_valid, errors = validate_required(data, ['name', 'email', 'company_name', 'phone', 'message', 'inquiry_type'])
         if not is_valid:
             logger.warning(f"联系表单验证失败: {errors}")
             return validation_error_response(errors)
@@ -202,72 +208,79 @@ def contact():
         if not is_valid:
             return error_response(msg, 400)
 
-        logger.info(f"收到联系表单: {data['name']} <{data['email']}> - 公司: {data['company_name']}")
+        # 验证咨询类型
+        inquiry_type = data.get('inquiry_type', '')
+        if inquiry_type not in ['account', 'technical']:
+            return error_response('请选择有效的咨询类型', 400)
 
-        # 自动生成随机密码（由管理员通过邮件发送给客户）
-        temp_password = secrets.token_urlsafe(10)
-        password_hash = generate_password_hash(temp_password)
-
-        # 根据姓名生成用户名（英文直接使用，中文转拼音）
-        display_name = data['name']
-        username = name_to_username(display_name)
+        logger.info(f"收到联系表单: {data['name']} <{data['email']}> - 公司: {data['company_name']} - 类型: {inquiry_type}")
 
         user_created = False
         user_info = None
 
-        # 自动创建禁用客户账户
-        try:
-            with db_connection('kb') as conn:
-                cursor = conn.cursor(pymysql.cursors.DictCursor)
+        # 根据咨询类型决定是否创建账户
+        if inquiry_type == 'account':
+            # 自动生成随机密码（由管理员通过邮件发送给客户）
+            temp_password = secrets.token_urlsafe(10)
+            password_hash = generate_password_hash(temp_password)
 
-                # 检查用户是否已存在
-                cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s",
-                             (username, data['email']))
-                existing_user = cursor.fetchone()
+            # 根据姓名生成用户名（英文直接使用，中文转拼音）
+            display_name = data['name']
+            username = name_to_username(display_name)
 
-                if existing_user:
-                    logger.warning(f"用户 {username} 或邮箱 {data['email']} 已存在，跳过创建")
-                    user_created = False
-                else:
-                    # 插入新用户（状态为inactive，角色为customer）
-                    insert_sql = """
-                    INSERT INTO users (
-                        username, password_hash, password_type, display_name, email,
-                        company_name, phone, role, status, system, created_by, force_password_change,
-                        created_at, updated_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
-                    """
-                    cursor.execute(insert_sql, (
-                        username,  # 使用姓名生成的用户名
-                        password_hash,
-                        'werkzeug',  # 密码类型
-                        display_name,  # 使用原始姓名作为显示名称
-                        data['email'],
-                        data['company_name'],
-                        data.get('phone', ''),
-                        'customer',
-                        'inactive',  # 账户状态为禁用
-                        'unified',  # 所属系统
-                        'contact_form',  # 创建人
-                        1,  # 强制修改密码
-                    ))
-                    conn.commit()
-                    user_created = True
-                    user_info = {
-                        'username': username,
-                        'password': temp_password,
-                        'display_name': display_name,
-                        'company_name': data['company_name'],
-                        'email': data['email']
-                    }
-                    logger.info(f"成功创建客户账户: {username} ({display_name})")
+            # 自动创建禁用客户账户
+            try:
+                with db_connection('kb') as conn:
+                    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-        except ImportError:
-            logger.warning("缺少 pymysql 模块，跳过用户创建")
-            user_created = False
-        except Exception as e:
-            logger.error(f"创建用户账户失败: {str(e)}")
-            user_created = False
+                    # 检查用户是否已存在（只通过邮箱判断，避免同名用户无法创建）
+                    cursor.execute("SELECT id, username, display_name, status FROM users WHERE email = %s",
+                                 (data['email'],))
+                    existing_user = cursor.fetchone()
+
+                    if existing_user:
+                        logger.warning(f"邮箱 {data['email']} 已存在（用户: {existing_user['display_name']}），跳过创建")
+                        user_created = False
+                    else:
+                        # 插入新用户（状态为inactive，角色为customer）
+                        insert_sql = """
+                        INSERT INTO users (
+                            username, password_hash, password_type, display_name, email,
+                            company_name, phone, role, status, system, created_by, force_password_change,
+                            created_at, updated_at
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                        """
+                        cursor.execute(insert_sql, (
+                            username,  # 使用姓名生成的用户名
+                            password_hash,
+                            'werkzeug',  # 密码类型
+                            display_name,  # 使用原始姓名作为显示名称
+                            data['email'],
+                            data['company_name'],
+                            data.get('phone', ''),
+                            'customer',
+                            'inactive',  # 账户状态为禁用
+                            'unified',  # 所属系统
+                            'contact_form',  # 创建人
+                            1,  # 强制修改密码
+                        ))
+                        conn.commit()
+                        user_created = True
+                        user_info = {
+                            'username': username,
+                            'password': temp_password,
+                            'display_name': display_name,
+                            'company_name': data['company_name'],
+                            'email': data['email']
+                        }
+                        logger.info(f"成功创建客户账户: {username} ({display_name})")
+
+            except ImportError:
+                logger.warning("缺少 pymysql 模块，跳过用户创建")
+                user_created = False
+            except Exception as e:
+                logger.error(f"创建用户账户失败: {str(e)}")
+                user_created = False
 
         # 发送邮件通知到 support@cloud-doors.com
         try:
@@ -287,39 +300,50 @@ def contact():
             else:
                 logger.info("邮件配置完整，准备发送")
 
-            # 构建邮件内容
-            subject = f"【云户科技】新客户注册申请 - {data['company_name']}"
+            # 根据咨询类型构建邮件主题和内容
+            if inquiry_type == 'account':
+                subject = f"【云户科技】开通账户申请 - {data['company_name']}"
+                header_title = "📋 新客户开通账户申请"
 
-            # 如果创建了用户，包含登录信息
-            if user_created and user_info:
-                account_info_html = f"""
-            <div class="info-item">
-                <label>显示名称：</label>
-                <span>{user_info['display_name']}</span>
-            </div>
-            <div class="info-item">
-                <label>账户状态：</label>
-                <span class="status-badge">待审核（已创建临时账户）</span>
-            </div>
-            <div class="account-box" style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #3b82f6; margin-top: 20px;">
-                <h3 style="margin-top: 0; color: #1d4ed8; font-size: 16px; margin-bottom: 15px;">🔑 客户登录信息（请通过邮件发送给客户）</h3>
-                <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #bfdbfe;">
-                    <p style="margin: 8px 0; color: #374151;"><strong>用户名：</strong>{user_info['username']}</p>
-                    <p style="margin: 8px 0; color: #374151;"><strong>初始密码：</strong><span style="background: #fef3c7; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;">{user_info['password']}</span></p>
-                    <p style="margin: 12px 0 8px 0; color: #ef4444; font-size: 13px;">⚠️ 请将此信息通过邮件发送给客户，提醒客户首次登录后修改密码</p>
+                # 如果创建了用户，包含登录信息
+                if user_created and user_info:
+                    account_info_html = f"""
+                <div class="info-item">
+                    <label>显示名称：</label>
+                    <span>{user_info['display_name']}</span>
                 </div>
-            </div>
-                """
-            else:
-                account_info_html = f"""
-            <div class="info-item">
-                <label>显示名称：</label>
-                <span>{display_name}</span>
-            </div>
-            <div class="info-item">
-                <label>账户状态：</label>
-                <span class="status-badge">待审核</span>
-            </div>
+                <div class="info-item">
+                    <label>账户状态：</label>
+                    <span class="status-badge">待审核（已创建临时账户）</span>
+                </div>
+                <div class="account-box" style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #3b82f6; margin-top: 20px;">
+                    <h3 style="margin-top: 0; color: #1d4ed8; font-size: 16px; margin-bottom: 15px;">🔑 客户登录信息（请通过邮件发送给客户）</h3>
+                    <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #bfdbfe;">
+                        <p style="margin: 8px 0; color: #374151;"><strong>用户名：</strong>{user_info['username']}</p>
+                        <p style="margin: 8px 0; color: #374151;"><strong>初始密码：</strong><span style="background: #fef3c7; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;">{user_info['password']}</span></p>
+                        <p style="margin: 12px 0 8px 0; color: #ef4444; font-size: 13px;">⚠️ 请将此信息通过邮件发送给客户，提醒客户首次登录后修改密码</p>
+                    </div>
+                </div>
+                    """
+                else:
+                    account_info_html = f"""
+                <div class="info-item">
+                    <label>显示名称：</label>
+                    <span>{data['name']}</span>
+                </div>
+                <div class="info-item">
+                    <label>账户状态：</label>
+                    <span class="status-badge">待审核（邮箱已存在）</span>
+                </div>
+                    """
+            else:  # technical
+                subject = f"【云户科技】技术咨询 - {data['company_name']}"
+                header_title = "💡 技术咨询"
+                account_info_html = """
+                <div class="info-item">
+                    <label>咨询类型：</label>
+                    <span class="status-badge" style="background: #eff6ff; color: #1d4ed8;">技术咨询</span>
+                </div>
                 """
 
             content = f"""
@@ -347,7 +371,7 @@ def contact():
 <body>
     <div class="container">
         <div class="header">
-            <h1>📋 新客户注册申请</h1>
+            <h1>{header_title}</h1>
         </div>
         <div class="content">
             <div class="info-item">
@@ -373,7 +397,7 @@ def contact():
             </div>
         </div>
         <div class="footer">
-            <p>请及时审核并激活该客户账户</p>
+            <p>请及时处理</p>
             <p style="margin-top: 10px;">—<br>云户科技 | 专业IT服务商</p>
         </div>
     </div>

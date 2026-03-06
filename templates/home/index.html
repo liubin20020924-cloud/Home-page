@@ -664,6 +664,22 @@
         <!-- 右侧留言表单卡片 -->
         <form id="contactForm" style="background: white; border-radius: 20px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); padding: clamp(28px, 4vw, 40px); border: 1px solid rgba(10, 77, 162, 0.08); width: 100%; box-sizing: border-box; min-height: clamp(300px, 45vh, 400px); display: flex; flex-direction: column; justify-content: center;">
           <div style="display: flex; flex-direction: column; gap: clamp(20px, 3vh, 28px);">
+            <!-- 咨询类型 -->
+            <div>
+              <label style="display: block; color: #1a202c; font-weight: 600; margin-bottom: clamp(8px, 1.2vh, 12px); font-size: clamp(0.95rem, 1.15vw, 1.05rem);">
+                咨询类型 <span style="color: #ef4444;">*</span>
+              </label>
+              <div style="position: relative;">
+                <i class="fa fa-question-circle" style="position: absolute; left: clamp(14px, 2.2vw, 18px); top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: clamp(16px, 2.2vw, 20px); pointer-events: none;"></i>
+                <select name="inquiry_type" required style="width: 100%; box-sizing: border-box; padding: clamp(12px, 1.8vh, 16px) clamp(14px, 2.2vw, 18px) clamp(12px, 1.8vh, 16px) clamp(40px, 5.5vw, 52px); border: 2px solid #e5e7eb; border-radius: 12px; font-size: clamp(0.95rem, 1.15vw, 1.05rem); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); outline: none; background: #f9fafb; appearance: none; cursor: pointer; padding-left: clamp(40px, 5.5vw, 52px);">
+                  <option value="">请选择咨询类型</option>
+                  <option value="account">开通账户</option>
+                  <option value="technical">技术咨询</option>
+                </select>
+                <i class="fa fa-chevron-down" style="position: absolute; right: clamp(14px, 2.2vw, 18px); top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: clamp(16px, 2.2vw, 20px); pointer-events: none;"></i>
+              </div>
+            </div>
+
             <!-- 姓名 -->
             <div>
               <label style="display: block; color: #1a202c; font-weight: 600; margin-bottom: clamp(8px, 1.2vh, 12px); font-size: clamp(0.95rem, 1.15vw, 1.05rem);">
@@ -700,10 +716,10 @@
             <!-- 联系电话 -->
             <div>
               <label style="display: block; color: #1a202c; font-weight: 600; margin-bottom: clamp(8px, 1.2vh, 12px); font-size: clamp(0.95rem, 1.15vw, 1.05rem);">
-                联系电话
+                联系电话 <span style="color: #ef4444;">*</span>
               </label>
               <div style="position: relative;">
-                <input type="tel" name="phone" style="width: 100%; box-sizing: border-box; padding: clamp(12px, 1.8vh, 16px) clamp(14px, 2.2vw, 18px) clamp(12px, 1.8vh, 16px) clamp(40px, 5.5vw, 52px); border: 2px solid #e5e7eb; border-radius: 12px; font-size: clamp(0.95rem, 1.15vw, 1.05rem); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); outline: none; background: #f9fafb;" placeholder="请输入您的联系电话">
+                <input type="tel" name="phone" required style="width: 100%; box-sizing: border-box; padding: clamp(12px, 1.8vh, 16px) clamp(14px, 2.2vw, 18px) clamp(12px, 1.8vh, 16px) clamp(40px, 5.5vw, 52px); border: 2px solid #e5e7eb; border-radius: 12px; font-size: clamp(0.95rem, 1.15vw, 1.05rem); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); outline: none; background: #f9fafb;" placeholder="请输入您的联系电话">
                 <i class="fa fa-phone" style="position: absolute; left: clamp(14px, 2.2vw, 18px); top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: clamp(16px, 2.2vw, 20px); transition: all 0.3s;"></i>
               </div>
             </div>
@@ -810,8 +826,9 @@
       const phone = formData.get('phone');
       const company_name = formData.get('company_name');
       const message = formData.get('message');
+      const inquiry_type = formData.get('inquiry_type');
 
-      console.log('提交数据:', { name, email, phone, company_name, message });
+      console.log('提交数据:', { name, email, phone, company_name, message, inquiry_type });
 
       fetch('/api/contact', {
         method: 'POST',
@@ -823,7 +840,8 @@
           email: email,
           phone: phone,
           company_name: company_name,
-          message: message
+          message: message,
+          inquiry_type: inquiry_type
         })
       })
       .then(response => {
