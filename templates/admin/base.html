@@ -8,160 +8,404 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --sidebar-width: 250px;
-            --primary-color: #0d6efd;
-            --dark-color: #212529;
+            --primary-color: #0A4DA2;
+            --secondary-color: #A2D93D;
+            --dark-color: #1a202c;
         }
-        
+
         body {
             background-color: #f8f9fa;
+            padding-top: 72px;
         }
-        
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
+
+        /* 顶部导航栏 */
+        .admin-header {
             position: fixed;
-            left: 0;
             top: 0;
-            background: linear-gradient(180deg, #212529 0%, #343a40 100%);
-            padding-top: 20px;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            height: clamp(60px, 8vh, 72px);
+            transition: background 0.3s;
         }
-        
-        .sidebar-brand {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            padding: 10px 20px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #495057;
+
+        .admin-header-inner {
+            width: 100%;
+            max-width: min(1400px, 95vw);
+            margin: 0 auto;
+            padding: 0 clamp(12px, 2vw, 24px);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        
-        .sidebar-nav a {
-            color: #adb5bd;
-            padding: 12px 20px;
-            display: block;
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: clamp(16px, 3vw, 40px);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
             text-decoration: none;
+        }
+
+        .logo-container img {
+            height: 50px;
+            width: auto;
+            max-width: 180px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+        }
+
+        .logo-container .brand-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #0A4DA2;
+        }
+
+        /* 导航菜单 */
+        .admin-nav {
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .admin-nav a {
+            color: #1a202c;
+            text-decoration: none;
+            font-weight: 500;
             transition: all 0.3s;
+            padding: clamp(6px, 1vh, 10px) clamp(10px, 1.5vw, 16px);
+            white-space: nowrap;
+            font-size: clamp(13px, 1vw, 15px);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        
-        .sidebar-nav a:hover,
-        .sidebar-nav a.active {
+
+        .admin-nav a:hover {
+            color: #0A4DA2;
+            background: rgba(10, 77, 162, 0.05);
+        }
+
+        .admin-nav a.active {
+            color: #0A4DA2;
+            background: rgba(10, 77, 162, 0.1);
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-logout {
+            background: #0A4DA2;
             color: white;
-            background-color: rgba(255, 255, 255, 0.1);
+            padding: clamp(6px, 1vh, 10px) clamp(12px, 1.5vw, 20px);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
         }
-        
-        .sidebar-nav a i {
-            width: 25px;
+
+        .btn-logout:hover {
+            background: #083d7a;
+            box-shadow: 0 4px 8px rgba(10, 77, 162, 0.2);
         }
-        
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1a202c;
+            font-size: clamp(13px, 1vw, 15px);
+        }
+
+        .user-info i {
+            color: #0A4DA2;
+            font-size: clamp(18px, 1.5vw, 20px);
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            color: #1a202c;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* 移动端菜单 */
+        .mobile-menu {
+            display: none;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: clamp(60px, 8vh, 72px);
+            left: 0;
+            right: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            z-index: 999;
+        }
+
+        .mobile-menu.open {
+            max-height: 1000px;
+            overflow-y: auto;
+        }
+
+        .mobile-menu-content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mobile-menu a {
+            color: #1a202c;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 12px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mobile-menu a:hover,
+        .mobile-menu a.active {
+            background: rgba(10, 77, 162, 0.1);
+            color: #0A4DA2;
+        }
+
+        /* 主内容区 */
         .main-content {
-            margin-left: var(--sidebar-width);
             padding: 20px;
         }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-            }
+
+        .content-wrapper {
+            max-width: min(1400px, 95vw);
+            margin: 0 auto;
         }
-        
+
+        /* 卡片样式 */
         .card-header {
             background-color: white;
-            border-bottom: 2px solid #0d6efd;
+            border-bottom: 2px solid #0A4DA2;
         }
-        
+
         .stat-card {
-            border-left: 4px solid #0d6efd;
+            border-left: 4px solid #0A4DA2;
         }
-        
+
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(10, 77, 162, 0.15);
+        }
+
+        .btn-primary {
+            background-color: #0A4DA2;
+            border-color: #0A4DA2;
+        }
+
+        .btn-primary:hover {
+            background-color: #083d7a;
+            border-color: #083d7a;
+        }
+
+        /* 响应式 */
+        @media (min-width: 768px) {
+            .admin-nav {
+                display: flex !important;
+            }
+            .mobile-menu-btn {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .admin-nav {
+                display: none !important;
+            }
+            .mobile-menu-btn {
+                display: block !important;
+            }
+            .brand-text {
+                display: none;
+            }
+            .logo-container img {
+                height: 40px;
+            }
+            .user-info span {
+                display: none;
+            }
+            .btn-logout span {
+                display: none;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- 侧边栏 -->
-    <nav class="sidebar">
-        <div class="sidebar-brand">
-            <i class="fas fa-cloud me-2"></i>云户科技
+    <!-- 顶部导航栏 -->
+    <header class="admin-header">
+        <div class="admin-header-inner">
+            <div class="header-left">
+                <a href="{{ url_for('admin.dashboard') }}" class="logo-container">
+                    <img src="{{ url_for('static', filename='home/images/Logo.jpg') }}" alt="云户科技">
+                    <span class="brand-text">统一管理后台</span>
+                </a>
+
+                <!-- 桌面端导航 -->
+                <nav class="admin-nav">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i> 仪表板
+                    </a>
+                    <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-users"></i> 用户管理
+                    </a>
+                    <a href="{{ url_for('admin.messages') }}" class="nav-link {% if request.endpoint and 'messages' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-envelope"></i> 留言管理
+                    </a>
+                    <a href="{{ url_for('admin.monitoring') }}" class="nav-link {% if request.endpoint and 'monitoring' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i> 监控管理
+                    </a>
+                    <a href="{{ url_for('home.index') }}" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> 访问官网
+                    </a>
+                </nav>
+            </div>
+
+            <div class="header-right">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>{{ session.get('display_name') or session.get('username', '管理员') }}</span>
+                </div>
+                <a href="{{ url_for('admin.logout') }}" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>退出</span>
+                </a>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
         </div>
-        <div class="sidebar-nav">
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+    </header>
+
+    <!-- 移动端菜单 -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-content">
+            <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
                 <i class="fas fa-tachometer-alt"></i> 仪表板
             </a>
-            <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
+            <a href="{{ url_for('admin.users') }}" class="{% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
                 <i class="fas fa-users"></i> 用户管理
             </a>
-            <a href="{{ url_for('admin.messages') }}" class="nav-link {% if request.endpoint and 'messages' in request.endpoint %}active{% endif %}">
+            <a href="{{ url_for('admin.messages') }}" class="{% if request.endpoint and 'messages' in request.endpoint %}active{% endif %}">
                 <i class="fas fa-envelope"></i> 留言管理
             </a>
-            <a href="{{ url_for('admin.monitoring') }}" class="nav-link {% if request.endpoint and 'monitoring' in request.endpoint %}active{% endif %}">
+            <a href="{{ url_for('admin.monitoring') }}" class="{% if request.endpoint and 'monitoring' in request.endpoint %}active{% endif %}">
                 <i class="fas fa-chart-line"></i> 监控管理
             </a>
-            <hr class="border-secondary mx-3">
-            <a href="{{ url_for('home.index') }}" target="_blank" class="nav-link">
+            <a href="{{ url_for('home.index') }}" target="_blank">
                 <i class="fas fa-external-link-alt"></i> 访问官网
             </a>
-            <hr class="border-secondary mx-3">
-            <a href="{{ url_for('admin.logout') }}" class="nav-link text-danger">
-                <i class="fas fa-sign-out-alt"></i> 退出登录
-            </a>
         </div>
-    </nav>
+    </div>
 
     <!-- 主内容区 -->
     <div class="main-content">
-        <!-- 顶部导航 -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 shadow-sm">
-            <div class="container-fluid">
-                <button class="btn btn-outline-secondary d-md-none" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <span class="navbar-brand mb-0 h1 ms-2">
-                    {% block page_title %}管理后台{% endblock %}
-                </span>
-                <div class="ms-auto">
-                    <span class="text-muted">
-                        <i class="fas fa-user-circle"></i>
-                        管理员
-                    </span>
-                </div>
-            </div>
-        </nav>
+        <div class="content-wrapper">
+            <!-- Flash 消息 -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        <!-- Flash 消息 -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <!-- 页面内容 -->
-        {% block content %}{% endblock %}
+            <!-- 页面内容 -->
+            {% block content %}{% endblock %}
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 侧边栏切换（移动端）
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
+        // 移动端菜单切换
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('open');
+                const icon = mobileMenuBtn.querySelector('i');
+                if (mobileMenu.classList.contains('open')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+
+            // 点击链接后关闭菜单
+            const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!link.getAttribute('target')) {
+                        mobileMenu.classList.remove('open');
+                        const icon = mobileMenuBtn.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+            });
+
+            // 点击外部关闭菜单
+            document.addEventListener('click', (e) => {
+                if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+                    mobileMenu.classList.remove('open');
+                    const icon = mobileMenuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+        }
+
+        // 顶部导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.admin-header');
+            if (header) {
+                if (window.scrollY > 50) {
+                    header.style.background = 'rgba(255,255,255,0.95)';
+                    header.style.backdropFilter = 'blur(10px)';
+                } else {
+                    header.style.background = 'white';
+                    header.style.backdropFilter = 'none';
+                }
+            }
         });
 
         // AJAX 全局错误处理

@@ -51,7 +51,66 @@ def admin_login_required(f):
 @admin_login_required
 def dashboard():
     """管理后台首页 - 仪表板"""
-    return render_template('admin/dashboard.html')
+    # 获取统计数据
+    stats = {
+        'user_count': 0,
+        'pending_messages': 0,
+        'ticket_count': 0,
+        'recent_messages': []
+    }
+
+    try:
+        # 获取用户总数（从 kb 数据库）
+        with db_connection('kb') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM `users`")
+            result = cursor.fetchone()
+            if result:
+                stats['user_count'] = result.get('count', 0)
+            cursor.close()
+
+        # 获取待处理留言数（从 home 数据库）
+        with db_connection('home') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM messages WHERE status = 'pending'")
+            result = cursor.fetchone()
+            if result:
+                stats['pending_messages'] = result.get('count', 0)
+
+            # 获取最近5条留言
+            cursor.execute("""
+                SELECT id, name, email, message, created_at, status
+                FROM messages
+                ORDER BY created_at DESC
+                LIMIT 5
+            """)
+            messages = cursor.fetchall()
+            stats['recent_messages'] = [
+                {
+                    'id': msg['id'],
+                    'name': msg['name'],
+                    'email': msg['email'],
+                    'message': msg['message'][:50] + '...' if len(msg['message']) > 50 else msg['message'],
+                    'created_at': msg['created_at'].strftime('%Y-%m-%d %H:%M') if msg['created_at'] else '',
+                    'status': msg['status']
+                }
+                for msg in messages
+            ]
+            cursor.close()
+
+        # 获取工单总数（从 case 数据库）
+        with db_connection('case') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM tickets")
+            result = cursor.fetchone()
+            if result:
+                stats['ticket_count'] = result.get('count', 0)
+            cursor.close()
+
+    except Exception as e:
+        logger.error(f"获取仪表盘统计数据失败: {str(e)}", exc_info=True)
+
+    return render_template('admin/dashboard.html', stats=stats)
 
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
@@ -66,7 +125,6 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
-        remember_me = request.form.get('remember', 'off') == 'on'
 
         if not username or not password:
             flash('用户名或密码不能为空', 'error')
@@ -100,14 +158,8 @@ def login():
             session['role'] = user_info['role']
             session['login_time'] = datetime.now().isoformat()
 
-            # 处理"记住我"功能
-            if remember_me:
-                session.permanent = True
-                logger.info(f"管理员 {username} 选择记住我，session有效期为7天")
-            else:
-                session.permanent = False
-                logger.info(f"管理员 {username} 未选择记住我，session有效期为3小时")
-
+            # session 有效期设置为 3 小时
+            session.permanent = False
             logger.info(f"管理员 {username} 成功登录管理后台")
 
             # 记录登录日志
@@ -400,6 +452,54 @@ def users_api_delete():
     except Exception as e:
         log_exception(logger, "删除用户失败")
         return server_error_response(f'删除用户失败：{str(e)}')
+
+
+@admin_bp.route('/users/api/login-logs', methods=['GET'])
+@admin_login_required
+def users_api_login_logs():
+    """获取登录记录 API"""
+    try:
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 50))
+
+        import pymysql
+        with db_connection('kb') as conn:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            # 获取总数
+            cursor.execute("SELECT COUNT(*) as total FROM mgmt_login_logs")
+            total = cursor.fetchone()['total']
+
+            # 获取分页数据
+            offset = (page - 1) * page_size
+            list_sql = """
+                SELECT id, username, display_name, ip_address,
+                       login_time, status, failure_reason
+                FROM mgmt_login_logs
+                ORDER BY login_time DESC
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(list_sql, [page_size, offset])
+            logs = cursor.fetchall()
+
+            # 将 datetime 对象转换为字符串
+            for log in logs:
+                if log.get('login_time'):
+                    log['login_time'] = log['login_time'].strftime('%Y-%m-%d %H:%M:%S')
+
+            cursor.close()
+
+            return success_response(data={
+                'logs': logs,
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'total_pages': (total + page_size - 1) // page_size
+            })
+
+    except Exception as e:
+        log_exception(logger, "获取登录记录失败")
+        return server_error_response(f'获取登录记录失败：{str(e)}')
 
 
 # ==================== 留言管理 ====================

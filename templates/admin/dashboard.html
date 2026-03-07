@@ -11,26 +11,26 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="me-3">
-                        <i class="fas fa-users fa-2x text-primary"></i>
+                        <i class="fas fa-users fa-2x" style="color: #0A4DA2;"></i>
                     </div>
                     <div>
                         <h6 class="card-title text-muted mb-1">用户总数</h6>
-                        <h3 class="mb-0">1,234</h3>
+                        <h3 class="mb-0">{{ stats.user_count }}</h3>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card shadow-sm h-100" style="border-left-color: #198754;">
+        <div class="card stat-card shadow-sm h-100" style="border-left-color: #A2D93D;">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="me-3">
-                        <i class="fas fa-envelope fa-2x text-success"></i>
+                        <i class="fas fa-envelope fa-2x" style="color: #A2D93D;"></i>
                     </div>
                     <div>
                         <h6 class="card-title text-muted mb-1">待处理留言</h6>
-                        <h3 class="mb-0">56</h3>
+                        <h3 class="mb-0">{{ stats.pending_messages }}</h3>
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                     </div>
                     <div>
                         <h6 class="card-title text-muted mb-1">工单总数</h6>
-                        <h3 class="mb-0">89</h3>
+                        <h3 class="mb-0">{{ stats.ticket_count }}</h3>
                     </div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>系统监控</h5>
-                <span class="badge bg-success" id="systemStatus">正常</span>
+                <span class="badge" id="systemStatus">正常</span>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -151,6 +151,7 @@
         <a href="{{ url_for('admin.messages') }}" class="btn btn-sm btn-primary">查看全部</a>
     </div>
     <div class="card-body">
+        {% if stats.recent_messages %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -163,23 +164,32 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for msg in stats.recent_messages %}
                     <tr>
-                        <td>张三</td>
-                        <td>zhang@example.com</td>
-                        <td>咨询产品价格...</td>
-                        <td>2024-01-15 10:30</td>
-                        <td><span class="badge bg-warning">待处理</span></td>
+                        <td>{{ msg.name }}</td>
+                        <td>{{ msg.email }}</td>
+                        <td>{{ msg.message }}</td>
+                        <td>{{ msg.created_at }}</td>
+                        <td>
+                            {% if msg.status == 'pending' %}
+                                <span class="badge bg-warning">待处理</span>
+                            {% elif msg.status == 'resolved' %}
+                                <span class="badge bg-success">已处理</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ msg.status }}</span>
+                            {% endif %}
+                        </td>
                     </tr>
-                    <tr>
-                        <td>李四</td>
-                        <td>li@example.com</td>
-                        <td>技术支持请求...</td>
-                        <td>2024-01-15 09:15</td>
-                        <td><span class="badge bg-success">已处理</span></td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>暂无留言</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
