@@ -373,7 +373,7 @@ class EmailService:
                     <p style="margin-top: 10px;">
                         —<br>
                         云户科技 | 专业IT服务商<br>
-                        <a href="https://www.yunhukeji.com" style="color: #0A4DA2; text-decoration: none;">www.yunhukeji.com</a>
+                        <a href="https://www.cloud-doors.com" style="color: #0A4DA2; text-decoration: none;">www.cloud-doors.com</a>
                     </p>
                 </div>
             </div>
@@ -625,8 +625,8 @@ class EmailService:
                     <p style="margin-top: 20px;">
                         —<br>
                         云户科技工单系统<br>
-                        <a href="https://www.yunhukeji.com/case/">查看工单</a> | 
-                        <a href="https://www.yunhukeji.com/">官方网站</a>
+                        <a href="https://www.cloud-doors.com/case/">查看工单</a> | 
+                        <a href="https://www.cloud-doors.com/">官方网站</a>
                     </p>
                 </div>
             </div>
@@ -645,7 +645,7 @@ class EmailService:
         """渲染附件列表HTML"""
         if not attachments:
             return ""
-        
+
         items_html = []
         for attachment in attachments:
             items_html.append(f"""
@@ -657,7 +657,7 @@ class EmailService:
                     </span>
                 </div>
             """)
-        
+
         return f"""
             <div class="attachments">
                 <h3>📎 附件 ({len(attachments)} 个)</h3>
@@ -666,6 +666,390 @@ class EmailService:
                 </div>
             </div>
         """
+
+    def send_message_reply_notification(
+        self,
+        to_email: str,
+        name: str,
+        original_message: str,
+        reply_content: str,
+        replied_by: str
+    ) -> tuple[bool, str]:
+        """
+        发送留言回复通知邮件
+
+        Args:
+            to_email: 收件人邮箱（客户的邮箱）
+            name: 客户姓名
+            original_message: 原始留言内容
+            reply_content: 回复内容
+            replied_by: 回复人
+
+        Returns:
+            (success: bool, message: str)
+        """
+        if not to_email:
+            return False, "客户邮箱不能为空"
+
+        subject = f"【云户科技】您的留言已收到回复"
+
+        # 创建HTML邮件内容
+        content = f"""
+        <!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, "Microsoft YaHei", sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+                    padding: 40px 20px;
+                    margin: 0;
+                }}
+                .container {{
+                    max-width: 700px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    overflow: hidden;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #0A4DA2 0%, #2563eb 100%);
+                    color: white;
+                    padding: 40px;
+                    text-align: center;
+                }}
+                .header h1 {{
+                    margin: 0;
+                    font-size: 26px;
+                    font-weight: 700;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                }}
+                .content {{
+                    padding: 40px;
+                }}
+                .greeting {{
+                    font-size: 18px;
+                    color: #1a202c;
+                    margin-bottom: 30px;
+                }}
+                .message-box {{
+                    background: #f9fafb;
+                    padding: 25px;
+                    border-radius: 8px;
+                    border-left: 4px solid #9ca3af;
+                    margin-bottom: 30px;
+                }}
+                .message-box h3 {{
+                    margin: 0 0 15px 0;
+                    color: #4b5563;
+                    font-size: 16px;
+                }}
+                .message-content {{
+                    color: #374151;
+                    white-space: pre-wrap;
+                    line-height: 1.8;
+                    font-size: 15px;
+                }}
+                .reply-box {{
+                    background: #f0fdf4;
+                    padding: 30px;
+                    border-radius: 8px;
+                    border-left: 4px solid #10b981;
+                    margin-bottom: 30px;
+                }}
+                .reply-box h3 {{
+                    margin: 0 0 20px 0;
+                    color: #047857;
+                    font-size: 18px;
+                }}
+                .reply-content {{
+                    color: #1a202c;
+                    white-space: pre-wrap;
+                    line-height: 1.8;
+                    font-size: 16px;
+                    padding: 15px;
+                    background: white;
+                    border-radius: 6px;
+                }}
+                .replied-by {{
+                    color: #6b7280;
+                    font-size: 14px;
+                    margin-top: 15px;
+                    text-align: right;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 30px;
+                    color: #6b7280;
+                    font-size: 14px;
+                    border-top: 1px solid #e5e7eb;
+                    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+                }}
+                .footer p {{
+                    margin: 5px 0;
+                }}
+                .footer a {{
+                    color: #0A4DA2;
+                    text-decoration: none;
+                    font-weight: 600;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📨 留言回复通知</h1>
+                </div>
+                <div class="content">
+                    <p class="greeting">尊敬的 <strong>{name}</strong>，您好！</p>
+
+                    <div class="message-box">
+                        <h3>📋 您的原始留言：</h3>
+                        <div class="message-content">{original_message}</div>
+                    </div>
+
+                    <div class="reply-box">
+                        <h3>✨ 我们的回复：</h3>
+                        <div class="reply-content">{reply_content}</div>
+                        <div class="replied-by">回复人：{replied_by}</div>
+                    </div>
+
+                    <p style="color: #6b7280; font-size: 14px; line-height: 1.8;">
+                        如有其他问题，欢迎随时联系我们。感谢您的信任与支持！
+                    </p>
+                </div>
+
+                <div class="footer">
+                    <p>—<br>
+                    云户科技 | 专业IT服务商<br>
+                    官网：<a href="https://www.cloud-doors.com">www.cloud-doors.com</a><br>
+                    联系我们：support@cloud-doors.com</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        return self.send_email(
+            to_email=to_email,
+            subject=subject,
+            content=content,
+            is_html=True
+        )
+
+    def send_account_activation_notification(
+        self,
+        to_email: str,
+        name: str,
+        username: str,
+        password: str,
+        company_name: str
+    ) -> tuple[bool, str]:
+        """
+        发送账户激活通知邮件
+
+        Args:
+            to_email: 收件人邮箱（客户的邮箱）
+            name: 客户姓名
+            username: 用户名
+            password: 临时密码
+            company_name: 公司名称
+
+        Returns:
+            (success: bool, message: str)
+        """
+        if not to_email:
+            return False, "客户邮箱不能为空"
+
+        subject = "【云户科技】您的账户已开通"
+
+        # 创建HTML邮件内容
+        content = f"""
+        <!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, "Microsoft YaHei", sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+                    padding: 40px 20px;
+                    margin: 0;
+                }}
+                .container {{
+                    max-width: 700px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    overflow: hidden;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+                    color: white;
+                    padding: 40px;
+                    text-align: center;
+                }}
+                .header h1 {{
+                    margin: 0;
+                    font-size: 26px;
+                    font-weight: 700;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                }}
+                .content {{
+                    padding: 40px;
+                }}
+                .greeting {{
+                    font-size: 18px;
+                    color: #1a202c;
+                    margin-bottom: 30px;
+                }}
+                .company-name {{
+                    font-size: 16px;
+                    color: #6b7280;
+                    margin-bottom: 20px;
+                }}
+                .account-box {{
+                    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                    padding: 30px;
+                    border-radius: 10px;
+                    border: 2px solid #10b981;
+                    margin-bottom: 30px;
+                }}
+                .account-box h3 {{
+                    margin: 0 0 20px 0;
+                    color: #047857;
+                    font-size: 20px;
+                    text-align: center;
+                }}
+                .account-info {{
+                    display: grid;
+                    gap: 15px;
+                }}
+                .info-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 15px;
+                    background: white;
+                    border-radius: 6px;
+                    border-left: 4px solid #10b981;
+                }}
+                .info-label {{
+                    font-weight: 600;
+                    color: #4b5563;
+                    font-size: 15px;
+                }}
+                .info-value {{
+                    font-weight: 700;
+                    color: #1a202c;
+                    font-size: 16px;
+                    font-family: 'Courier New', monospace;
+                }}
+                .info-value.password {{
+                    color: #dc2626;
+                    font-size: 18px;
+                }}
+                .warning-box {{
+                    background: #fef3c7;
+                    padding: 20px;
+                    border-radius: 8px;
+                    border-left: 4px solid #f59e0b;
+                    margin-bottom: 20px;
+                }}
+                .warning-box h4 {{
+                    margin: 0 0 10px 0;
+                    color: #92400e;
+                    font-size: 16px;
+                }}
+                .warning-box ul {{
+                    margin: 0;
+                    padding-left: 20px;
+                    color: #78350f;
+                    font-size: 14px;
+                    line-height: 1.8;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 30px;
+                    color: #6b7280;
+                    font-size: 14px;
+                    border-top: 1px solid #e5e7eb;
+                    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+                }}
+                .footer p {{
+                    margin: 5px 0;
+                }}
+                .footer a {{
+                    color: #10b981;
+                    text-decoration: none;
+                    font-weight: 600;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 账户开通成功</h1>
+                </div>
+                <div class="content">
+                    <p class="greeting">尊敬的 <strong>{name}</strong>，您好！</p>
+                    <p class="company-name"><strong>公司名称：</strong>{company_name}</p>
+
+                    <div class="account-box">
+                        <h3>🔐 您的账户信息</h3>
+                        <div class="account-info">
+                            <div class="info-row">
+                                <span class="info-label">用户名：</span>
+                                <span class="info-value">{username}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">临时密码：</span>
+                                <span class="info-value password">{password}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <h4>⚠️ 重要提示</h4>
+                        <ul>
+                            <li>请妥善保管您的用户名和密码</li>
+                            <li><strong>首次登录后请立即修改密码</strong></li>
+                            <li>如果忘记密码，请联系管理员重置</li>
+                            <li>请勿将账户信息透露给他人</li>
+                        </ul>
+                    </div>
+
+                    <p style="color: #6b7280; font-size: 14px; line-height: 1.8;">
+                        如有任何问题，请随时联系我们。感谢您的信任！
+                    </p>
+                </div>
+
+                <div class="footer">
+                    <p>—<br>
+                    云户科技 | 专业IT服务商<br>
+                    官网：<a href="https://www.cloud-doors.com">www.cloud-doors.com</a><br>
+                    联系我们：support@cloud-doors.com</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        return self.send_email(
+            to_email=to_email,
+            subject=subject,
+            content=content,
+            is_html=True
+        )
 
 
 # 创建全局邮件服务实例

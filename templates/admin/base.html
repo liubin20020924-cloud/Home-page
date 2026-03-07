@@ -285,6 +285,9 @@
                     <a href="{{ url_for('admin.messages') }}" class="nav-link {% if request.endpoint and 'messages' in request.endpoint %}active{% endif %}">
                         <i class="fas fa-envelope"></i> 留言管理
                     </a>
+                    <a href="{{ url_for('reply_templates.reply_templates_page') }}" class="nav-link {% if request.endpoint and 'reply_templates' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-file-alt"></i> 回复模板
+                    </a>
                     <a href="{{ url_for('admin.monitoring') }}" class="nav-link {% if request.endpoint and 'monitoring' in request.endpoint %}active{% endif %}">
                         <i class="fas fa-chart-line"></i> 监控管理
                     </a>
@@ -321,6 +324,9 @@
             </a>
             <a href="{{ url_for('admin.messages') }}" class="{% if request.endpoint and 'messages' in request.endpoint %}active{% endif %}">
                 <i class="fas fa-envelope"></i> 留言管理
+            </a>
+            <a href="{{ url_for('reply_templates.reply_templates_page') }}" class="{% if request.endpoint and 'reply_templates' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-file-alt"></i> 回复模板
             </a>
             <a href="{{ url_for('admin.monitoring') }}" class="{% if request.endpoint and 'monitoring' in request.endpoint %}active{% endif %}">
                 <i class="fas fa-chart-line"></i> 监控管理

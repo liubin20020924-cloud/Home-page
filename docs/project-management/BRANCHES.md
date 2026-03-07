@@ -9,7 +9,7 @@
 ### main
 - **用途**: 生产环境主分支
 - **状态**: ✅ 稳定
-- **最新提交**: `d82d862 merge: 合并统一管理后台功能到main分支` (2026-03-07)
+- **最新提交**: `ba21095 docs: 更新分支说明文档，添加所有分支最新状态` (2026-03-07)
 - **说明**: 所有功能开发完成后合并到此分支，经过测试后部署到生产环境
 - **已合并分支**:
   - feat/service-guarantee-page
@@ -50,18 +50,60 @@
 
 ### feat/contact-form-features
 - **用途**: 联系我们在线留言功能开发
-- **状态**: ⏳ 开发中 (未合并)
-- **最新提交**: `52e39c8 docs(message): 优化功能说明，消除重复内容`
-- **本地状态**: 已同步
+- **状态**: 🔄 开发中 (未合并)
+- **最新提交**: `5726a28 feat(admin): 完善统一管理后台留言管理功能` (2026-03-07)
+- **本地状态**: 领先1个提交
 - **说明**:
-  - 添加咨询类型选择（开通账户/技术咨询）
-  - 修复用户存在性判断逻辑
-  - 开通账户：创建客户账户并发送邮件
-  - 技术咨询：不创建账户，只发送邮件
-  - 联系电话改为必填
+  - **留言提交功能**:
+    - 添加咨询类型选择（开通账户/技术咨询）
+    - 修复用户存在性判断逻辑
+    - 开通账户：创建客户账户并发送邮件
+    - 技术咨询：不创建账户，只发送邮件
+    - 联系电话改为必填
+  - **留言管理功能**:
+    - 留言列表查询（支持搜索和筛选）
+    - 留言详情查看
+    - 留言状态更新
+    - 批量删除留言
+  - **留言回复功能** (新增):
+    - 管理员可直接回复留言
+    - 回复内容保存到数据库
+    - 回复后自动发送邮件通知客户
+    - 回复历史记录
+    - 回复状态跟踪
+  - **账户激活功能** (新增):
+    - 管理员可激活账户并发送账户信息
+    - 自动生成临时密码
+    - 邮件包含用户名、密码和登录地址
+    - 首次登录强制修改密码提示
+  - **回复模板管理** (新增):
+    - 创建、编辑、删除回复模板
+    - 按分类管理（通用/账户/技术/计费/其他）
+    - 支持变量替换（{name}, {email}, {phone}等）
+    - 模板使用统计
 - **相关文件**:
   - `templates/home/index.html` (联系表单部分)
   - `routes/home_bp.py` (表单提交处理)
+  - `routes/admin_bp.py` (留言管理、回复、激活)
+  - `routes/reply_templates_bp.py` (回复模板管理)
+  - `templates/admin/messages.html` (留言管理页面)
+  - `templates/admin/reply_templates.html` (模板管理页面)
+  - `services/email_service.py` (邮件发送服务)
+  - `database/upgrade_message_table.sql` (添加phone字段)
+  - `database/upgrade_message_reply.sql` (添加回复字段)
+  - `database/upgrade_inquiry_type.sql` (添加咨询类型)
+  - `database/upgrade_activated_at.sql` (添加激活时间)
+  - `database/create_reply_templates.sql` (创建模板表)
+- **已完成**:
+  - ✅ 留言提交（支持咨询类型）
+  - ✅ 留言管理（列表、详情、状态更新、删除）
+  - ✅ 留言回复（邮件通知）
+  - ✅ 账户激活（邮件发送账户信息）
+  - ✅ 回复模板管理（分类、变量替换）
+- **待完成**:
+  - ⏳ 留言统计分析
+  - ⏳ 留言导出功能
+  - ⏳ 留言标签分类
 
 ### feat/user-management-ui
 - **用途**: 用户管理界面功能修改
@@ -83,7 +125,7 @@
 
 ### feat/monitoring-alerting
 - **用途**: 系统监控与告警功能
-- **状态**: ⚠️ 基础功能已完成，待继续开发 (未合并)
+- **状态**: ⚠️ 基础功能已完成，已集成到统一管理后台 (部分功能在main分支)
 - **最新提交**: `80de3ef feat: 实现系统监控与告警功能`
 - **本地状态**: 已同步
 - **说明**:
@@ -101,18 +143,28 @@
     - 实时指标 API
     - 告警历史 API
     - 健康检查端点
+  - 已集成到统一管理后台 (`/admin/monitoring`)
   - 更新依赖文件 (psutil==5.9.6, Flask-Login==0.6.3)
-  - 添加监控文档 (MONITORING_QUICK_START.md)
+  - 添加监控文档 (docs/IMPLEMENTATION_SUMMARY_MONITORING.md)
+- **已实现**:
+  - ✅ 系统资源监控（CPU、内存、磁盘、网络）
+  - ✅ 告警规则与多级告警
+  - ✅ 邮件通知支持
+  - ✅ API性能追踪
+  - ✅ 监控仪表板页面（集成到统一管理后台）
+  - ✅ 实时指标 API
+  - ✅ 告警历史 API
 - **待完善**:
-  - 添加用户认证和权限控制
-  - 优化邮件通知模板
-  - 添加历史数据持久化
-  - 支持自定义监控指标
+  - ⏳ 添加历史数据持久化
+  - ⏳ 支持自定义监控指标
+  - ⏳ 优化告警通知模板
 - **相关文件**:
   - `services/monitoring_service.py`
   - `middlewares/monitoring_middleware.py`
   - `routes/monitoring_bp.py`
-  - `templates/monitoring/dashboard.html`
+  - `routes/admin_bp.py` (统一管理后台集成)
+  - `templates/admin/monitoring.html`
+  - `docs/IMPLEMENTATION_SUMMARY_MONITORING.md`
 
 ### feat/unified-admin-dashboard
 - **用途**: 统一管理后台
@@ -141,6 +193,8 @@
   5. ✅ 搜索功能（用户列表支持多条件搜索）
   6. ✅ 统计信息卡片（总用户数、活跃用户、管理员、锁定用户）
   7. ✅ 登录记录查看
+  8. ✅ 留言回复功能（邮件通知）
+  9. ✅ 账户激活功能（邮件发送账户信息）
 - **相关文件**:
   - `routes/admin_bp.py`
   - `templates/admin/`
@@ -151,6 +205,7 @@
   - 用户管理: `/admin/users`
   - 留言管理: `/admin/messages`
   - 监控管理: `/admin/monitoring`
+  - 回复模板: `/admin/reply-templates`
 
 ---
 
@@ -208,13 +263,136 @@
 
 | 分支名称 | 状态 | 最新提交 | 是否已合并 | 说明 |
 |---------|------|---------|-----------|------|
-| main | ✅ 稳定 | d82d862 | - | 生产主分支 |
+| main | ✅ 稳定 | ba21095 | - | 生产主分支 |
 | feat/service-guarantee-page | ✅ 已完成 | cd243be | ✅ 是 | 服务保障页面 |
 | feat/contact-button-adjustment | ✅ 已完成 | a371744 | ✅ 是 | 联系按钮调整 |
-| feat/contact-form-features | ⏳ 开发中 | 52e39c8 | ❌ 否 | 联系表单功能 |
+| feat/contact-form-features | 🔄 开发中 | 5726a28 | ❌ 否 | 联系表单/留言管理/回复模板 |
 | feat/user-management-ui | ✅ 已完成 | 8b7607d | ✅ 是 | 用户管理UI |
-| feat/monitoring-alerting | ⚠️ 部分完成 | 80de3ef | ❌ 否 | 监控与告警 |
+| feat/monitoring-alerting | ⚠️ 部分完成 | 80de3ef | ❌ 否 | 监控与告警（已集成到main） |
 | feat/unified-admin-dashboard | ✅ 已完成 | 469f3dd | ✅ 是 | 统一管理后台 |
+
+---
+
+## 功能完成情况详细说明
+
+### feat/contact-form-features 分支
+
+#### 已完成的核心功能
+
+**1. 留言提交功能** ✅
+- 支持两种咨询类型：开通账户、技术咨询
+- 开通账户类型：自动创建客户账户（禁用状态）
+- 技术咨询类型：不创建账户，仅发送通知邮件
+- 联系电话改为必填字段
+- 自动发送邮件通知到 support@cloud-doors.com
+
+**2. 留言管理功能** ✅
+- 留言列表查询（支持搜索和筛选）
+- 按状态筛选（未处理/已处理/已完成）
+- 留言详情查看
+- 留言状态更新
+- 批量删除留言
+- 分页显示
+
+**3. 留言回复功能** ✅
+- 管理员可直接在留言管理页面回复
+- 回复内容保存到数据库
+- 回复后自动发送邮件通知客户
+- 支持选择是否发送邮件
+- 回复历史记录显示
+- 回复状态跟踪（draft/sent/failed）
+- 支持回复模板快速填充
+
+**4. 账户激活功能** ✅
+- 管理员可为申请开通账户的客户激活账户
+- 自动生成随机临时密码
+- 发送激活邮件（包含用户名、密码、登录地址）
+- 首次登录强制修改密码提示
+- 更新用户状态为 active
+- 记录激活时间
+
+**5. 回复模板管理功能** ✅
+- 创建、编辑、删除回复模板
+- 按分类管理（通用/账户相关/技术支持/计费相关/其他）
+- 支持变量替换（{name}, {email}, {phone}, {company_name}, {message}, {username}）
+- 模板预览功能
+- 模板使用统计
+- 系统模板和自定义模板
+- 模板启用/禁用控制
+
+#### 数据库变更
+
+**messages 表扩展**:
+```sql
+-- 添加回复相关字段
+reply_content TEXT
+reply_time TIMESTAMP
+replied_by VARCHAR(50)
+replied_name VARCHAR(100)
+reply_status VARCHAR(20)
+
+-- 添加咨询类型字段
+inquiry_type VARCHAR(50)
+```
+
+**users 表扩展**:
+```sql
+-- 添加注册来源和激活时间字段
+registration_source VARCHAR(50)
+contact_message_id INT
+activated_at TIMESTAMP
+```
+
+**reply_templates 表创建**:
+```sql
+CREATE TABLE reply_templates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    description VARCHAR(500),
+    is_active TINYINT(1) DEFAULT 1,
+    is_system TINYINT(1) DEFAULT 0,
+    sort_order INT DEFAULT 0,
+    use_count INT DEFAULT 0,
+    created_by VARCHAR(50),
+    updated_by VARCHAR(50),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+)
+```
+
+#### API 接口
+
+**留言相关**:
+- `POST /api/contact` - 提交留言
+- `GET /admin/messages/api/list` - 获取留言列表
+- `POST /admin/messages/api/update` - 更新留言状态
+- `POST /admin/messages/api/delete` - 删除留言
+- `POST /admin/messages/api/reply` - 回复留言
+- `POST /admin/messages/api/activate-account` - 激活账户
+
+**回复模板相关**:
+- `GET /admin/reply-templates/api/list` - 获取模板列表
+- `GET /admin/reply-templates/api/<id>` - 获取模板详情
+- `POST /admin/reply-templates/api` - 创建模板
+- `PUT /admin/reply-templates/api/<id>` - 更新模板
+- `DELETE /admin/reply-templates/api/<id>` - 删除模板
+- `POST /admin/reply-templates/api/<id>/increment-use` - 增加使用次数
+- `POST /admin/reply-templates/api/preview` - 预览模板
+
+#### 相关文档
+
+- `docs/optimization-plans/MESSAGE_SYSTEM_OPTIMIZATION_PLAN.md` - 留言系统优化计划（v3.0）
+- `docs/IMPLEMENTATION_SUMMARY_MONITORING.md` - 监控系统实现总结
+
+#### 待完成的高级功能
+
+- 留言统计分析（图表展示）
+- 留言导出功能（Excel/CSV）
+- 留言标签分类
+- 附件上传功能
+- 留言归档功能（软删除）
 
 ---
 
@@ -222,10 +400,19 @@
 
 - **更新时间**: 2026-03-07
 - **更新人**: AI Assistant
-- **备注**: 
+- **备注**:
   - 更新所有分支的最新状态和提交信息
   - 添加分支状态标识和同步状态说明
   - 添加分支总览表格，便于快速查看
   - 统一管理后台功能已完成，包含用户管理、留言管理、监控管理三大模块
-  - 监控与告警功能基础完成，待继续开发完善
-  - 联系表单功能开发中，尚未合并
+  - 监控与告警功能基础完成，已集成到统一管理后台
+  - **联系表单功能分支已更新**：
+    - ✅ 留言提交（支持咨询类型：开通账户/技术咨询）
+    - ✅ 留言管理（列表、详情、状态更新、删除）
+    - ✅ 留言回复功能（支持邮件通知客户）
+    - ✅ 账户激活功能（自动发送账户信息邮件）
+    - ✅ 回复模板管理（支持分类和变量替换）
+    - 🔄 待完成：统计分析、导出、标签分类等高级功能
+  - **文档更新**：
+    - `docs/optimization-plans/MESSAGE_SYSTEM_OPTIMIZATION_PLAN.md` 已更新至 v3.0
+    - 记录了所有已完成功能的详细说明和技术实现

@@ -17,33 +17,13 @@ from common.database_context import db_connection
 from common.response import success_response, error_response, validation_error_response, server_error_response
 from common.validators import validate_user_data
 from common.logger import logger, log_exception
+from common.auth_utils import admin_login_required
 
 # 创建统一管理蓝图
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 
-# 登录验证装饰器
-def admin_login_required(f):
-    """管理员登录验证"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        # 检查登录状态
-        user = get_current_user()
-        if not user:
-            # 未登录，跳转到登录页面
-            if request.is_json:
-                return error_response('未登录，请先登录', 401)
-            return redirect(url_for('admin.login'))
 
-        # 检查是否是管理员
-        if user.get('role') != 'admin':
-            if request.is_json:
-                return error_response('权限不足', 403)
-            flash('权限不足，只有管理员才能访问此页面', 'error')
-            return redirect(url_for('admin.login'))
-
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @admin_bp.route('/')
@@ -552,7 +532,8 @@ def messages_api_list():
             # 获取分页数据
             offset = (page - 1) * page_size
             list_sql = f"""
-                SELECT id, name, email, phone, message, created_at, status
+                SELECT id, name, email, phone, message, created_at, status,
+                       inquiry_type, reply_content, reply_time, replied_by, replied_name, reply_status
                 FROM messages {where_sql}
                 ORDER BY created_at DESC
                 LIMIT %s OFFSET %s
@@ -658,6 +639,224 @@ def messages_api_delete():
         return server_error_response(f'删除留言失败：{str(e)}')
 
 
+@admin_bp.route('/messages/api/reply', methods=['POST'])
+@admin_login_required
+def messages_api_reply():
+    """回复留言 API"""
+    try:
+        data = request.get_json()
+        if not data:
+            return error_response('请求数据不能为空', 400)
+
+        message_id = data.get('id')
+        reply_content = data.get('reply_content')
+        send_email = data.get('send_email', True)  # 默认发送邮件
+
+        if not message_id:
+            return error_response('留言ID不能为空', 400)
+
+        if not reply_content or not reply_content.strip():
+            return error_response('回复内容不能为空', 400)
+
+        import pymysql
+        with db_connection('home') as conn:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            # 检查留言是否存在并获取留言信息
+            cursor.execute("SELECT * FROM `messages` WHERE id = %s", (message_id,))
+            message = cursor.fetchone()
+
+            if not message:
+                return error_response('留言不存在', 404)
+
+            # 检查客户邮箱
+            if not message.get('email'):
+                return error_response('该留言没有联系邮箱，无法发送邮件通知', 400)
+
+            # 获取管理员信息
+            admin_username = session.get('username')
+            admin_display_name = session.get('display_name', admin_username)
+
+            # 更新数据库
+            import datetime
+            reply_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            cursor.execute("""
+                UPDATE `messages`
+                SET reply_content = %s,
+                    reply_time = %s,
+                    replied_by = %s,
+                    replied_name = %s,
+                    reply_status = 'sent',
+                    status = 'processed'
+                WHERE id = %s
+            """, (reply_content, reply_time, admin_username, admin_display_name, message_id))
+            conn.commit()
+            cursor.close()
+
+        # 发送邮件通知
+        email_sent = False
+        email_message = ""
+        if send_email:
+            from services.email_service import email_service
+            success, msg = email_service.send_message_reply_notification(
+                to_email=message['email'],
+                name=message['name'],
+                original_message=message['message'],
+                reply_content=reply_content,
+                replied_by=admin_display_name
+            )
+            email_sent = success
+            email_message = msg
+
+            if not success:
+                # 如果邮件发送失败，更新回复状态
+                with db_connection('home') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "UPDATE `messages` SET reply_status = 'failed' WHERE id = %s",
+                        (message_id,)
+                    )
+                    conn.commit()
+                    cursor.close()
+                logger.warning(f"留言 {message_id} 回复邮件发送失败: {msg}")
+
+        logger.info(f"管理员 {admin_username} 回复留言 {message_id} 成功，邮件发送: {email_sent}")
+        return success_response(data={
+            'email_sent': email_sent,
+            'email_message': email_message
+        }, message='留言回复成功')
+
+    except Exception as e:
+        log_exception(logger, "回复留言失败")
+        return server_error_response(f'回复留言失败：{str(e)}')
+
+
+@admin_bp.route('/messages/api/activate-account', methods=['POST'])
+@admin_login_required
+def messages_api_activate_account():
+    """启用账户并发送账户信息 API"""
+    try:
+        data = request.get_json()
+        if not data:
+            return error_response('请求数据不能为空', 400)
+
+        message_id = data.get('id')
+
+        if not message_id:
+            return error_response('留言ID不能为空', 400)
+
+        import pymysql
+        import secrets
+        from werkzeug.security import generate_password_hash
+        from common.logger import logger
+
+        with db_connection('home') as conn:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            # 获取留言信息
+            cursor.execute("SELECT * FROM `messages` WHERE id = %s", (message_id,))
+            message = cursor.fetchone()
+
+            if not message:
+                return error_response('留言不存在', 404)
+
+            # 检查是否是开通账户类型
+            if message.get('inquiry_type') != 'account':
+                return error_response('该留言不是开通账户类型', 400)
+
+            # 切换到知识库数据库
+            cursor.close()
+            conn.close()
+
+        # 查找关联的用户账户（通过邮箱匹配）
+        with db_connection('kb') as conn:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            cursor.execute(
+                "SELECT id, username, display_name, status FROM users WHERE email = %s AND registration_source = 'contact_form'",
+                (message['email'],)
+            )
+            user = cursor.fetchone()
+
+            if not user:
+                return error_response('未找到关联的用户账户，可能已被手动删除', 404)
+
+            if user['status'] == 'active':
+                return error_response('该账户已经激活', 400)
+
+            # 生成新的临时密码
+            temp_password = secrets.token_urlsafe(10)
+            password_hash = generate_password_hash(temp_password)
+
+            # 激活账户
+            cursor.execute("""
+                UPDATE users
+                SET status = 'active',
+                    password_hash = %s,
+                    force_password_change = 1,
+                    activated_at = NOW(),
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (password_hash, user['id']))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+        # 发送账户信息邮件
+        from services.email_service import email_service
+        success, msg = email_service.send_account_activation_notification(
+            to_email=message['email'],
+            name=message['name'],
+            username=user['username'],
+            password=temp_password,
+            company_name=message.get('company_name', message['name'])
+        )
+
+        if not success:
+            logger.warning(f"账户激活邮件发送失败: {msg}")
+
+        # 更新留言状态和回复信息
+        with db_connection('home') as conn:
+            cursor = conn.cursor()
+            import datetime
+            admin_username = session.get('username')
+            admin_display_name = session.get('display_name', admin_username)
+
+            reply_content = f"尊敬的{message['name']}，您的账户已成功开通！账户信息和临时密码已通过邮件发送至您的邮箱，请查收。首次登录后请及时修改密码。"
+
+            cursor.execute("""
+                UPDATE messages
+                SET status = 'processed',
+                    reply_content = %s,
+                    reply_time = %s,
+                    replied_by = %s,
+                    replied_name = %s,
+                    reply_status = %s
+                WHERE id = %s
+            """, (
+                reply_content,
+                datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                admin_username,
+                admin_display_name,
+                'sent' if success else 'failed',
+                message_id
+            ))
+            conn.commit()
+            cursor.close()
+
+        logger.info(f"管理员 {admin_username} 激活账户 {user['username']} 成功，邮件发送: {success}")
+        return success_response(data={
+            'username': user['username'],
+            'email_sent': success,
+            'email_message': msg
+        }, message='账户激活成功，账户信息已发送至客户邮箱')
+
+    except Exception as e:
+        log_exception(logger, "激活账户失败")
+        return server_error_response(f'激活账户失败：{str(e)}')
+
+
 # ==================== 监控管理 ====================
 
 @admin_bp.route('/monitoring')
@@ -695,8 +894,22 @@ def monitoring_api_alerts():
     """告警列表 API"""
     from services.monitoring_service import get_monitoring_service
     monitoring_service = get_monitoring_service()
-    
+
+    def alert_to_dict(alert):
+        """将 Alert 对象转换为可序列化的字典"""
+        data = {
+            'level': alert.level.value if hasattr(alert.level, 'value') else str(alert.level),
+            'metric_name': alert.metric_name,
+            'current_value': alert.current_value,
+            'threshold': alert.threshold,
+            'message': alert.message,
+            'timestamp': alert.timestamp.isoformat() if alert.timestamp else None,
+            'resolved': alert.resolved,
+            'resolved_at': alert.resolved_at.isoformat() if alert.resolved_at else None
+        }
+        return data
+
     return jsonify({
         'success': True,
-        'data': [alert.__dict__ for alert in monitoring_service.get_active_alerts()]
+        'data': [alert_to_dict(alert) for alert in monitoring_service.get_active_alerts()]
     })

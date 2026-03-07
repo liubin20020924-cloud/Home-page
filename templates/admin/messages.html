@@ -119,26 +119,77 @@
                     <div class="col-md-6">
                         <strong><i class="fas fa-phone me-2"></i>电话:</strong>
                         <span id="detailPhone"></span>
-                        <button class="btn btn-sm btn-success ms-2" onclick="callPhone()">
-                            <i class="fas fa-phone me-1"></i>拨打
-                        </button>
                     </div>
                     <div class="col-md-6">
                         <strong><i class="fas fa-clock me-2"></i>提交时间:</strong>
                         <span id="detailTime"></span>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <strong><i class="fas fa-tag me-2"></i>状态:</strong>
-                    <select class="form-select form-select-sm w-auto d-inline-block" id="detailStatus">
-                        <option value="1">未处理</option>
-                        <option value="2">已联系</option>
-                        <option value="3">已完成</option>
-                    </select>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong><i class="fas fa-tag me-2"></i>状态:</strong>
+                        <select class="form-select form-select-sm w-auto d-inline-block" id="detailStatus">
+                            <option value="1">未处理</option>
+                            <option value="2">已联系</option>
+                            <option value="3">已完成</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <strong><i class="fas fa-info-circle me-2"></i>咨询类型:</strong>
+                        <span id="detailInquiryType"></span>
+                    </div>
                 </div>
                 <hr>
                 <h6><i class="fas fa-comment me-2"></i>留言内容:</h6>
                 <div class="border p-3 bg-light rounded" id="detailContent" style="max-height: 300px; overflow-y: auto;"></div>
+
+                <!-- 回复区域 -->
+                <hr>
+                <h6><i class="fas fa-reply me-2"></i>回复留言:</h6>
+                <div id="replySection" style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <!-- 已有回复显示 -->
+                    <div id="existingReply" style="display: none; margin-bottom: 20px;">
+                        <div class="alert alert-info mb-2">
+                            <strong><i class="fas fa-check-circle me-2"></i>已回复</strong>
+                            <span class="text-muted float-end" id="replyTime"></span>
+                        </div>
+                        <div class="border rounded p-3 bg-white" id="replyContent"></div>
+                        <div class="text-muted small mt-2" id="repliedBy"></div>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="showEditReply()">
+                            <i class="fas fa-edit me-1"></i>编辑回复
+                        </button>
+                    </div>
+
+                    <!-- 回复输入区域 -->
+                    <div id="replyInputArea">
+                        <!-- 模板选择 -->
+                        <div class="mb-2">
+                            <label class="form-label"><i class="fas fa-file-alt me-1"></i>使用回复模板：</label>
+                            <select class="form-select form-select-sm" id="templateSelect" onchange="applyTemplate()">
+                                <option value="">-- 选择模板 --</option>
+                            </select>
+                            <small class="text-muted">选择模板可快速填充回复内容</small>
+                        </div>
+
+                        <textarea
+                            class="form-control mb-2"
+                            id="replyContentInput"
+                            rows="5"
+                            placeholder="请输入回复内容..."></textarea>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="sendEmailCheck" checked>
+                            <label class="form-check-label" for="sendEmailCheck">
+                                同时发送邮件通知客户
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-success" onclick="submitReply()">
+                            <i class="fas fa-paper-plane me-1"></i>发送回复
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="cancelReply()">
+                            <i class="fas fa-times me-1"></i>取消
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger me-auto" onclick="deleteCurrentMessage()">
@@ -147,8 +198,9 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>关闭
                 </button>
-                <button type="button" class="btn btn-success" onclick="sendEmail()">
-                    <i class="fas fa-paper-plane me-1"></i>回复邮件
+                <!-- 激活账户按钮（仅开通账户类型显示） -->
+                <button type="button" class="btn btn-success" id="activateAccountBtn" style="display: none;" onclick="activateAccount()">
+                    <i class="fas fa-user-plus me-1"></i>启用并发送账户信息
                 </button>
                 <button type="button" class="btn btn-primary" onclick="updateMessageStatus()">
                     <i class="fas fa-save me-1"></i>保存状态
@@ -310,9 +362,6 @@ function renderMessagesTable(messages) {
                         <button class="btn btn-outline-primary" onclick="viewMessage(${msg.id})" title="查看详情">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-outline-success" onclick="quickCall('${msg.phone}')" title="拨打电话">
-                            <i class="fas fa-phone"></i>
-                        </button>
                     </div>
                 </td>
             </tr>
@@ -404,43 +453,101 @@ function viewMessage(messageId) {
     if (statusValue === 'processed') statusValue = '3';
     $('#detailStatus').val(statusValue || '1');
 
+    // 显示咨询类型
+    const inquiryType = message.inquiry_type || 'other';
+    const inquiryTypeMap = {
+        'account': '<span class="badge bg-success"><i class="fas fa-user-plus me-1"></i>开通账户</span>',
+        'technical': '<span class="badge bg-info"><i class="fas fa-question-circle me-1"></i>技术咨询</span>',
+        'other': '<span class="badge bg-secondary"><i class="fas fa-info-circle me-1"></i>其他</span>'
+    };
+    $('#detailInquiryType').html(inquiryTypeMap[inquiryType] || inquiryTypeMap['other']);
+
+    // 根据咨询类型显示/隐藏按钮
+    if (inquiryType === 'account') {
+        $('#activateAccountBtn').show();
+        // 如果已激活，隐藏激活按钮
+        if (message.status === 'processed' && message.reply_content && message.reply_content.includes('账户已成功开通')) {
+            $('#activateAccountBtn').hide();
+        }
+    } else {
+        $('#activateAccountBtn').hide();
+    }
+
+    // 显示或隐藏已有回复
+    if (message.reply_content) {
+        $('#existingReply').show();
+        $('#replyContent').text(message.reply_content);
+        $('#replyTime').text('回复时间: ' + formatDateTime(message.reply_time));
+        $('#repliedBy').text('回复人: ' + (message.replied_name || message.replied_by || '-'));
+        $('#replyInputArea').hide();
+    } else {
+        $('#existingReply').hide();
+        $('#replyInputArea').show();
+        $('#replyContentInput').val('');
+    }
+
     const modal = new bootstrap.Modal(document.getElementById('messageDetailModal'));
     modal.show();
 }
 
-// 拨打电话
-function callPhone() {
-    const phone = $('#detailPhone').text();
-    if (!phone || phone === '-') {
-        showMessage('没有电话号码', 'warning');
+// 提交回复
+function submitReply() {
+    const replyContent = $('#replyContentInput').val().trim();
+    const sendEmail = $('#sendEmailCheck').is(':checked');
+
+    if (!replyContent) {
+        showMessage('请输入回复内容', 'warning');
         return;
     }
-    if (confirm(`确定要拨打 ${phone} 吗？`)) {
-        showMessage(`准备拨打: ${phone}`, 'info');
-        // 这里可以集成实际的拨号功能
-        // window.open(`tel:${phone}`);
+
+    $.ajax({
+        url: '/admin/messages/api/reply',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            id: currentMessageId,
+            reply_content: replyContent,
+            send_email: sendEmail
+        }),
+        success: function(response) {
+            if (response.success) {
+                const msg = '回复成功' + (response.data.email_sent ? '，邮件已发送' : '，但邮件发送失败');
+                showMessage(msg, 'success');
+                $('#replyContentInput').val('');
+                loadMessages(currentPage); // 重新加载列表
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('messageDetailModal'));
+                if (modal) modal.hide();
+            } else {
+                showMessage('回复失败: ' + response.message, 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            showMessage('回复失败: ' + error, 'error');
+        }
+    });
+}
+
+// 编辑回复
+function showEditReply() {
+    const message = allMessages.find(m => m.id === currentMessageId);
+    if (message && message.reply_content) {
+        $('#replyContentInput').val(message.reply_content);
+        $('#existingReply').hide();
+        $('#replyInputArea').show();
+        $('#replyContentInput').focus();
     }
 }
 
-// 快速拨打电话
-function quickCall(phone) {
-    if (!phone) {
-        showMessage('没有电话号码', 'warning');
-        return;
+// 取消回复
+function cancelReply() {
+    const message = allMessages.find(m => m.id === currentMessageId);
+    if (message && message.reply_content) {
+        $('#existingReply').show();
+        $('#replyInputArea').hide();
+    } else {
+        $('#replyContentInput').val('');
     }
-    if (confirm(`确定要拨打 ${phone} 吗？`)) {
-        showMessage(`准备拨打: ${phone}`, 'info');
-    }
-}
-
-// 发送邮件
-function sendEmail() {
-    const email = $('#detailEmail').find('a').text();
-    if (!email || email === '无') {
-        showMessage('没有邮箱地址', 'warning');
-        return;
-    }
-    window.location.href = `mailto:${email}`;
 }
 
 // 更新留言状态
@@ -499,6 +606,40 @@ function deleteCurrentMessage() {
     }
 }
 
+// 激活账户
+function activateAccount() {
+    if (!confirm('确定要激活该账户并发送账户信息邮件吗？账户将被启用，临时密码将发送至客户邮箱。')) {
+        return;
+    }
+
+    $.ajax({
+        url: '/admin/messages/api/activate-account',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: currentMessageId }),
+        success: function(response) {
+            if (response.success) {
+                const msg = '账户激活成功！用户名: ' + response.data.username;
+                if (response.data.email_sent) {
+                    showMessage(msg + '，账户信息已发送至客户邮箱', 'success');
+                } else {
+                    showMessage(msg + '，但邮件发送失败: ' + response.data.email_message, 'warning');
+                }
+                loadMessages(currentPage);
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('messageDetailModal'));
+                if (modal) modal.hide();
+            } else {
+                showMessage('激活失败: ' + response.message, 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('激活失败:', xhr);
+            showMessage('激活失败: ' + error, 'error');
+        }
+    });
+}
+
 // 清除搜索
 function clearSearch() {
     $('#searchInput').val('');
@@ -532,9 +673,95 @@ $(document).on('keydown', function(e) {
     }
 });
 
+// 加载回复模板
+function loadTemplates() {
+    $.ajax({
+        url: '/admin/reply-templates/api/list',
+        method: 'GET',
+        data: { page: 1, page_size: 100, is_active: '1' }, // 获取所有启用的模板
+        success: function(response) {
+            if (response.success) {
+                const templates = response.data.templates || [];
+                const select = $('#templateSelect');
+                select.empty();
+                select.append('<option value="">-- 选择模板 --</option>');
+
+                // 按分类分组
+                const categorized = {};
+                templates.forEach(function(tpl) {
+                    if (!categorized[tpl.category]) {
+                        categorized[tpl.category] = [];
+                    }
+                    categorized[tpl.category].push(tpl);
+                });
+
+                // 分类名称映射
+                const categoryNames = {
+                    'general': '通用',
+                    'account': '账户相关',
+                    'technical': '技术支持',
+                    'billing': '计费相关',
+                    'other': '其他'
+                };
+
+                // 添加选项
+                for (const category in categorized) {
+                    const optgroup = $('<optgroup>').attr('label', categoryNames[category] || category);
+                    categorized[category].forEach(function(tpl) {
+                        optgroup.append(`<option value="${tpl.id}">${tpl.name}</option>`);
+                    });
+                    select.append(optgroup);
+                }
+            }
+        },
+        error: function(xhr) {
+            console.error('加载模板失败:', xhr);
+        }
+    });
+}
+
+// 应用模板
+function applyTemplate() {
+    const templateId = $('#templateSelect').val();
+    if (!templateId) return;
+
+    $.ajax({
+        url: `/admin/reply-templates/api/${templateId}`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                const template = response.data;
+                const message = allMessages.find(m => m.id === currentMessageId);
+
+                if (message) {
+                    // 替换变量
+                    let content = template.content;
+                    content = content.replace(/{name}/g, message.name || '');
+                    content = content.replace(/{email}/g, message.email || '');
+                    content = content.replace(/{phone}/g, message.phone || '');
+                    content = content.replace(/{company_name}/g, message.company_name || '');
+                    content = content.replace(/{message}/g, message.message || '');
+                    content = content.replace(/{username}/g, message.username || '');
+
+                    $('#replyContentInput').val(content);
+                } else {
+                    $('#replyContentInput').val(template.content);
+                }
+
+                // 增加模板使用次数
+                $.post(`/admin/reply-templates/api/${templateId}/increment-use`, function() {});
+            }
+        },
+        error: function(xhr) {
+            showMessage('加载模板失败', 'error');
+        }
+    });
+}
+
 // 初始加载
 $(document).ready(function() {
     loadMessages(1);
+    loadTemplates(); // 加载回复模板
 });
 </script>
 {% endblock %}

@@ -5,13 +5,12 @@
 """
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
-from flask_wtf.csrf import CSRFProtect
 from flasgger import Swagger
 import jinja2
 import config
 from common.db_manager import get_pool
 from services.socketio_service import register_socketio_events, init_case_database
-from routes import home_bp, kb_bp, kb_management_bp, case_bp, unified_bp, api_bp, auth_bp, user_management_bp, admin_bp, monitoring_bp
+from routes import home_bp, kb_bp, kb_management_bp, case_bp, unified_bp, api_bp, auth_bp, user_management_bp, admin_bp, monitoring_bp, reply_templates_bp
 import os
 from datetime import timedelta
 
@@ -29,23 +28,6 @@ app.config['SESSION_COOKIE_HTTPONLY'] = config.BaseConfig.SESSION_COOKIE_HTTPONL
 # Session 安全配置（生产环境使用 HTTPS 时启用）
 if os.getenv('HTTPS_ENABLED', 'false').lower() == 'true':
     app.config['SESSION_COOKIE_SECURE'] = True
-
-# 启用 CSRF 保护
-# 注意：需要安装 flask-wtf: pip install flask-wtf
-# 登录和认证 API 不使用 CSRF 保护，因为它们是公开接口
-# 其他表单需要在模板中添加 {% csrf_token() %}
-csrf = None
-try:
-    csrf = CSRFProtect(app)
-except ImportError:
-    print("警告: flask-wtf 未安装，CSRF 保护未启用。运行: pip install flask-wtf")
-
-# 为所有模板添加 CSRF token 到上下文
-@app.context_processor
-def inject_csrf_token():
-    if csrf:
-        return dict(csrf_token=lambda: csrf._get_csrf_token())
-    return dict(csrf_token=lambda: '')
 
 # 性能优化配置
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=3)
@@ -181,9 +163,6 @@ swagger_template = {
 
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
-# CSRF 保护 - 已禁用以避免登录问题
-
-
 # 请求速率限制
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -253,19 +232,10 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(user_management_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(monitoring_bp)
+app.register_blueprint(reply_templates_bp)
 
 # 排除登录端点的 CSRF 保护（这些是公开接口）
-if csrf:
-    csrf.exempt(kb_bp)
-    csrf.exempt(kb_management_bp)  # 知识库管理后台也需要exempt
-    csrf.exempt(case_bp)
-    csrf.exempt(auth_bp)
-    csrf.exempt(user_management_bp)
-    csrf.exempt(home_bp)  # 官网系统的公开接口（如联系表单）不需要 CSRF 保护
-    csrf.exempt(admin_bp)  # 统一管理后台使用 session 认证，不需要 CSRF 保护
-    csrf.exempt(monitoring_bp)  # 监控API不需要CSRF保护
-    csrf.exempt(admin_bp)  # 统一管理后台暂时不需要CSRF保护
-    csrf.exempt(monitoring_bp)  # 监控API不需要CSRF保护
+# 注意：CSRF 保护已禁用，所有 API 都不需要 CSRF token
 
 # 注册SocketIO事件
 register_socketio_events(socketio)

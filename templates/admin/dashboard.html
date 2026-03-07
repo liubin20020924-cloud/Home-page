@@ -171,10 +171,12 @@
                         <td>{{ msg.message }}</td>
                         <td>{{ msg.created_at }}</td>
                         <td>
-                            {% if msg.status == 'pending' %}
-                                <span class="badge bg-warning">待处理</span>
-                            {% elif msg.status == 'resolved' %}
-                                <span class="badge bg-success">已处理</span>
+                            {% if msg.status == 'pending' or msg.status == '1' %}
+                                <span class="badge bg-warning">未处理</span>
+                            {% elif msg.status == '2' %}
+                                <span class="badge bg-info">已联系</span>
+                            {% elif msg.status == '3' or msg.status == 'processed' or msg.status == 'resolved' %}
+                                <span class="badge bg-success">已完成</span>
                             {% else %}
                                 <span class="badge bg-secondary">{{ msg.status }}</span>
                             {% endif %}

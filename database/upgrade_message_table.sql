@@ -2,12 +2,14 @@
 -- 在线留言功能数据库升级脚本
 -- 创建时间: 2026-03-07
 -- 说明: 为官网联系表单添加留言持久化存储
+--       添加 phone 字段以支持电话联系功能
 -- =====================================================
 
 USE `clouddoors_db`;
 
--- 留言表已存在，确保字段完整性
--- 表结构已在初始化脚本中创建
+-- 添加 phone 字段（如果不存在）
+ALTER TABLE `messages`
+ADD COLUMN IF NOT EXISTS `phone` VARCHAR(20) COMMENT '联系电话' AFTER `email`;
 
 -- 查看当前表结构
 SHOW COLUMNS FROM `messages`;

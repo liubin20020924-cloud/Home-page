@@ -12,61 +12,9 @@ from common.response import success_response, error_response, validation_error_r
 from common.validators import validate_required, validate_email
 from common.logger import logger, log_exception
 from common.database_context import db_connection
+from utils.name_to_username import name_to_username
 
 home_bp = Blueprint('home', __name__)
-
-
-def name_to_username(display_name: str) -> str:
-    """
-    将显示名称转换为用户名
-    - 英文：直接使用（去除特殊字符，保留字母、数字、点、下划线、短横线）
-    - 中文：转换为全拼
-    - 混合：中文转拼音，英文保留
-
-    Args:
-        display_name: 显示名称
-
-    Returns:
-        str: 用户名
-    """
-    try:
-        from pypinyin import lazy_pinyin, Style
-
-        # 检查是否包含中文字符
-        has_chinese = bool(re.search(r'[\u4e00-\u9fff]', display_name))
-
-        if has_chinese:
-            # 包含中文，转换为拼音
-            # 使用全拼，首字母大写，用空格分隔
-            pinyin_list = lazy_pinyin(display_name, style=Style.NORMAL)
-            username = ''.join(pinyin_list)
-        else:
-            # 纯英文/数字，直接使用
-            username = display_name
-
-        # 清理用户名：只保留字母、数字、点、下划线、短横线
-        username = re.sub(r'[^a-zA-Z0-9._-]', '', username)
-
-        # 确保用户名不为空
-        if not username:
-            username = f'user_{secrets.token_hex(4)}'
-
-        # 转换为小写
-        username = username.lower()
-
-        logger.info(f"将显示名称 '{display_name}' 转换为用户名: '{username}'")
-        return username
-
-    except ImportError:
-        logger.warning("pypinyin 库未安装，使用简单转换逻辑")
-        # 降级方案：只保留字母、数字、点、下划线、短横线
-        username = re.sub(r'[^a-zA-Z0-9._-]', '', display_name)
-        if not username:
-            username = f'user_{secrets.token_hex(4)}'
-        return username.lower()
-    except Exception as e:
-        logger.error(f"转换用户名失败: {str(e)}")
-        return f'user_{secrets.token_hex(4)}'
 
 
 @home_bp.route('/')
@@ -259,8 +207,8 @@ def contact():
                         INSERT INTO users (
                             username, password_hash, password_type, display_name, email,
                             company_name, phone, role, status, system, created_by, force_password_change,
-                            created_at, updated_at
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                            registration_source, created_at, updated_at
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                         """
                         cursor.execute(insert_sql, (
                             username,  # 使用姓名生成的用户名（可能带后缀）
@@ -275,6 +223,7 @@ def contact():
                             'unified',  # 所属系统
                             'contact_form',  # 创建人
                             1,  # 强制修改密码
+                            'contact_form'  # 注册来源
                         ))
                         conn.commit()
                         user_created = True
@@ -441,17 +390,19 @@ def contact():
             with db_connection('home') as conn:
                 cursor = conn.cursor()
                 insert_message_sql = """
-                INSERT INTO messages (name, email, message, status)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO messages (name, email, phone, message, status, inquiry_type)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(insert_message_sql, (
                     data['name'],
                     data['email'],
+                    data.get('phone', ''),
                     data['message'],
-                    'pending'
+                    'pending',
+                    inquiry_type  # 保存咨询类型
                 ))
                 conn.commit()
-                logger.info(f"留言已保存到 messages 表: {data['name']} - {data['email']}")
+                logger.info(f"留言已保存到 messages 表: {data['name']} - {data['email']} - {data.get('phone', '')} - 类型: {inquiry_type}")
         except Exception as e:
             logger.error(f"保存留言到 messages 表失败: {str(e)}", exc_info=True)
 
