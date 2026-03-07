@@ -2,10 +2,10 @@
 -- 云户科技网站数据库初始化脚本
 -- 适用于 MariaDB/MySQL
 -- 创建时间: 2026-02-08
--- 最后更新: 2026-03-02 (v1.0 首次正式发布)
--- 版本: v1.0 (正式版)
+-- 最后更新: 2026-03-07 (v2.0 整合所有补丁)
+-- 版本: v2.0 (正式版)
 -- 说明：整合官网、知识库、工单三个系统的数据库
---       本脚本可直接用于全新安装
+--       本脚本可直接用于全新安装，包含所有功能和字段
 -- =====================================================
 
 -- =====================================================
@@ -70,12 +70,17 @@ CREATE TABLE IF NOT EXISTS `users` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `created_by` VARCHAR(50) COMMENT '创建人',
+    `registration_source` VARCHAR(50) COMMENT '注册来源：contact_form-联系表单, manual-手动创建, other-其他',
+    `contact_message_id` INT COMMENT '关联的留言ID',
+    `activated_at` TIMESTAMP NULL DEFAULT NULL COMMENT '账户激活时间',
     INDEX idx_username (`username`),
     INDEX idx_status (`status`),
     INDEX idx_role (`role`),
     INDEX idx_system (`system`),
     INDEX idx_company_name (`company_name`),
-    INDEX idx_force_password_change (`force_password_change`)
+    INDEX idx_force_password_change (`force_password_change`),
+    INDEX idx_users_registration_source (`registration_source`),
+    INDEX idx_users_activated_at (`activated_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='统一用户表';
 
 -- 知识库登录日志表
@@ -179,17 +184,118 @@ CREATE TABLE IF NOT EXISTS `satisfaction` (
 -- =====================================================
 USE `clouddoors_db`;
 
--- 留言表
+-- 留言表（完整版本，包含所有字段）
 CREATE TABLE IF NOT EXISTS `messages` (
     `id` INT AUTO_INCREMENT PRIMARY KEY COMMENT '留言ID',
     `name` VARCHAR(100) NOT NULL COMMENT '姓名',
     `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
+    `phone` VARCHAR(20) COMMENT '联系电话',
+    `company_name` VARCHAR(200) DEFAULT NULL COMMENT '公司名称',
     `message` TEXT NOT NULL COMMENT '留言内容',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `status` VARCHAR(20) DEFAULT 'pending' COMMENT '状态：pending-待处理, processed-已处理',
+    `status` VARCHAR(20) DEFAULT 'pending' COMMENT '状态：pending-未处理, processed-已处理, completed-已完成',
+    `reply_content` TEXT COMMENT '回复内容',
+    `reply_time` TIMESTAMP NULL COMMENT '回复时间',
+    `replied_by` VARCHAR(50) COMMENT '回复人用户名',
+    `replied_name` VARCHAR(100) COMMENT '回复人显示名',
+    `reply_status` VARCHAR(20) DEFAULT 'draft' COMMENT '回复状态：draft-草稿, sent-已发送, failed-发送失败',
+    `inquiry_type` VARCHAR(50) DEFAULT 'other' COMMENT '咨询类型：account-开通账户, technical-技术咨询, other-其他',
     INDEX idx_created_at (`created_at`),
-    INDEX idx_status (`status`)
+    INDEX idx_status (`status`),
+    INDEX idx_messages_status_date (`status`, `created_at`),
+    INDEX idx_messages_email (`email`),
+    INDEX idx_messages_reply_status (`reply_status`),
+    INDEX idx_messages_reply_time (`reply_time`),
+    INDEX idx_messages_inquiry_type (`inquiry_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='官网留言表';
+
+-- 回复模板表
+CREATE TABLE IF NOT EXISTS `reply_templates` (
+    `id` INT(11) NOT NULL AUTO_INCREMENT COMMENT '模板ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '模板名称',
+    `category` VARCHAR(50) DEFAULT 'general' COMMENT '模板分类：general-通用, account-账户相关, technical-技术支持, billing-计费相关, other-其他',
+    `content` TEXT NOT NULL COMMENT '模板内容（支持变量：{name}, {email}, {phone}, {company_name}, {message}, {username}）',
+    `description` VARCHAR(500) DEFAULT NULL COMMENT '模板描述',
+    `is_active` TINYINT(1) DEFAULT 1 COMMENT '是否启用：0-禁用，1-启用',
+    `is_system` TINYINT(1) DEFAULT 0 COMMENT '是否系统模板：0-自定义，1-系统预设',
+    `sort_order` INT(11) DEFAULT 0 COMMENT '排序顺序（数字越小越靠前）',
+    `use_count` INT(11) DEFAULT 0 COMMENT '使用次数',
+    `created_by` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+    `updated_by` VARCHAR(50) DEFAULT NULL COMMENT '最后修改人',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_category` (`category`),
+    KEY `idx_active` (`is_active`),
+    KEY `idx_is_active` (`is_active`),
+    KEY `idx_is_system` (`is_system`),
+    KEY `idx_sort` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='留言回复模板表';
+
+-- 插入系统预设回复模板
+INSERT INTO `reply_templates` (`name`, `category`, `content`, `description`, `is_system`, `sort_order`, `created_by`) VALUES
+('通用回复-收到留言', 'general', '尊敬的{name}：
+
+您好！感谢您的留言。
+
+我们已收到您的留言，稍后会有专人与您联系处理。如有紧急事宜，请直接拨打我们的客服电话：400-XXX-XXXX
+
+祝您生活愉快！
+
+此致
+敬礼
+
+云户科技客服团队', '通用回复模板，表示已收到留言', 1, 1, 'system'),
+('技术支持-收到咨询', 'technical', '尊敬的{name}：
+
+您好！感谢您联系云户科技技术支持。
+
+我们已收到您的技术咨询内容：
+"{message}"
+
+我们的技术工程师正在尽快处理您的咨询，预计在1-2个工作日内给您详细回复。如有紧急技术问题，请拨打技术支持热线：400-XXX-XXXX
+
+感谢您的信任与支持！
+
+云户科技技术支持团队', '技术支持类回复模板', 1, 2, 'system'),
+('账户相关-账户已激活', 'account', '尊敬的{name}：
+
+您好！很高兴通知您，您的账户已成功激活。
+
+账户信息：
+- 用户名：{username}
+- 登录地址：https://您的域名.com/login
+
+请使用管理员通过邮件发送给您的初始密码登录系统，首次登录后请及时修改密码。
+
+如有任何问题，请联系我们的客服团队。
+
+祝您使用愉快！
+
+云户科技客服团队', '账户激活成功回复模板', 1, 3, 'system'),
+('通用回复-问题已解决', 'general', '尊敬的{name}：
+
+您好！
+
+您之前咨询的问题已得到解决。感谢您的耐心等待，如有其他疑问，欢迎随时联系我们。
+
+祝您一切顺利！
+
+云户科技客服团队', '问题解决后的通用回复', 1, 4, 'system'),
+('通用回复-转交处理', 'general', '尊敬的{name}：
+
+您好！
+
+您的留言已收到，我们已将您的问题转交给相关部门处理。相关部门会尽快与您联系。
+
+如有其他需要，请随时联系我们。
+
+云户科技客服团队', '转交相关部门处理的回复', 1, 5, 'system')
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    category = VALUES(category),
+    content = VALUES(content),
+    description = VALUES(description);
 
 -- 留言数据由用户通过前端界面提交
 
@@ -217,7 +323,6 @@ SELECT '=================================================' AS info;
 SHOW TABLES;
 
 
-
 -- 查看官网数据库表
 USE `clouddoors_db`;
 SELECT '=================================================' AS info;
@@ -225,6 +330,12 @@ SELECT '官网系统数据库 (clouddoors_db) 表结构' AS info;
 SELECT '=================================================' AS info;
 SHOW TABLES;
 
+-- 查看留言表结构
+SELECT '官网留言表 (messages) 结构' AS info;
+SHOW COLUMNS FROM `messages`;
+
+-- 查看回复模板数量
+SELECT '系统预设回复模板数量：' AS info, COUNT(*) AS count FROM `reply_templates` WHERE `is_system` = 1;
 
 
 -- =====================================================
@@ -243,4 +354,25 @@ SELECT '系统包含三个数据库：' AS info;
 SELECT '  1. clouddoors_db - 官网系统' AS info;
 SELECT '  2. YHKB - 知识库系统' AS info;
 SELECT '  3. casedb - 工单系统' AS info;
+SELECT '' AS info;
+SELECT '数据库表结构汇总：' AS info;
+SELECT '-------------------------------------------------' AS info;
+SELECT 'clouddoors_db (官网系统)：' AS info;
+SELECT '  - messages (留言表) - 包含完整的回复和咨询类型字段' AS info;
+SELECT '  - reply_templates (回复模板表) - 包含系统预设模板' AS info;
+SELECT '' AS info;
+SELECT 'YHKB (知识库系统)：' AS info;
+SELECT '  - KB-info (知识库信息表)' AS info;
+SELECT '  - users (统一用户表) - 包含注册来源和激活时间字段' AS info;
+SELECT '  - mgmt_login_logs (登录日志表)' AS info;
+SELECT '' AS info;
+SELECT 'casedb (工单系统)：' AS info;
+SELECT '  - tickets (工单表)' AS info;
+SELECT '  - messages (工单消息表)' AS info;
+SELECT '  - satisfaction (满意度评价表)' AS info;
+SELECT '=================================================' AS info;
+SELECT '' AS info;
+SELECT '✅ 所有字段和表已完整初始化' AS info;
+SELECT '✅ 索引已创建完成' AS info;
+SELECT '✅ 系统预设数据已插入' AS info;
 SELECT '=================================================' AS info;
