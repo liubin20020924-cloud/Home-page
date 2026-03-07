@@ -70,15 +70,123 @@ mysql -h localhost -u root -p < database/init_database.sql
 - 版本 v2.0 包含所有功能（留言系统、回复模板、账户激活等）
 - **⚠️ 不可在已有数据的数据库上执行！**
 
-### 场景2: 升级现有数据库 (已部署环境)
+### 场景2: 智能同步数据库 (推荐 ⭐)
 
-使用 `upgrade_to_v2.sql` 升级现有数据库。
+使用 `sync_database.py` 智能同步脚本，自动检测并补充缺失的内容。
+
+**适用情况：**
+- ✅ **任何情况**（全新安装或升级现有数据库）
+- ✅ 自动检测数据库状态
+- ✅ 只补充缺失的内容
+- ✅ 不影响现有数据
+- ✅ 安全、可重复执行
+
+**执行方式：**
+
+```bash
+# Windows:
+cd database
+sync_database.bat
+
+# Linux/macOS:
+cd database
+chmod +x sync_database.sh
+./sync_database.sh
+
+# 或直接使用 Python:
+python database/sync_database.py [host] [port] [user] [password]
+
+# 示例:
+python database/sync_database.py localhost 3306 root your_password
+```
+
+**功能特点：**
+
+1. **自动检测**
+   - 检测数据库是否存在
+   - 检测表是否存在
+   - 检测字段是否存在
+   - 检测索引是否存在
+
+2. **智能同步**
+   - 只添加缺失的数据库、表、字段、索引
+   - 不会重复创建已存在的对象
+   - 保留所有现有数据
+
+3. **安全可靠**
+   - 使用幂等操作
+   - 可重复执行
+   - 执行前自动检查
+   - 详细的执行日志
+
+**同步内容：**
+
+1. **clouddoors_db (官网系统)**
+   - messages 表：添加 phone, company_name, reply 相关字段, inquiry_type
+   - reply_templates 表：创建表和系统预设模板
+   - 所有相关索引
+
+2. **YHKB (知识库系统)**
+   - users 表：添加 registration_source, contact_message_id, activated_at
+   - 所有相关索引
+
+3. **casedb (工单系统)**
+   - 无需额外同步
+
+**输出示例：**
+
+```
+╔════════════════════════════════════════════════════════╗
+║          云户科技 - 智能数据库同步工具                  ║
+╚════════════════════════════════════════════════════════╝
+
+✅ 成功连接到 MySQL 数据库
+
+============================================================
+📦 同步 clouddoors_db (官网系统)
+============================================================
+  📋 检查 messages 表字段...
+  ✅ 添加列: messages.phone
+  ✅ 添加列: messages.reply_content
+  ⏭️  列已存在: messages.reply_time
+  📋 检查 messages 表索引...
+  ✅ 添加索引: messages.idx_messages_status_date
+  ⏭️  索引已存在: messages.idx_messages_email
+  📋 创建 reply_templates 表...
+  ✅ 创建表: clouddoors_db.reply_templates
+
+============================================================
+📦 同步 YHKB (知识库系统)
+============================================================
+  📋 检查 users 表字段...
+  ✅ 添加列: users.registration_source
+  ✅ 添加列: users.activated_at
+
+============================================================
+📊 同步摘要
+============================================================
+共执行 5 项变更：
+  1. 添加列: clouddoors_db.messages.phone
+  2. 添加列: clouddoors_db.messages.reply_content
+  3. 添加索引: clouddoors_db.messages.idx_messages_status_date
+  4. 创建表: clouddoors_db.reply_templates
+  5. 添加列: YHKB.users.registration_source
+
+============================================================
+✅ 数据库同步完成
+============================================================
+```
+
+### 场景3: 使用 SQL 脚本升级 (已部署环境)
+
+使用 `upgrade_to_v2.sql` SQL 脚本升级现有数据库。
 
 **适用情况：**
 - ✅ 已有运行中的生产数据库
 - ✅ 数据库中已有数据（用户、留言、工单等）
 - ✅ 需要添加新字段但不影响现有数据
 - ✅ 保留所有现有数据
+- ✅ 不想使用 Python 脚本
 
 **执行方式：**
 
@@ -297,11 +405,12 @@ SHOW TABLES FROM clouddoors_db LIKE 'reply_templates';
 
 ## 快速参考
 
-| 场景 | 使用脚本 | 说明 |
-|------|---------|------|
-| 全新安装 | `init_database.sql` | 创建所有数据库和表 |
-| 升级现有数据库 | `upgrade_to_v2.sql` | 添加新字段和表，保留数据 |
-| 旧版本升级 | `patches/upgrade_v2.0_integration.sql` | 从 v2.1-v2.5 升级 |
+| 场景 | 使用脚本 | 说明 | 推荐度 |
+|------|---------|------|--------|
+| 任何情况（推荐） | `sync_database.py` | 智能检测并补充缺失内容 | ⭐⭐⭐ |
+| 全新安装 | `init_database.sql` | 创建所有数据库和表 | ⭐⭐ |
+| 升级现有数据库（SQL） | `upgrade_to_v2.sql` | 添加新字段和表，保留数据 | ⭐⭐ |
+| 旧版本升级 | `patches/upgrade_v2.0_integration.sql` | 从 v2.1-v2.5 升级 | ⭐ |
 
 ## 联系支持
 
