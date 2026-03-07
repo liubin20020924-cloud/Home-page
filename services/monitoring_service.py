@@ -457,6 +457,7 @@ def init_monitoring_service(config: dict = None) -> MonitoringService:
 
 def get_monitoring_service() -> MonitoringService:
     """获取全局监控服务实例"""
+    global _monitoring_service
     if _monitoring_service is None:
         _monitoring_service = MonitoringService()
     return _monitoring_service

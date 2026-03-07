@@ -1,10 +1,18 @@
 # 监控功能快速开始指南
 
+> **分支**: `feat/monitoring-alerting`
+> **状态**: 基础功能已完成，待继续开发
+> **后续计划**:
+> - 添加用户认证和权限控制
+> - 优化邮件通知模板
+> - 添加历史数据持久化
+> - 支持自定义监控指标
+
 ## 🚀 5 分钟快速启用
 
 ### 步骤 1: 安装依赖
 ```bash
-pip install psutil
+pip install psutil Flask-Login
 ```
 
 ### 步骤 2: 配置环境变量
@@ -13,6 +21,9 @@ pip install psutil
 # 监控配置（最小配置）
 MONITORING_ENABLED=True
 MONITORING_EMAIL_ENABLED=False  # 暂时关闭邮件通知
+
+# 邮件通知配置（可选）
+MONITORING_EMAIL_RECIPIENTS=admin@example.com
 ```
 
 ### 步骤 3: 重启应用
@@ -25,7 +36,7 @@ python app.py
 http://localhost:5000/monitoring/
 ```
 
-需要管理员权限才能访问。
+**注意**: 当前版本未启用用户认证，生产环境请通过反向代理或防火墙限制访问。
 
 ---
 

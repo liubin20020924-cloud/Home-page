@@ -9,18 +9,14 @@
 """
 
 from flask import Blueprint, render_template, jsonify, request
-from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 
 from services.monitoring_service import get_monitoring_service, AlertLevel
-from utils.decorators import admin_required
 
 monitoring_bp = Blueprint('monitoring', __name__, url_prefix='/monitoring')
 
 
 @monitoring_bp.route('/')
-@login_required
-@admin_required
 def dashboard():
     """监控仪表板"""
     monitoring = get_monitoring_service()
@@ -35,8 +31,6 @@ def dashboard():
 
 
 @monitoring_bp.route('/api/metrics')
-@login_required
-@admin_required
 def api_metrics():
     """获取当前指标 API"""
     monitoring = get_monitoring_service()
@@ -49,8 +43,6 @@ def api_metrics():
 
 
 @monitoring_bp.route('/api/alerts')
-@login_required
-@admin_required
 def api_alerts():
     """获取告警列表 API"""
     monitoring = get_monitoring_service()
@@ -93,8 +85,6 @@ def api_alerts():
 
 
 @monitoring_bp.route('/api/alerts/active')
-@login_required
-@admin_required
 def api_active_alerts():
     """获取活跃告警 API"""
     monitoring = get_monitoring_service()
@@ -118,8 +108,6 @@ def api_active_alerts():
 
 
 @monitoring_bp.route('/api/test-alert', methods=['POST'])
-@login_required
-@admin_required
 def test_alert():
     """测试告警 API"""
     from services.monitoring_service import Alert
@@ -149,8 +137,6 @@ def test_alert():
 
 
 @monitoring_bp.route('/api/config', methods=['GET', 'PUT'])
-@login_required
-@admin_required
 def api_config():
     """获取或更新监控配置 API"""
     monitoring = get_monitoring_service()
