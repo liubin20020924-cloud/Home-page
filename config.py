@@ -51,6 +51,34 @@ SITE_URL = os.getenv('SITE_URL', f'http://{FLASK_HOST}:{FLASK_PORT}')
 
 
 # ============================================
+# 监控与告警配置
+# ============================================
+# CPU 告警阈值（百分比）
+CPU_WARNING_THRESHOLD = float(os.getenv('CPU_WARNING_THRESHOLD', '70'))
+CPU_CRITICAL_THRESHOLD = float(os.getenv('CPU_CRITICAL_THRESHOLD', '90'))
+
+# 内存告警阈值（百分比）
+MEMORY_WARNING_THRESHOLD = float(os.getenv('MEMORY_WARNING_THRESHOLD', '70'))
+MEMORY_CRITICAL_THRESHOLD = float(os.getenv('MEMORY_CRITICAL_THRESHOLD', '85'))
+
+# 磁盘告警阈值（百分比）
+DISK_WARNING_THRESHOLD = float(os.getenv('DISK_WARNING_THRESHOLD', '80'))
+DISK_CRITICAL_THRESHOLD = float(os.getenv('DISK_CRITICAL_THRESHOLD', '90'))
+
+# API 响应时间告警（毫秒）
+API_RESPONSE_WARNING = int(os.getenv('API_RESPONSE_WARNING', '1000'))
+API_RESPONSE_CRITICAL = int(os.getenv('API_RESPONSE_CRITICAL', '3000'))
+
+# 监控配置
+MONITORING_EMAIL_ENABLED = os.getenv('MONITORING_EMAIL_ENABLED', 'true').lower() == 'true'
+MONITORING_EMAIL_RECIPIENTS = os.getenv('MONITORING_EMAIL_RECIPIENTS', '')
+MONITOR_INTERVAL = int(os.getenv('MONITOR_INTERVAL', '60'))
+METRICS_RETENTION_DAYS = int(os.getenv('METRICS_RETENTION_DAYS', '7'))
+ALERT_RETENTION_DAYS = int(os.getenv('ALERT_RETENTION_DAYS', '30'))
+
+
+
+# ============================================
 # 数据库配置
 # ============================================
 DB_HOST = os.getenv('DB_HOST', '127.0.0.1')

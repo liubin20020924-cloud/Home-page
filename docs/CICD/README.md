@@ -351,11 +351,11 @@
 
 ### 项目文档
 
-- [系统配置指南](../CONFIGURATION_GUIDE.md)
-- [统一用户管理指南](../UNIFIED_SYSTEM_GUIDE.md)
-- [版本管理指南](../VERSION_MANAGEMENT_GUIDE.md)
-- [项目更新日志](../CHANGELOG.md)
-- [Webhook清理指南](../CLEANUP_WEBHOOK.md)
+- [系统配置指南](../configuration/CONFIGURATION_GUIDE.md)
+- [统一用户管理指南](../system-guides/UNIFIED_SYSTEM_GUIDE.md)
+- [版本管理指南](../project-management/VERSION_MANAGEMENT_GUIDE.md)
+- [项目更新日志](../../CHANGELOG.md)
+- [Webhook清理指南](../configuration/CLEANUP_WEBHOOK.md)
 
 ### 外部资源
 

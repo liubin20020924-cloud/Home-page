@@ -1,0 +1,1251 @@
+{% extends "admin/base.html" %}
+
+{% block title %}用户管理{% endblock %}
+
+{% block content %}
+<!-- 统计信息 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card bg-primary">
+            <h5><i class="fas fa-users me-2"></i>总用户数</h5>
+            <h3 id="totalUsers">0</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-success">
+            <h5><i class="fas fa-user-check me-2"></i>活跃用户</h5>
+            <h3 id="activeUsers">0</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-warning">
+            <h5><i class="fas fa-user-cog me-2"></i>管理员</h5>
+            <h3 id="adminUsers">0</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card bg-danger">
+            <h5><i class="fas fa-user-slash me-2"></i>锁定用户</h5>
+            <h3 id="lockedUsers">0</h3>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-users me-2"></i>用户列表</h5>
+        <button class="btn btn-primary btn-sm" id="btnAddUser">
+            <i class="fas fa-user-plus me-1"></i>添加用户
+        </button>
+    </div>
+    <div class="card-body">
+        <!-- 搜索栏 -->
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <select class="form-select" id="searchType">
+                    <option value="">全部</option>
+                    <option value="username">用户名</option>
+                    <option value="email">邮箱</option>
+                    <option value="role">角色</option>
+                    <option value="status">状态</option>
+                    <option value="company">公司名称</option>
+                    <option value="display_name">显示名称</option>
+                </select>
+            </div>
+            <div class="col-md-6" id="keywordContainer">
+                <input type="text" class="form-control" id="searchKeyword" placeholder="请输入搜索关键词...">
+            </div>
+            <div class="col-md-2" id="statusDropdownContainer" style="display: none;">
+                <select class="form-select" id="searchStatus">
+                    <option value="">全部状态</option>
+                    <option value="active">正常</option>
+                    <option value="inactive">禁用</option>
+                    <option value="locked">锁定</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-primary w-100" id="btnSearch">
+                    <i class="fas fa-search me-1"></i>搜索
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-secondary w-100" id="btnClearSearch">
+                    <i class="fas fa-times me-1"></i>清除
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover" id="usersTable">
+                <thead>
+                    <tr>
+                        <th width="60">ID</th>
+                        <th>用户名</th>
+                        <th>显示名称</th>
+                        <th>邮箱</th>
+                        <th>电话</th>
+                        <th>角色</th>
+                        <th>状态</th>
+                        <th>公司名称</th>
+                        <th width="150">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 登录记录 -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>最近登录记录</h5>
+    </div>
+    <div class="card-body">
+        <!-- 搜索过滤区域 -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" id="filterUsername" placeholder="搜索用户名">
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" id="filterIp" placeholder="搜索IP地址">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterStatus">
+                    <option value="">全部状态</option>
+                    <option value="success">成功</option>
+                    <option value="failed">失败</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-primary" id="applyFilter">
+                    <i class="fas fa-search me-1"></i>搜索
+                </button>
+                <button type="button" class="btn btn-secondary" id="resetFilter">
+                    <i class="fas fa-redo me-1"></i>重置
+                </button>
+            </div>
+        </div>
+
+        <div class="login-logs" id="loginLogsContainer">
+            <div class="text-center py-4 text-muted">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="mt-2">加载登录记录...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加用户模态框 -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>添加新用户</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="newUsername" class="form-label">用户名 *</label>
+                        <input type="text" class="form-control" id="newUsername"
+                               name="username" required placeholder="请输入用户名">
+                        <div class="form-text">用户名必须唯一,不能与现有用户重复</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">密码 *</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="newPassword"
+                                   name="password" required placeholder="请输入密码">
+                            <button type="button" class="btn btn-outline-secondary" id="toggleNewPassword" title="显示/隐藏密码">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>密码复杂度要求：</strong>
+                            <ul class="mb-0 ps-3 mt-1" style="font-size: 0.85rem; color: #666;">
+                                <li>至少 <strong>6</strong> 个字符</li>
+                                <li>必须包含<strong>字母</strong>和<strong>数字</strong></li>
+                                <li>建议包含<strong>大写字母</strong>和<strong>特殊符号</strong>以提高安全性</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newCompanyName" class="form-label">公司名称 *</label>
+                        <input type="text" class="form-control" id="newCompanyName"
+                               name="company_name" required placeholder="请输入公司名称">
+                        <div class="form-text">公司名称将作为密码类型使用</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newDisplayName" class="form-label">显示名称</label>
+                        <input type="text" class="form-control" id="newDisplayName"
+                               name="display_name" placeholder="请输入显示名称(可选)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="newEmail" class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="newEmail"
+                               name="email" placeholder="请输入邮箱(可选)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPhone" class="form-label">电话</label>
+                        <input type="tel" class="form-control" id="newPhone"
+                               name="phone" placeholder="请输入电话(可选)">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="newRole" class="form-label">角色</label>
+                            <select class="form-select" id="newRole" name="role">
+                                <option value="user">普通用户</option>
+                                <option value="admin">管理员</option>
+                                <option value="customer">客户</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newStatus" class="form-label">状态</label>
+                            <select class="form-select" id="newStatus" name="status">
+                                <option value="active">正常</option>
+                                <option value="inactive">禁用</option>
+                                <option value="locked">锁定</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="submitAddUser">添加用户</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑用户模态框 -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>编辑用户</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="editUsername" disabled>
+                        <div class="form-text">用户名不可修改</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDisplayName" class="form-label">显示名称</label>
+                        <input type="text" class="form-control" id="editDisplayName"
+                               name="display_name" placeholder="请输入显示名称">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="editEmail"
+                               name="email" placeholder="请输入邮箱(可选)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPhone" class="form-label">电话</label>
+                        <input type="tel" class="form-control" id="editPhone"
+                               name="phone" placeholder="请输入电话(可选)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCompanyName" class="form-label">公司名称</label>
+                        <input type="text" class="form-control" id="editCompanyName"
+                               name="company_name" placeholder="请输入公司名称">
+                        <div class="form-text">公司名称将作为密码类型使用</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editRole" class="form-label">角色</label>
+                            <select class="form-select" id="editRole" name="role">
+                                <option value="user">普通用户</option>
+                                <option value="admin">管理员</option>
+                                <option value="customer">客户</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editStatus" class="form-label">状态</label>
+                            <select class="form-select" id="editStatus" name="status">
+                                <option value="active">正常</option>
+                                <option value="inactive">禁用</option>
+                                <option value="locked">锁定</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="changePassword">
+                            <label class="form-check-label" for="changePassword">
+                                修改密码
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="passwordChangeSection" style="display: none;">
+                        <label for="editPassword" class="form-label">新密码</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="editPassword"
+                                   name="password" placeholder="请输入新密码(留空则不修改)">
+                            <button type="button" class="btn btn-outline-secondary" id="toggleEditPassword" title="显示/隐藏密码">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>密码复杂度要求：</strong>
+                            <ul class="mb-0 ps-3 mt-1" style="font-size: 0.85rem; color: #666;">
+                                <li>至少 <strong>6</strong> 个字符</li>
+                                <li>必须包含<strong>字母</strong>和<strong>数字</strong></li>
+                                <li>建议包含<strong>大写字母</strong>和<strong>特殊符号</strong>以提高安全性</li>
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="submitEditUser">保存更改</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 查看用户详情模态框 -->
+<div class="modal fade" id="viewUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-eye me-2"></i>用户详情</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold">用户名</label>
+                        <p id="viewUsername" class="form-control-plaintext">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">显示名称</label>
+                        <p id="viewDisplayName" class="form-control-plaintext">-</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold">邮箱</label>
+                        <p id="viewEmail" class="form-control-plaintext">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">电话</label>
+                        <p id="viewPhone" class="form-control-plaintext">-</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold">公司名称</label>
+                        <p id="viewCompanyName" class="form-control-plaintext">-</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold">角色</label>
+                        <p id="viewRole" class="form-control-plaintext">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">状态</label>
+                        <p id="viewStatus" class="form-control-plaintext">-</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold">最后登录</label>
+                        <p id="viewLastLogin" class="form-control-plaintext">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">创建时间</label>
+                        <p id="viewCreatedAt" class="form-control-plaintext">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 确认删除用户模态框 -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>确认删除用户</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteUserMessage">确定要删除这个用户吗?此操作不可撤销。</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    删除用户将同时删除该用户的登录记录。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUser">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 消息提示 -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="messageToast" class="toast" role="alert">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong class="me-auto">系统提示</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<style>
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #0A4DA2;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .role-admin {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .role-user {
+        background-color: #0A4DA2;
+        color: white;
+    }
+
+    .role-customer {
+        background-color: #A2D93D;
+        color: #000;
+    }
+
+    .status-active {
+        background-color: #198754;
+        color: white;
+    }
+
+    .status-inactive {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .status-locked {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+    }
+
+    .login-logs {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .login-logs::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .login-logs::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .login-logs::-webkit-scrollbar-thumb {
+        background: #0A4DA2;
+        border-radius: 3px;
+    }
+
+    .log-card {
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+    }
+
+    .log-card:hover {
+        transform: translateX(3px);
+    }
+
+    .log-card.log-success {
+        border-left: 3px solid #198754;
+    }
+
+    .log-card.log-failed {
+        border-left: 3px solid #dc3545;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stats-card.bg-primary {
+        background: linear-gradient(135deg, #e7f1ff 0%, #f0f6ff 100%);
+        border-left-color: #0d6efd;
+    }
+
+    .stats-card.bg-success {
+        background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f2 100%);
+        border-left-color: #198754;
+    }
+
+    .stats-card.bg-warning {
+        background: linear-gradient(135deg, #fff8e1 0%, #fffbe6 100%);
+        border-left-color: #fd7e14;
+    }
+
+    .stats-card.bg-danger {
+        background: linear-gradient(135deg, #ffebee 0%, #fef0f0 100%);
+        border-left-color: #dc3545;
+    }
+
+    .stats-card h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #555;
+    }
+
+    .stats-card h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .stats-card.bg-primary h3 {
+        color: #0d6efd;
+    }
+
+    .stats-card.bg-success h3 {
+        color: #198754;
+    }
+
+    .stats-card.bg-warning h3 {
+        color: #fd7e14;
+    }
+
+    .stats-card.bg-danger h3 {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // 显示消息
+    function showMessage(message, type = 'info') {
+        const toastEl = $('#messageToast');
+        const toastMessage = $('#toastMessage');
+        const header = toastEl.find('.toast-header');
+
+        let icon = 'fa-info-circle';
+        let bgColor = 'bg-info';
+
+        switch(type) {
+            case 'success':
+                icon = 'fa-check-circle';
+                bgColor = 'bg-success';
+                break;
+            case 'error':
+                icon = 'fa-times-circle';
+                bgColor = 'bg-danger';
+                break;
+            case 'warning':
+                icon = 'fa-exclamation-triangle';
+                bgColor = 'bg-warning';
+                break;
+        }
+
+        header.find('i').removeClass().addClass(`fas ${icon} me-2`);
+        header.removeClass().addClass(`toast-header text-white ${bgColor}`);
+        toastMessage.text(message);
+
+        const toast = new bootstrap.Toast(toastEl[0]);
+        toast.show();
+    }
+
+    // 加载用户列表
+    function loadUsers(searchType = '', searchKeyword = '') {
+        $.ajax({
+            url: '/admin/users/api/list',
+            method: 'GET',
+            data: {
+                page: 1,
+                page_size: 100,
+                search_type: searchType,
+                search: searchKeyword
+            },
+            success: function(response) {
+                console.log('API响应:', response);
+                if (response.success) {
+                    const users = response.users || response.data?.users || [];
+                    renderUsersTable(users);
+                } else {
+                    showMessage(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                console.error('加载用户列表失败:', xhr);
+                showMessage('加载用户列表失败', 'error');
+            }
+        });
+    }
+
+    // 渲染用户表格
+    function renderUsersTable(users) {
+        const tbody = $('#usersTable tbody');
+        tbody.empty();
+
+        // 更新统计信息
+        updateStats(users);
+
+        if (!users || users.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-2x mb-3"></i>
+                        <p>暂无数据</p>
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        users.forEach(function(user) {
+            const username = user.username || '';
+            const displayName = user.display_name || '';
+            const email = user.email || '';
+            const phone = user.phone || '';
+            const companyName = user.company_name || '';
+            const role = user.role || 'user';
+            const status = user.status || 'active';
+
+            const roleText = role === 'admin' ? '管理员' : (role === 'customer' ? '客户' : '用户');
+            const statusText = status === 'active' ? '正常' : (status === 'inactive' ? '禁用' : (status === 'locked' ? '锁定' : status));
+
+            const row = `
+                <tr data-user-id="${user.id}">
+                    <td>${user.id}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-2">
+                                ${username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <strong>${username}</strong>
+                                ${displayName ? `<small class="d-block text-muted">${displayName}</small>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td>${displayName || '-'}</td>
+                    <td>${email || '-'}</td>
+                    <td>${phone || '-'}</td>
+                    <td>
+                        <span class="status-badge role-${role}">
+                            ${roleText}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${status}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td>${companyName || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-info btn-view-user"
+                                    data-user-id="${user.id}"
+                                    data-username="${username}"
+                                    data-display-name="${displayName}"
+                                    data-email="${email}"
+                                    data-phone="${phone}"
+                                    data-company-name="${companyName}"
+                                    data-role="${role}"
+                                    data-status="${status}"
+                                    data-last-login="${user.last_login || ''}"
+                                    data-created-at="${user.created_at || ''}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary btn-edit-user"
+                                    data-user-id="${user.id}"
+                                    data-username="${username}"
+                                    data-display-name="${displayName}"
+                                    data-email="${email}"
+                                    data-phone="${phone}"
+                                    data-company-name="${companyName}"
+                                    data-role="${role}"
+                                    data-status="${status}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${username !== 'admin' ? `
+                            <button class="btn btn-sm btn-outline-danger btn-delete-user"
+                                    data-user-id="${user.id}"
+                                    data-username="${username}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+    }
+
+    // 加载登录记录
+    function loadLoginLogs() {
+        $.ajax({
+            url: '/admin/users/api/login-logs',
+            method: 'GET',
+            success: function(response) {
+                console.log('登录记录API响应:', response);
+                if (response.success) {
+                    const logs = response.data?.logs || response.logs || [];
+                    renderLoginLogs(logs);
+                } else {
+                    showMessage(response.message, 'error');
+                    $('#loginLogsContainer').html(`
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-history fa-2x mb-3"></i>
+                            <p>暂无登录记录</p>
+                        </div>
+                    `);
+                }
+            },
+            error: function(xhr) {
+                console.error('加载登录记录失败:', xhr);
+                $('#loginLogsContainer').html(`
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-exclamation-circle fa-2x mb-3"></i>
+                        <p>加载失败，请刷新页面重试</p>
+                    </div>
+                `);
+            }
+        });
+    }
+
+    // 更新统计信息
+    function updateStats(users) {
+        if (!users) return;
+
+        const totalUsers = users.length;
+        const activeUsers = users.filter(u => u.status === 'active').length;
+        const adminUsers = users.filter(u => u.role === 'admin').length;
+        const lockedUsers = users.filter(u => u.status === 'locked').length;
+
+        $('#totalUsers').text(totalUsers);
+        $('#activeUsers').text(activeUsers);
+        $('#adminUsers').text(adminUsers);
+        $('#lockedUsers').text(lockedUsers);
+    }
+
+    // 渲染登录记录
+    function renderLoginLogs(logs) {
+        const container = $('#loginLogsContainer');
+
+        if (!logs || logs.length === 0) {
+            container.html(`
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-history fa-2x mb-3"></i>
+                    <p>暂无登录记录</p>
+                </div>
+            `);
+            return;
+        }
+
+        let html = '';
+        logs.forEach(function(log) {
+            const statusClass = log.status === 'success' ? 'log-success' : 'log-failed';
+            const badgeClass = log.status === 'success' ? 'success' : 'danger';
+            const statusText = log.status === 'success' ? '成功' : '失败';
+
+            html += `
+                <div class="card log-card ${statusClass} mb-2"
+                     data-username="${log.username || ''}"
+                     data-display-name="${log.display_name || ''}"
+                     data-ip="${log.ip_address || ''}"
+                     data-status="${log.status || ''}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>${log.display_name || log.username || '-'}</strong>
+                                <small class="d-block text-muted">${log.ip_address || '-'}</small>
+                                ${log.failure_reason ? `<small class="d-block text-danger">${log.failure_reason}</small>` : ''}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-${badgeClass}">
+                                    ${statusText}
+                                </span>
+                                <small class="d-block text-muted">
+                                    ${formatDateTime(log.login_time)}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.html(html);
+    }
+
+    // 格式化日期时间
+    function formatDateTime(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            const date = new Date(dateStr);
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${month}-${day} ${hours}:${minutes}`;
+        } catch (e) {
+            return dateStr;
+        }
+    }
+
+    // 打开添加用户模态框
+    $('#btnAddUser').on('click', function() {
+        $('#addUserForm')[0].reset();
+        const modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        modal.show();
+    });
+
+    // 添加用户
+    $('#submitAddUser').on('click', function() {
+        const formData = {
+            username: $('#newUsername').val(),
+            password: $('#newPassword').val(),
+            display_name: $('#newDisplayName').val(),
+            email: $('#newEmail').val(),
+            phone: $('#newPhone').val(),
+            company_name: $('#newCompanyName').val(),
+            role: $('#newRole').val(),
+            status: $('#newStatus').val()
+        };
+
+        if (!formData.username || !formData.password) {
+            showMessage('用户名和密码不能为空', 'warning');
+            return;
+        }
+
+        if (!formData.company_name) {
+            showMessage('公司名称不能为空', 'warning');
+            return;
+        }
+
+        // 验证密码长度
+        if (formData.password.length < 6) {
+            showMessage('密码长度至少需要6个字符', 'warning');
+            return;
+        }
+
+        // 验证密码必须包含字母和数字
+        const hasLetter = /[a-zA-Z]/.test(formData.password);
+        const hasDigit = /[0-9]/.test(formData.password);
+        if (!hasLetter || !hasDigit) {
+            showMessage('密码必须包含字母和数字', 'warning');
+            return;
+        }
+
+        $.ajax({
+            url: '/admin/users/api/create',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    showMessage(response.message, 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                    if (modal) modal.hide();
+                    loadUsers();
+                } else {
+                    showMessage(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    showMessage('添加失败: ' + xhr.responseJSON.message, 'error');
+                } else {
+                    showMessage('网络错误,请稍后重试', 'error');
+                }
+            }
+        });
+    });
+
+    // 编辑用户
+    let currentEditUserId = null;
+    $(document).on('click', '.btn-edit-user', function() {
+        currentEditUserId = $(this).data('user-id');
+        $('#editUserId').val(currentEditUserId);
+        $('#editUsername').val($(this).data('username'));
+        $('#editDisplayName').val($(this).data('display-name'));
+        $('#editEmail').val($(this).data('email'));
+        $('#editPhone').val($(this).data('phone'));
+        $('#editCompanyName').val($(this).data('company-name'));
+        $('#editRole').val($(this).data('role'));
+        $('#editStatus').val($(this).data('status'));
+
+        $('#changePassword').prop('checked', false);
+        $('#passwordChangeSection').hide();
+        $('#editPassword').val('');
+
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+    });
+
+    // 切换密码修改选项
+    $('#changePassword').on('change', function() {
+        if ($(this).prop('checked')) {
+            $('#passwordChangeSection').slideDown();
+        } else {
+            $('#passwordChangeSection').slideUp();
+            $('#editPassword').val('');
+        }
+    });
+
+    // 保存用户编辑
+    $('#submitEditUser').on('click', function() {
+        const formData = {
+            id: currentEditUserId,
+            display_name: $('#editDisplayName').val(),
+            email: $('#editEmail').val(),
+            phone: $('#editPhone').val(),
+            company_name: $('#editCompanyName').val(),
+            role: $('#editRole').val(),
+            status: $('#editStatus').val()
+        };
+
+        if ($('#changePassword').prop('checked')) {
+            const newPassword = $('#editPassword').val();
+            if (newPassword) {
+                // 验证密码长度
+                if (newPassword.length < 6) {
+                    showMessage('密码长度至少需要6个字符', 'warning');
+                    return;
+                }
+
+                // 验证密码必须包含字母和数字
+                const hasLetter = /[a-zA-Z]/.test(newPassword);
+                const hasDigit = /[0-9]/.test(newPassword);
+                if (!hasLetter || !hasDigit) {
+                    showMessage('密码必须包含字母和数字', 'warning');
+                    return;
+                }
+
+                formData.password = newPassword;
+            }
+        }
+
+        $.ajax({
+            url: '/admin/users/api/update',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    showMessage(response.message, 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    if (modal) modal.hide();
+                    loadUsers();
+                } else {
+                    showMessage(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    showMessage('更新失败: ' + xhr.responseJSON.message, 'error');
+                } else {
+                    showMessage('网络错误,请稍后重试', 'error');
+                }
+            }
+        });
+    });
+
+    // 查看用户详情
+    $(document).on('click', '.btn-view-user', function() {
+        const userData = {
+            username: $(this).data('username'),
+            displayName: $(this).data('display-name'),
+            email: $(this).data('email'),
+            phone: $(this).data('phone'),
+            companyName: $(this).data('company-name'),
+            role: $(this).data('role'),
+            status: $(this).data('status'),
+            lastLogin: $(this).data('last-login'),
+            createdAt: $(this).data('created-at')
+        };
+
+        // 填充详情模态框
+        $('#viewUsername').text(userData.username || '-');
+        $('#viewDisplayName').text(userData.displayName || '-');
+        $('#viewEmail').text(userData.email || '-');
+        $('#viewPhone').text(userData.phone || '-');
+        $('#viewCompanyName').text(userData.companyName || '-');
+        $('#viewRole').text(userData.role === 'admin' ? '管理员' : (userData.role === 'user' ? '用户' : (userData.role === 'customer' ? '客户' : userData.role)));
+        $('#viewStatus').text(userData.status === 'active' ? '正常' : (userData.status === 'inactive' ? '禁用' : (userData.status === 'locked' ? '锁定' : userData.status)));
+        $('#viewLastLogin').text(userData.lastLogin || '-');
+        $('#viewCreatedAt').text(userData.createdAt || '-');
+
+        const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+        modal.show();
+    });
+
+    // 删除用户
+    let currentDeleteUserId = null;
+    let currentDeleteUsername = '';
+    $(document).on('click', '.btn-delete-user', function() {
+        currentDeleteUserId = $(this).data('user-id');
+        currentDeleteUsername = $(this).data('username');
+
+        $('#deleteUserMessage').text(`确定要删除用户 "${currentDeleteUsername}" 吗?此操作不可撤销。`);
+        const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+        modal.show();
+    });
+
+    // 确认删除用户
+    $('#confirmDeleteUser').on('click', function() {
+        $.ajax({
+            url: '/admin/users/api/delete',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({id: currentDeleteUserId}),
+            success: function(response) {
+                if (response.success) {
+                    showMessage(response.message, 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteUserModal'));
+                    if (modal) modal.hide();
+                    loadUsers();
+                } else {
+                    showMessage(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    showMessage('删除失败: ' + xhr.responseJSON.message, 'error');
+                } else {
+                    showMessage('网络错误,请稍后重试', 'error');
+                }
+            }
+        });
+    });
+
+    // 密码显示/隐藏切换功能
+    $('#toggleNewPassword').on('click', function() {
+        const input = $('#newPassword');
+        const icon = $(this).find('i');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            setTimeout(() => {
+                if (input.attr('type') === 'text') {
+                    input.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            }, 3000);
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    $('#toggleEditPassword').on('click', function() {
+        const input = $('#editPassword');
+        const icon = $(this).find('i');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            setTimeout(() => {
+                if (input.attr('type') === 'text') {
+                    input.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            }, 3000);
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // 搜索功能
+    $('#btnSearch').on('click', function() {
+        const searchType = $('#searchType').val();
+        let searchKeyword = '';
+
+        // 如果是状态类型，使用状态下拉框的值
+        if (searchType === 'status') {
+            searchKeyword = $('#searchStatus').val();
+        } else {
+            searchKeyword = $('#searchKeyword').val();
+        }
+
+        loadUsers(searchType, searchKeyword);
+    });
+
+    // 清除搜索
+    $('#btnClearSearch').on('click', function() {
+        $('#searchType').val('');
+        $('#searchKeyword').val('');
+        $('#searchStatus').val('');
+        // 恢复默认显示
+        $('#keywordContainer').show();
+        $('#statusDropdownContainer').hide();
+        loadUsers();
+    });
+
+    // 搜索类型改变时
+    $('#searchType').on('change', function() {
+        const searchType = $(this).val();
+
+        // 如果选择"状态"，显示状态下拉选择，隐藏文本输入框
+        if (searchType === 'status') {
+            $('#keywordContainer').hide();
+            $('#statusDropdownContainer').show();
+        } else {
+            $('#keywordContainer').show();
+            $('#statusDropdownContainer').hide();
+            $('#searchKeyword').val('');
+            $('#searchStatus').val('');
+        }
+
+        if (searchType === '') {
+            $('#searchKeyword').val('');
+        }
+    });
+
+    // 回车键触发搜索
+    $('#searchKeyword').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#btnSearch').click();
+        }
+    });
+
+    // 登录记录搜索过滤功能
+    $('#applyFilter').on('click', function() {
+        const username = $('#filterUsername').val().toLowerCase();
+        const ip = $('#filterIp').val().toLowerCase();
+        const status = $('#filterStatus').val();
+
+        $('.log-card').each(function() {
+            const cardUsername = $(this).data('username') || '';
+            const cardDisplayName = $(this).data('display-name') || '';
+            const cardIp = $(this).data('ip') || '';
+            const cardStatus = $(this).data('status');
+
+            let match = true;
+
+            // 检查用户名
+            if (username && !cardUsername.toLowerCase().includes(username) && !cardDisplayName.toLowerCase().includes(username)) {
+                match = false;
+            }
+
+            // 检查IP地址
+            if (ip && !cardIp.toLowerCase().includes(ip)) {
+                match = false;
+            }
+
+            // 检查状态
+            if (status && cardStatus !== status) {
+                match = false;
+            }
+
+            if (match) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+
+        // 检查是否有匹配的记录
+        const visibleLogs = $('.log-card:visible').length;
+        if (visibleLogs === 0) {
+            if ($('#noMatchMessage').length === 0) {
+                $('#loginLogsContainer').append(
+                    '<div class="text-center py-4 text-muted" id="noMatchMessage">' +
+                    '<i class="fas fa-search fa-2x mb-3"></i>' +
+                    '<p>没有找到匹配的登录记录</p>' +
+                    '</div>'
+                );
+            }
+        } else {
+            $('#noMatchMessage').remove();
+        }
+    });
+
+    // 重置搜索过滤
+    $('#resetFilter').on('click', function() {
+        $('#filterUsername').val('');
+        $('#filterIp').val('');
+        $('#filterStatus').val('');
+        $('.log-card').show();
+        $('#noMatchMessage').remove();
+    });
+
+    // 支持回车键触发搜索
+    $('#filterUsername, #filterIp').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#applyFilter').click();
+        }
+    });
+
+    // 初始化加载用户列表
+    loadUsers();
+
+    // 初始化加载登录记录
+    loadLoginLogs();
+});
+</script>
+{% endblock %}

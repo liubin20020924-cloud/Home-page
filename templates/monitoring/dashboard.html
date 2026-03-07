@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统监控 - 云户科技</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f6fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .metric-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .alert-card {
+            border-left: 4px solid;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .alert-critical {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .alert-warning {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+        .alert-info {
+            border-left-color: #17a2b8;
+            background-color: #d1ecf1;
+        }
+        .alert-resolved {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .metric-good {
+            color: #28a745;
+        }
+        .metric-warning {
+            color: #ffc107;
+        }
+        .metric-danger {
+            color: #dc3545;
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-activity"></i> 系统监控
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/monitoring/">监控仪表板</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">管理后台</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout/">退出</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4"><i class="bi bi-speedometer2"></i> 系统监控仪表板</h1>
+
+        <!-- 活跃告警 -->
+        {% if active_alerts %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> 活跃告警 ({{ active_alerts|length }})</h4>
+            <hr>
+            {% for alert in active_alerts %}
+            <div class="alert-card alert-{{ alert.level.value }}">
+                <h5 class="alert-heading">{{ alert.metric_name }}</h5>
+                <p class="mb-0">{{ alert.message }}</p>
+                <small class="text-muted">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- 系统指标 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-label">CPU 使用率</div>
+                        <div class="metric-value {% if metrics.cpu_usage < 50 %}metric-good{% elif metrics.cpu_usage < 80 %}metric-warning{% else %}metric-danger{% endif %}">
+                            {{ metrics.cpu_usage|round(1) }}%
+                        </div>
+                        <div class="progress mt-2">
+                            <div class="progress-bar {% if metrics.cpu_usage < 50 %}bg-success{% elif metrics.cpu_usage < 80 %}bg-warning{% else %}bg-danger{% endif %}"
+                                 style="width: {{ metrics.cpu_usage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-label">内存使用率</div>
+                        <div class="metric-value {% if metrics.memory_usage < 50 %}metric-good{% elif metrics.memory_usage < 80 %}metric-warning{% else %}metric-danger{% endif %}">
+                            {{ metrics.memory_usage|round(1) }}%
+                        </div>
+                        <div class="text-muted small">可用: {{ metrics.memory_available|round(2) }} GB</div>
+                        <div class="progress mt-2">
+                            <div class="progress-bar {% if metrics.memory_usage < 50 %}bg-success{% elif metrics.memory_usage < 80 %}bg-warning{% else %}bg-danger{% endif %}"
+                                 style="width: {{ metrics.memory_usage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-label">磁盘使用率</div>
+                        <div class="metric-value {% if metrics.disk_usage < 80 %}metric-good{% else %}metric-danger{% endif %}">
+                            {{ metrics.disk_usage|round(1) }}%
+                        </div>
+                        <div class="text-muted small">可用: {{ metrics.disk_available|round(2) }} GB</div>
+                        <div class="progress mt-2">
+                            <div class="progress-bar {% if metrics.disk_usage < 80 %}bg-success{% else %}bg-danger{% endif %}"
+                                 style="width: {{ metrics.disk_usage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-label">进程数</div>
+                        <div class="metric-value">
+                            {{ metrics.process_count|round(0) }}
+                        </div>
+                        <div class="text-muted small">系统进程总数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 网络统计 -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-arrow-up"></i> 网络发送</h5>
+                        <div class="metric-value">{{ (metrics.network_bytes_sent / 1024 / 1024 / 1024)|round(2) }} GB</div>
+                        <div class="text-muted small">总计发送数据量</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-arrow-down"></i> 网络接收</h5>
+                        <div class="metric-value">{{ (metrics.network_bytes_recv / 1024 / 1024 / 1024)|round(2) }} GB</div>
+                        <div class="text-muted small">总计接收数据量</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近告警 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bell"></i> 最近 24 小时告警 ({{ recent_alerts|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_alerts %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>级别</th>
+                                <th>指标</th>
+                                <th>消息</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in recent_alerts %}
+                            <tr>
+                                <td>{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    {% if alert.level.value == 'critical' %}
+                                    <span class="badge bg-danger">严重</span>
+                                    {% elif alert.level.value == 'warning' %}
+                                    <span class="badge bg-warning text-dark">警告</span>
+                                    {% else %}
+                                    <span class="badge bg-info">信息</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ alert.metric_name }}</td>
+                                <td>{{ alert.message }}</td>
+                                <td>
+                                    {% if alert.resolved %}
+                                    <span class="badge bg-success">已解决</span>
+                                    <small class="text-muted">({{ alert.resolved_at.strftime('%H:%M:%S') }})</small>
+                                    {% else %}
+                                    <span class="badge bg-danger">活跃</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0">最近 24 小时无告警</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 测试按钮 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-tools"></i> 管理操作</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-primary me-2" onclick="testAlert('warning')">
+                    <i class="bi bi-bell"></i> 测试警告告警
+                </button>
+                <button class="btn btn-outline-danger" onclick="testAlert('critical')">
+                    <i class="bi bi-exclamation-triangle"></i> 测试严重告警
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自动刷新按钮 -->
+    <button class="btn btn-primary refresh-btn rounded-circle" onclick="location.reload()">
+        <i class="bi bi-arrow-clockwise"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 自动刷新（每 60 秒）
+        setInterval(function() {
+            location.reload();
+        }, 60000);
+
+        // 测试告警
+        function testAlert(level) {
+            if (!confirm('确定要发送测试告警吗？')) {
+                return;
+            }
+
+            fetch('/monitoring/api/test-alert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    level: level,
+                    metric_name: 'test_metric',
+                    value: 85.0
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('测试告警已发送！');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert('发送失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('发送失败：' + error);
+            });
+        }
+    </script>
+</body>
+</html>

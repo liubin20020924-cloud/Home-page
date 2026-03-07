@@ -432,7 +432,7 @@ logging.basicConfig(filename='logs/home.log', level=logging.INFO)
 
 - [项目总览](../README.md)
 - [知识库系统说明](./KB_SYSTEM_GUIDE.md)
-- [工单系统说明](./CASE_SYSTEM_GUIDE.md)
+- [工单系统说明](./工单系统设计文档.md)
 - [统一用户管理说明](./UNIFIED_SYSTEM_GUIDE.md)
 - [代码风格指南](./STYLE_GUIDE.md)
 
