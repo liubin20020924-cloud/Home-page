@@ -519,7 +519,8 @@ def messages_api_list():
         # 获取查询参数
         page = request.args.get('page', 1, type=int)
         page_size = request.args.get('page_size', 10, type=int)
-        status = request.args.get('status', '')  # pending/processed
+        status = request.args.get('status', '')  # 1/2/3/pending/processed
+        search = request.args.get('search', '')
 
         import pymysql
         with db_connection('home') as conn:
@@ -532,6 +533,11 @@ def messages_api_list():
             if status:
                 where_clause.append("status = %s")
                 params.append(status)
+
+            if search:
+                where_clause.append("(name LIKE %s OR phone LIKE %s OR message LIKE %s)")
+                search_pattern = f"%{search}%"
+                params.extend([search_pattern, search_pattern, search_pattern])
 
             # 构建 WHERE 子句
             where_sql = ""
@@ -546,7 +552,7 @@ def messages_api_list():
             # 获取分页数据
             offset = (page - 1) * page_size
             list_sql = f"""
-                SELECT id, name, email, message, created_at, status
+                SELECT id, name, email, phone, message, created_at, status
                 FROM messages {where_sql}
                 ORDER BY created_at DESC
                 LIMIT %s OFFSET %s
@@ -584,7 +590,10 @@ def messages_api_update():
         if not message_id:
             return error_response('留言ID不能为空', 400)
 
-        if status not in ['pending', 'processed']:
+        # 支持 1/2/3 和 pending/processed 两种格式
+        valid_statuses = ['1', '2', '3', 'pending', 'processed']
+        if status not in valid_statuses:
+            return error_response('状态值无效', 400)
             return error_response('状态值无效', 400)
 
         import pymysql
