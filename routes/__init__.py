@@ -12,6 +12,7 @@ from .auth_bp import auth_bp
 from .user_management_bp import user_management_bp
 from .monitoring_bp import monitoring_bp
 from .admin_bp import admin_bp
+from .reply_templates_bp import reply_templates_bp
 
 __all__ = [
     'home_bp',
@@ -23,5 +24,6 @@ __all__ = [
     'auth_bp',
     'user_management_bp',
     'monitoring_bp',
-    'admin_bp'
+    'admin_bp',
+    'reply_templates_bp'
 ]

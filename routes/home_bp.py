@@ -12,61 +12,9 @@ from common.response import success_response, error_response, validation_error_r
 from common.validators import validate_required, validate_email
 from common.logger import logger, log_exception
 from common.database_context import db_connection
+from utils.name_to_username import name_to_username
 
 home_bp = Blueprint('home', __name__)
-
-
-def name_to_username(display_name: str) -> str:
-    """
-    将显示名称转换为用户名
-    - 英文：直接使用（去除特殊字符，保留字母、数字、点、下划线、短横线）
-    - 中文：转换为全拼
-    - 混合：中文转拼音，英文保留
-
-    Args:
-        display_name: 显示名称
-
-    Returns:
-        str: 用户名
-    """
-    try:
-        from pypinyin import lazy_pinyin, Style
-
-        # 检查是否包含中文字符
-        has_chinese = bool(re.search(r'[\u4e00-\u9fff]', display_name))
-
-        if has_chinese:
-            # 包含中文，转换为拼音
-            # 使用全拼，首字母大写，用空格分隔
-            pinyin_list = lazy_pinyin(display_name, style=Style.NORMAL)
-            username = ''.join(pinyin_list)
-        else:
-            # 纯英文/数字，直接使用
-            username = display_name
-
-        # 清理用户名：只保留字母、数字、点、下划线、短横线
-        username = re.sub(r'[^a-zA-Z0-9._-]', '', username)
-
-        # 确保用户名不为空
-        if not username:
-            username = f'user_{secrets.token_hex(4)}'
-
-        # 转换为小写
-        username = username.lower()
-
-        logger.info(f"将显示名称 '{display_name}' 转换为用户名: '{username}'")
-        return username
-
-    except ImportError:
-        logger.warning("pypinyin 库未安装，使用简单转换逻辑")
-        # 降级方案：只保留字母、数字、点、下划线、短横线
-        username = re.sub(r'[^a-zA-Z0-9._-]', '', display_name)
-        if not username:
-            username = f'user_{secrets.token_hex(4)}'
-        return username.lower()
-    except Exception as e:
-        logger.error(f"转换用户名失败: {str(e)}")
-        return f'user_{secrets.token_hex(4)}'
 
 
 @home_bp.route('/')
@@ -124,7 +72,7 @@ def test_images():
 @home_bp.route('/view-messages')
 def view_messages():
     """留言管理页面"""
-    return render_template('home/admin_messages.html')
+    return render_template('home/message_management.html')
 
 
 @home_bp.route('/api/contact', methods=['POST'])
@@ -242,16 +190,28 @@ def contact():
                         logger.warning(f"邮箱 {data['email']} 已存在（用户: {existing_user['display_name']}），跳过创建")
                         user_created = False
                     else:
+                        # 检查用户名是否已存在，如果存在则添加随机后缀
+                        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                        username_exists = cursor.fetchone()
+
+                        if username_exists:
+                            # 添加随机后缀确保用户名唯一
+                            import random
+                            import string
+                            suffix = ''.join(random.choices(string.digits, k=4))
+                            username = f"{username}{suffix}"
+                            logger.info(f"用户名已存在，使用新用户名: {username}")
+
                         # 插入新用户（状态为inactive，角色为customer）
                         insert_sql = """
                         INSERT INTO users (
                             username, password_hash, password_type, display_name, email,
                             company_name, phone, role, status, system, created_by, force_password_change,
-                            created_at, updated_at
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                            registration_source, created_at, updated_at
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                         """
                         cursor.execute(insert_sql, (
-                            username,  # 使用姓名生成的用户名
+                            username,  # 使用姓名生成的用户名（可能带后缀）
                             password_hash,
                             'werkzeug',  # 密码类型
                             display_name,  # 使用原始姓名作为显示名称
@@ -263,6 +223,7 @@ def contact():
                             'unified',  # 所属系统
                             'contact_form',  # 创建人
                             1,  # 强制修改密码
+                            'contact_form'  # 注册来源
                         ))
                         conn.commit()
                         user_created = True
@@ -424,6 +385,27 @@ def contact():
         except Exception as e:
             logger.error(f"邮件发送异常: {str(e)}", exc_info=True)
 
+        # 保存留言到 messages 表
+        try:
+            with db_connection('home') as conn:
+                cursor = conn.cursor()
+                insert_message_sql = """
+                INSERT INTO messages (name, email, phone, message, status, inquiry_type)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(insert_message_sql, (
+                    data['name'],
+                    data['email'],
+                    data.get('phone', ''),
+                    data['message'],
+                    'pending',
+                    inquiry_type  # 保存咨询类型
+                ))
+                conn.commit()
+                logger.info(f"留言已保存到 messages 表: {data['name']} - {data['email']} - {data.get('phone', '')} - 类型: {inquiry_type}")
+        except Exception as e:
+            logger.error(f"保存留言到 messages 表失败: {str(e)}", exc_info=True)
+
         return success_response(message='留言提交成功！我们会尽快与您联系。')
     except Exception as e:
         log_exception(logger, "提交联系表单失败")
@@ -433,4 +415,126 @@ def contact():
 @home_bp.route('/api/messages', methods=['GET'])
 def get_messages():
     """获取留言列表"""
-    return success_response(data={'messages': []}, message='查询成功')
+    try:
+        # 获取查询参数
+        status = request.args.get('status', '')  # pending/processed/completed
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 20))
+        keyword = request.args.get('keyword', '')
+
+        with db_connection('home') as conn:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            # 构建查询条件
+            where_clause = []
+            params = []
+
+            if status:
+                where_clause.append("status = %s")
+                params.append(status)
+
+            if keyword:
+                where_clause.append("(name LIKE %s OR email LIKE %s OR message LIKE %s)")
+                params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
+
+            # 计算总数
+            count_sql = "SELECT COUNT(*) as total FROM `messages`"
+            if where_clause:
+                count_sql += " WHERE " + " AND ".join(where_clause)
+
+            cursor.execute(count_sql, params)
+            total_count = cursor.fetchone()['total']
+
+            # 获取留言列表
+            base_sql = "SELECT * FROM `messages`"
+            if where_clause:
+                base_sql += " WHERE " + " AND ".join(where_clause)
+            base_sql += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+
+            params.extend([page_size, (page - 1) * page_size])
+            cursor.execute(base_sql, params)
+            messages = cursor.fetchall()
+
+            return success_response(
+                data={
+                    'messages': messages,
+                    'total': total_count,
+                    'page': page,
+                    'page_size': page_size,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                },
+                message=f'查询到 {len(messages)} 条留言'
+            )
+    except Exception as e:
+        logger.error(f"获取留言列表失败: {str(e)}", exc_info=True)
+        return server_error_response(f'查询失败: {str(e)}')
+
+
+@home_bp.route('/api/messages/<int:message_id>', methods=['PUT'])
+def update_message_status(message_id):
+    """更新留言状态"""
+    try:
+        data = request.get_json()
+
+        # 验证必填字段
+        if not data.get('status') or not data.get('notes'):
+            return validation_error_response(['状态和备注不能为空'])
+
+        # 验证状态值
+        valid_statuses = ['pending', 'processed', 'completed']
+        if data['status'] not in valid_statuses:
+            return error_response('无效的状态值', 400)
+
+        with db_connection('home') as conn:
+            cursor = conn.cursor()
+
+            # 检查留言是否存在
+            cursor.execute("SELECT id, status FROM `messages` WHERE id = %s", (message_id,))
+            message = cursor.fetchone()
+
+            if not message:
+                return error_response('留言不存在', 404)
+
+            # 更新留言状态
+            update_sql = """
+                UPDATE `messages`
+                SET status = %s
+                WHERE id = %s
+            """
+            cursor.execute(update_sql, (
+                data['status'],
+                message_id
+            ))
+
+            conn.commit()
+
+            return success_response(message='留言状态更新成功')
+
+    except Exception as e:
+        logger.error(f"更新留言状态失败: {str(e)}", exc_info=True)
+        return server_error_response(f'更新失败: {str(e)}')
+
+
+@home_bp.route('/api/messages/<int:message_id>', methods=['DELETE'])
+def delete_message(message_id):
+    """删除留言"""
+    try:
+        with db_connection('home') as conn:
+            cursor = conn.cursor()
+
+            # 检查留言是否存在
+            cursor.execute("SELECT id FROM `messages` WHERE id = %s", (message_id,))
+            message = cursor.fetchone()
+
+            if not message:
+                return error_response('留言不存在', 404)
+
+            # 删除留言
+            cursor.execute("DELETE FROM `messages` WHERE id = %s", (message_id,))
+            conn.commit()
+
+            return success_response(message='留言删除成功')
+
+    except Exception as e:
+        logger.error(f"删除留言失败: {str(e)}", exc_info=True)
+        return server_error_response(f'删除失败: {str(e)}')

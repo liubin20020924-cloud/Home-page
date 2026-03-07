@@ -1,0 +1,612 @@
+{% extends "admin/base.html" %}
+
+{% block title %}回复模板管理{% endblock %}
+
+{% block page_title %}回复模板管理{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-light">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-file-alt me-2 text-primary"></i>
+                        <strong>总模板数:</strong> <span id="totalCount">0</span>
+                    </div>
+                    <div>
+                        <span class="badge bg-success me-2">启用: <span id="activeCount">0</span></span>
+                        <span class="badge bg-secondary">系统模板: <span id="systemCount">0</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>回复模板列表</h5>
+        <div>
+            <select class="form-select form-select-sm d-inline-block w-auto me-2" id="categoryFilter">
+                <option value="all">全部分类</option>
+                <option value="general">通用</option>
+                <option value="account">账户相关</option>
+                <option value="technical">技术支持</option>
+                <option value="billing">计费相关</option>
+                <option value="other">其他</option>
+            </select>
+            <select class="form-select form-select-sm d-inline-block w-auto me-2" id="activeFilter">
+                <option value="all">全部状态</option>
+                <option value="1">启用</option>
+                <option value="0">禁用</option>
+            </select>
+            <button class="btn btn-sm btn-primary me-2" onclick="showCreateModal()">
+                <i class="fas fa-plus me-1"></i>新建模板
+            </button>
+            <button class="btn btn-sm btn-outline-primary me-2" onclick="loadTemplates()">
+                <i class="fas fa-sync-alt me-1"></i>刷新
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- 搜索框 -->
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput"
+                           placeholder="搜索模板名称或内容...">
+                    <button class="btn btn-primary" type="button" onclick="loadTemplates()">
+                        <i class="fas fa-search me-1"></i>搜索
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+                        <i class="fas fa-times me-1"></i>清除
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <small class="text-muted">
+                    <kbd>F5</kbd> 刷新 | <kbd>Ctrl+F</kbd> 搜索
+                </small>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>模板名称</th>
+                        <th>分类</th>
+                        <th>描述</th>
+                        <th>使用次数</th>
+                        <th>状态</th>
+                        <th>排序</th>
+                        <th width="180">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="templatesTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        <nav aria-label="Page navigation" id="paginationContainer">
+            <ul class="pagination justify-content-center" id="pagination"></ul>
+        </nav>
+    </div>
+</div>
+
+<!-- 创建/编辑模板模态框 -->
+<div class="modal fade" id="templateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-file-alt me-2"></i><span id="modalTitle">新建模板</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="templateForm">
+                    <input type="hidden" id="templateId">
+
+                    <div class="mb-3">
+                        <label for="templateName" class="form-label">模板名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="templateName" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="templateCategory" class="form-label">分类 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="templateCategory" required>
+                                <option value="general">通用</option>
+                                <option value="account">账户相关</option>
+                                <option value="technical">技术支持</option>
+                                <option value="billing">计费相关</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="templateSort" class="form-label">排序</label>
+                            <input type="number" class="form-control" id="templateSort" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="templateDescription" class="form-label">描述</label>
+                        <textarea class="form-control" id="templateDescription" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="templateContent" class="form-label">模板内容 <span class="text-danger">*</span></label>
+                        <small class="text-muted">支持变量: {name}, {email}, {phone}, {company_name}, {message}, {username}</small>
+                        <textarea class="form-control" id="templateContent" rows="8" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="templateActive" checked>
+                            <label class="form-check-label" for="templateActive">
+                                启用模板
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveTemplate()">
+                    <i class="fas fa-save me-1"></i>保存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 查看模板模态框 -->
+<div class="modal fade" id="viewTemplateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-eye me-2"></i>查看模板</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>模板名称:</strong> <span id="viewTemplateName"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>分类:</strong> <span id="viewTemplateCategory"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>描述:</strong> <span id="viewTemplateDescription"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>状态:</strong> <span id="viewTemplateStatus"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>使用次数:</strong> <span id="viewTemplateUseCount"></span>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <strong>模板内容:</strong>
+                    <pre id="viewTemplateContent" style="background: #f8f9fa; padding: 15px; border-radius: 5px;"></pre>
+                </div>
+                <div class="mb-3">
+                    <strong>创建人:</strong> <span id="viewTemplateCreatedBy"></span>
+                    <span class="mx-2">|</span>
+                    <strong>创建时间:</strong> <span id="viewTemplateCreatedAt"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>关闭
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 消息提示 -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="messageToast" class="toast" role="alert">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong class="me-auto">系统提示</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+let currentPage = 1;
+let pageSize = 10;
+let allTemplates = [];
+
+// 显示消息提示
+function showMessage(message, type = 'info') {
+    const toastEl = $('#messageToast');
+    const toastMessage = $('#toastMessage');
+    const header = toastEl.find('.toast-header');
+
+    let icon = 'fa-info-circle';
+    let bgColor = 'bg-info';
+
+    switch(type) {
+        case 'success':
+            icon = 'fa-check-circle';
+            bgColor = 'bg-success';
+            break;
+        case 'error':
+            icon = 'fa-times-circle';
+            bgColor = 'bg-danger';
+            break;
+        case 'warning':
+            icon = 'fa-exclamation-triangle';
+            bgColor = 'bg-warning';
+            break;
+    }
+
+    header.find('i').removeClass().addClass(`fas ${icon} me-2`);
+    header.removeClass().addClass(`toast-header text-white ${bgColor}`);
+    toastMessage.text(message);
+
+    const toast = new bootstrap.Toast(toastEl[0]);
+    toast.show();
+}
+
+// 分类映射
+const categoryMap = {
+    'general': '<span class="badge bg-secondary">通用</span>',
+    'account': '<span class="badge bg-primary">账户相关</span>',
+    'technical': '<span class="badge bg-info">技术支持</span>',
+    'billing': '<span class="badge bg-warning">计费相关</span>',
+    'other': '<span class="badge bg-secondary">其他</span>'
+};
+
+// 格式化日期时间
+function formatDateTime(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const date = new Date(dateStr);
+        return date.toLocaleString('zh-CN');
+    } catch (e) {
+        return dateStr;
+    }
+}
+
+// 加载模板列表
+function loadTemplates(page = 1) {
+    currentPage = page;
+    const category = $('#categoryFilter').val();
+    const isActive = $('#activeFilter').val();
+    const search = $('#searchInput').val();
+
+    $.ajax({
+        url: '/admin/reply-templates/api/list',
+        method: 'GET',
+        data: {
+            page: currentPage,
+            page_size: pageSize,
+            category: category === 'all' ? '' : category,
+            is_active: isActive === 'all' ? '' : isActive,
+            search: search
+        },
+        success: function(response) {
+            if (response.success) {
+                const data = response.data;
+                allTemplates = data.templates || [];
+                renderTemplatesTable(allTemplates);
+                updateStats(data.total, allTemplates);
+                renderPagination(data.total, data.page_size, data.page, data.total_pages);
+            } else {
+                showMessage(response.message, 'error');
+            }
+        },
+        error: function(xhr) {
+            console.error('加载模板列表失败:', xhr);
+            showMessage('加载模板列表失败', 'error');
+        }
+    });
+}
+
+// 渲染模板表格
+function renderTemplatesTable(templates) {
+    const tbody = $('#templatesTableBody');
+    tbody.empty();
+
+    if (!templates || templates.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="8" class="text-center py-4 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-3"></i>
+                    <p>暂无数据</p>
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    templates.forEach(function(tpl) {
+        const isSystem = tpl.is_system === 1;
+        const isActive = tpl.is_active === 1;
+
+        const row = `
+            <tr>
+                <td>${tpl.id}</td>
+                <td>
+                    <strong>${tpl.name}</strong>
+                    ${isSystem ? '<span class="badge bg-info ms-1">系统</span>' : ''}
+                </td>
+                <td>${categoryMap[tpl.category] || tpl.category}</td>
+                <td title="${tpl.description || ''}">${(tpl.description || '-').substring(0, 30)}${(tpl.description && tpl.description.length > 30) ? '...' : ''}</td>
+                <td>${tpl.use_count || 0}</td>
+                <td>
+                    <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+                        ${isActive ? '启用' : '禁用'}
+                    </span>
+                </td>
+                <td>${tpl.sort_order || 0}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info" onclick="viewTemplate(${tpl.id})" title="查看">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="editTemplate(${tpl.id})" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="toggleStatus(${tpl.id}, ${isActive ? 0 : 1})" title="${isActive ? '禁用' : '启用'}">
+                            <i class="fas fa-${isActive ? 'toggle-off' : 'toggle-on'}"></i>
+                        </button>
+                        ${!isSystem ? `
+                        <button class="btn btn-outline-danger" onclick="deleteTemplate(${tpl.id})" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// 更新统计信息
+function updateStats(total, templates) {
+    $('#totalCount').text(total);
+    $('#activeCount').text(templates.filter(t => t.is_active === 1).length);
+    $('#systemCount').text(templates.filter(t => t.is_system === 1).length);
+}
+
+// 渲染分页
+function renderPagination(total, pageSize, currentPage, totalPages) {
+    const pagination = $('#pagination');
+    pagination.empty();
+
+    if (totalPages <= 1) {
+        $('#paginationContainer').hide();
+        return;
+    }
+
+    $('#paginationContainer').show();
+
+    // 上一页
+    if (currentPage > 1) {
+        pagination.append(`
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="loadTemplates(${currentPage - 1})">
+                    <i class="fas fa-chevron-left"></i> 上一页
+                </a>
+            </li>
+        `);
+    }
+
+    // 页码
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            pagination.append(`
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadTemplates(${i})">${i}</a>
+                </li>
+            `);
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+        }
+    }
+
+    // 下一页
+    if (currentPage < totalPages) {
+        pagination.append(`
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" onclick="loadTemplates(${currentPage + 1})">
+                    下一页 <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        `);
+    }
+}
+
+// 显示创建模态框
+function showCreateModal() {
+    $('#modalTitle').text('新建模板');
+    $('#templateId').val('');
+    $('#templateForm')[0].reset();
+    $('#templateActive').prop('checked', true);
+    $('#templateModal').modal('show');
+}
+
+// 编辑模板
+function editTemplate(templateId) {
+    const template = allTemplates.find(t => t.id === templateId);
+    if (!template) {
+        showMessage('模板不存在', 'error');
+        return;
+    }
+
+    $('#modalTitle').text('编辑模板');
+    $('#templateId').val(template.id);
+    $('#templateName').val(template.name);
+    $('#templateCategory').val(template.category);
+    $('#templateDescription').val(template.description);
+    $('#templateContent').val(template.content);
+    $('#templateActive').prop('checked', template.is_active === 1);
+    $('#templateSort').val(template.sort_order || 0);
+
+    $('#templateModal').modal('show');
+}
+
+// 查看模板
+function viewTemplate(templateId) {
+    const template = allTemplates.find(t => t.id === templateId);
+    if (!template) {
+        showMessage('模板不存在', 'error');
+        return;
+    }
+
+    $('#viewTemplateName').text(template.name);
+    $('#viewTemplateCategory').html(categoryMap[template.category] || template.category);
+    $('#viewTemplateDescription').text(template.description || '-');
+    $('#viewTemplateStatus').html(template.is_active === 1 ?
+        '<span class="badge bg-success">启用</span>' :
+        '<span class="badge bg-secondary">禁用</span>');
+    $('#viewTemplateUseCount').text(template.use_count || 0);
+    $('#viewTemplateContent').text(template.content);
+    $('#viewTemplateCreatedBy').text(template.created_by || '-');
+    $('#viewTemplateCreatedAt').text(formatDateTime(template.created_at));
+
+    $('#viewTemplateModal').modal('show');
+}
+
+// 保存模板
+function saveTemplate() {
+    const templateId = $('#templateId').val();
+    const data = {
+        name: $('#templateName').val().trim(),
+        category: $('#templateCategory').val(),
+        description: $('#templateDescription').val().trim(),
+        content: $('#templateContent').val(),
+        is_active: $('#templateActive').prop('checked') ? 1 : 0,
+        sort_order: parseInt($('#templateSort').val()) || 0
+    };
+
+    // 验证
+    if (!data.name) {
+        showMessage('请输入模板名称', 'warning');
+        return;
+    }
+    if (!data.content) {
+        showMessage('请输入模板内容', 'warning');
+        return;
+    }
+
+    const url = templateId ? `/admin/reply-templates/api/${templateId}` : '/admin/reply-templates/api';
+    const method = templateId ? 'PUT' : 'POST';
+
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                showMessage(templateId ? '模板更新成功' : '模板创建成功', 'success');
+                $('#templateModal').modal('hide');
+                loadTemplates(currentPage);
+            } else {
+                showMessage('保存失败: ' + response.message, 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            showMessage('保存失败: ' + error, 'error');
+        }
+    });
+}
+
+// 删除模板
+function deleteTemplate(templateId) {
+    if (confirm('确定要删除这个模板吗？此操作不可撤销。')) {
+        $.ajax({
+            url: `/admin/reply-templates/api/${templateId}`,
+            method: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    showMessage('模板已删除', 'success');
+                    loadTemplates(currentPage);
+                } else {
+                    showMessage('删除失败: ' + response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                showMessage('删除失败，请稍后重试', 'error');
+            }
+        });
+    }
+}
+
+// 切换启用状态
+function toggleStatus(templateId, status) {
+    $.ajax({
+        url: `/admin/reply-templates/api/${templateId}`,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({ is_active: status }),
+        success: function(response) {
+            if (response.success) {
+                showMessage('状态更新成功', 'success');
+                loadTemplates(currentPage);
+            } else {
+                showMessage('更新失败: ' + response.message, 'error');
+            }
+        },
+        error: function(xhr) {
+            showMessage('更新失败，请稍后重试', 'error');
+        }
+    });
+}
+
+// 清除搜索
+function clearSearch() {
+    $('#searchInput').val('');
+    $('#categoryFilter').val('all');
+    $('#activeFilter').val('all');
+    loadTemplates(1);
+}
+
+// 筛选变化
+$('#categoryFilter, #activeFilter').on('change', function() {
+    loadTemplates(1);
+});
+
+// 搜索框回车
+$('#searchInput').on('keypress', function(e) {
+    if (e.which === 13) {
+        loadTemplates(1);
+    }
+});
+
+// 键盘快捷键
+$(document).on('keydown', function(e) {
+    if (e.keyCode === 116) { // F5
+        e.preventDefault();
+        loadTemplates(currentPage);
+    }
+});
+
+// 初始加载
+$(document).ready(function() {
+    loadTemplates(1);
+});
+</script>
+{% endblock %}
