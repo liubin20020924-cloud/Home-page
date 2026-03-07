@@ -577,7 +577,7 @@ Connection refused
 - [CI/CD 功能设计](./04-FEATURES.md) - 功能设计和实现细节
 - [CI/CD 故障排除](./05-TROUBLESHOOTING.md) - 完整的故障排除指南
 - [CI/CD 测试指南](./06-TESTING.md) - 详细的测试步骤
-- [脚本使用说明](../SCRIPTS.md) - 所有脚本的功能说明
+- [脚本使用说明](../project-management/SCRIPTS.md) - 所有脚本的功能说明
 
 ---
 

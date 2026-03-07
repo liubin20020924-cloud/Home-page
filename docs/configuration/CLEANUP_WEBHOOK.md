@@ -490,7 +490,7 @@ sudo /tmp/cleanup_webhook.sh
 
 - [CI/CD配置指南](./CICD/02-CONFIGURATION.md)
 - [故障排除指南](./CICD/05-TROUBLESHOOTING.md)
-- [版本管理规范](../VERSION_MANAGEMENT_GUIDE.md)
+- [版本管理规范](../project-management/VERSION_MANAGEMENT_GUIDE.md)
 
 ---
 

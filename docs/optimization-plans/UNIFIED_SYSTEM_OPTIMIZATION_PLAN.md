@@ -397,10 +397,10 @@
 
 ## 🔗 相关文档
 
-- [统一用户管理指南](./UNIFIED_SYSTEM_GUIDE.md)
-- [用户注册指南](./USER_REGISTRATION_GUIDE.md)
-- [分支说明文档](./BRANCHES.md)
-- [更新日志](../CHANGELOG.md)
+- [统一用户管理指南](../system-guides/UNIFIED_SYSTEM_GUIDE.md)
+- [用户注册指南](../system-guides/USER_REGISTRATION_GUIDE.md)
+- [分支说明文档](../project-management/BRANCHES.md)
+- [更新日志](../../CHANGELOG.md)
 
 ---
 

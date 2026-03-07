@@ -398,9 +398,9 @@ DB_POOL_MAX_SHARED=5        # 最大共享连接
 
 ### 配置文档
 
-- [配置详细说明](./docs/CONFIGURATION_GUIDE.md) - 所有配置项的详细说明
-- [配置迁移指南](./docs/CONFIG_MIGRATION_GUIDE.md) - 从旧版本迁移配置
-- [邮件配置指南](./docs/EMAIL_CONFIG_GUIDE.md) - 企业微信/QQ 邮箱配置
+- [配置详细说明](./docs/configuration/CONFIGURATION_GUIDE.md) - 所有配置项的详细说明
+- [配置迁移指南](./docs/configuration/CONFIG_MIGRATION_GUIDE.md) - 从旧版本迁移配置
+- [邮件配置指南](./docs/configuration/EMAIL_CONFIG_GUIDE.md) - 企业微信/QQ 邮箱配置
 
 ---
 
@@ -455,25 +455,26 @@ DB_POOL_MAX_SHARED=5        # 最大共享连接
 详细文档请查看 [`docs/`](./docs/) 目录：
 
 ### 核心文档
+- [文档总览](./docs/README.md) ⭐
 - [快速开始](./docs/QUICK_START.md)
 - [Git配置方案](./docs/GIT_CONFIG_SOLUTION.md) ⭐ **新** - 腾讯云完整配置
 - [快速配置指南（简化版）](./docs/QUICK_SETUP_GUIDE.md) ⭐
 - [简化版CI/CD配置](./docs/SIMPLIFIED_CI_CD.md)
-- [版本管理规范](./docs/VERSION_MANAGEMENT_GUIDE.md) ⭐
+- [版本管理规范](./docs/project-management/VERSION_MANAGEMENT_GUIDE.md) ⭐
 - [版本管理快速指南](./docs/QUICK_START_VERSIONING.md) ⭐
 - [自动部署配置](./docs/AUTO_DEPLOY_SETUP.md)
 
 ### 系统文档
-- [官网系统说明](./docs/HOME_SYSTEM_GUIDE.md)
-- [知识库系统说明](./docs/KB_SYSTEM_GUIDE.md)
-- [工单系统说明](./docs/CASE_SYSTEM_GUIDE.md)
-- [统一用户管理说明](./docs/UNIFIED_SYSTEM_GUIDE.md)
+- [官网系统说明](./docs/system-guides/HOME_SYSTEM_GUIDE.md)
+- [知识库系统说明](./docs/system-guides/KB_SYSTEM_GUIDE.md)
+- [工单系统说明](./docs/system-guides/工单系统设计文档.md)
+- [统一用户管理说明](./docs/system-guides/UNIFIED_SYSTEM_GUIDE.md)
 
 ### 配置文档
-- [配置详细说明](./docs/CONFIGURATION_GUIDE.md)
-- [配置迁移指南](./docs/CONFIG_MIGRATION_GUIDE.md)
-- [邮件配置指南](./docs/EMAIL_CONFIG_GUIDE.md)
-- [用户注册指南](./docs/USER_REGISTRATION_GUIDE.md)
+- [配置详细说明](./docs/configuration/CONFIGURATION_GUIDE.md)
+- [配置迁移指南](./docs/configuration/CONFIG_MIGRATION_GUIDE.md)
+- [邮件配置指南](./docs/configuration/EMAIL_CONFIG_GUIDE.md)
+- [用户注册指南](./docs/system-guides/USER_REGISTRATION_GUIDE.md)
 
 ### 技术文档
 - [API 文档](./docs/API_DOCS.md)

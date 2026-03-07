@@ -4,105 +4,118 @@
 
 本文档是所有系统优化文档的总览索引，提供完整的项目优化路线图。涵盖前端代码优化、各功能系统优化计划，以及实施建议。
 
+**重要更新 (2026-03-07)**: 所有系统优化文档已基于**实用架构优化方案**（单机腾讯云部署环境）进行更新，调整了优先级和实施策略。
+
+---
+
+## 🚀 架构优化基础
+
+### 核心架构优化文档
+**文档**: [实用架构优化方案](../architecture/PRAGMATIC_ARCHITECTURE_OPTIMIZATION.md)
+**概述**: 基于实际部署环境（单机腾讯云服务器 + 内网备份 + HTTPS已部署）的系统架构优化方案
+**核心内容**:
+- ✅ 已完成: HTTPS 部署、内网备份
+- 🔜 P1 立即执行: 应用监控与告警、数据库索引优化
+- ⏳ P2 3个月内: Redis 缓存、日志集中管理
+- ⏰ P3 长期: CDN 加速、数据库合并
+
+**预计效果**:
+- P1 完成后: 故障响应时间缩短 80%，系统可用性提升至 99.5%
+- P2 完成后: API 响应时间降低 50%，并发能力提升 3-5 倍
+
 ---
 
 ## 🎯 优化文档分类
 
-### 1. 前端代码优化
-**文档**: [前端代码优化建议](./FRONTEND_OPTIMIZATION_GUIDE.md)
+### 1. 系统架构优化
+**文档**: [实用架构优化方案](../architecture/PRAGMATIC_ARCHITECTURE_OPTIMIZATION.md)
+**优先级**: 🔴 P1（立即执行）
+**成本**: P1 免费，P2 约 200元/月
+**时间**: P1 约 50 工时（2-3周）
+
+---
+
+### 2. 前端代码优化
+**文档**: [前端代码优化建议](../FRONTEND_OPTIMIZATION_GUIDE.md)
 **覆盖范围**: 全面前端代码（官网、工单、知识库、用户管理）
 **优化方向**: HTML结构、CSS样式、JavaScript代码、安全性、性能
 **预估时间**: 6-8周（分阶段实施）
 
 ---
 
-### 2. 功能系统优化计划
+### 3. 功能系统优化计划
 
-#### 2.1 官网留言系统
-**文档**: [留言系统优化计划](./MESSAGE_OPTIMIZATION_PLAN.md)
+#### 3.1 官网留言系统 📧
+**文档**: [留言系统优化计划](./MESSAGE_SYSTEM_OPTIMIZATION_PLAN.md)
 **优化功能数**: 11项
-**高优先级**: 2项（账户激活、留言回复）
-**预估时间**: 5-7周（高优先级功能）
+**🔴 P1 高优先级**: 2项（留言回复、账户激活邮件）
+**预估时间**: P1 约 15-20 工时（2-3周）
 
-**核心功能**:
-- 账户激活邮件发送功能
-- 留言回复功能
-- 批量操作
-- 留言导出
-- 统计分析
-- 标签分类
-- 附件上传
-- 回复模板
-- 客户信息关联
-- 实时通知
-- 归档功能
+**P1 核心功能**:
+- 留言回复功能（2周）
+- 账户激活邮件发送功能（1周）
+
+**P2 功能**（3个月内）:
+- 留言统计分析
+- 留言导出功能
+- 留言标签分类
+- 附件上传功能
+- 留言归档功能
 
 ---
 
-#### 2.2 工单系统
+#### 3.2 工单系统 🎫
 **文档**: [工单系统优化计划](./CASE_SYSTEM_OPTIMIZATION_PLAN.md)
 **优化功能数**: 12项
-**高优先级**: 2项（邮件通知增强、工单模板管理）
-**预估时间**: 6-8周（高优先级功能）
+**🔴 P1 高优先级**: 2项（邮件通知增强、工单模板管理）
+**预估时间**: P1 约 15-19 工时（2-3周）
 
-**核心功能**:
-- 邮件通知增强
-- 工单模板管理
+**P1 核心功能**:
+- 邮件通知增强（2周）
+- 工单模板管理（1周）
+
+**P2 功能**（3个月内）:
 - 批量操作功能
 - 工单导出功能
 - 高级筛选和搜索
-- 工单自动化规则
 - 工单统计增强
-- SLA管理
-- 工单标签管理
-- 工单关联和依赖
-- 知识库集成
-- 移动端适配
 
 ---
 
-#### 2.3 知识库系统
+#### 3.3 知识库系统 📚
 **文档**: [知识库系统优化计划](./KB_SYSTEM_OPTIMIZATION_PLAN.md)
 **优化功能数**: 13项
-**高优先级**: 2项（搜索功能增强、文档编辑器增强）
-**预估时间**: 6-9周（高优先级功能）
+**🔴 P1 高优先级**: 2项（搜索功能增强、文档编辑器增强）
+**预估时间**: P1 约 15-20 工时（2-3周）
 
-**核心功能**:
-- 搜索功能增强（Elasticsearch）
-- 文档编辑器增强（Markdown）
+**P1 核心功能**:
+- 搜索功能增强（2周）
+- 文档编辑器增强（1周）
+
+**P2 功能**（3个月内）:
 - 文档评论和反馈
 - 文档评分和统计
 - 文档导出功能
 - 文档版本管理和对比
-- 文档分类和导航增强
-- 文档协作功能
-- 文档工作流和审核
-- 知识图谱
-- 文档翻译和多语言
-- 智能推荐
-- 文档归档和备份
 
 ---
 
-#### 2.4 统一用户管理
+#### 3.4 统一用户管理 👤
 **文档**: [统一用户管理优化计划](./UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md)
 **优化功能数**: 12项
-**高优先级**: 3项（双因素认证、密码策略安全增强、审计日志操作记录）
-**预估时间**: 7-10周（高优先级功能）
+**🔴 P1 高优先级**: 3项（双因素认证、密码策略安全增强、审计日志操作记录）
+**预估时间**: P1 约 20-25 工时（2-3周）
 
-**核心功能**:
-- 双因素认证（2FA）
-- 密码策略和安全增强
-- 审计日志和操作记录
+**P1 核心功能**:
+- 双因素认证（2FA）（2周）
+- 密码策略和安全增强（1周）
+- 审计日志和操作记录（1周）
+
+**P2 功能**（3个月内）:
 - 用户组织和部门管理
 - 用户标签和分组
 - 用户导入导出
 - 用户活动监控
-- 第三方登录集成
-- 用户画像和行为分析
-- 权限精细化控制
-- 用户生命周期管理
-- API密钥和令牌管理
 
 ---
 
@@ -357,23 +370,23 @@ npm install just-validate
 ## 📚 相关文档
 
 ### 系统指南
-- [官网系统指南](./HOME_SYSTEM_GUIDE.md)
-- [工单系统设计文档](./工单系统设计文档.md)
-- [知识库系统指南](./KB_SYSTEM_GUIDE.md)
-- [统一用户管理指南](./UNIFIED_SYSTEM_GUIDE.md)
+- [官网系统指南](../system-guides/HOME_SYSTEM_GUIDE.md)
+- [工单系统设计文档](../system-guides/工单系统设计文档.md)
+- [知识库系统指南](../system-guides/KB_SYSTEM_GUIDE.md)
+- [统一用户管理指南](../system-guides/UNIFIED_SYSTEM_GUIDE.md)
 
 ### 优化计划
-- [前端代码优化建议](./FRONTEND_OPTIMIZATION_GUIDE.md)
-- [留言系统优化计划](./MESSAGE_OPTIMIZATION_PLAN.md)
+- [前端代码优化建议](../FRONTEND_OPTIMIZATION_GUIDE.md)
+- [留言系统优化计划](./MESSAGE_SYSTEM_OPTIMIZATION_PLAN.md)
 - [工单系统优化计划](./CASE_SYSTEM_OPTIMIZATION_PLAN.md)
 - [知识库系统优化计划](./KB_SYSTEM_OPTIMIZATION_PLAN.md)
 - [统一用户管理优化计划](./UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md)
 
 ### 项目文档
-- [更新日志](../CHANGELOG.md)
-- [配置指南](./CONFIGURATION_GUIDE.md)
-- [版本管理指南](./VERSION_MANAGEMENT_GUIDE.md)
-- [分支说明文档](./BRANCHES.md)
+- [更新日志](../../CHANGELOG.md)
+- [配置指南](../configuration/CONFIGURATION_GUIDE.md)
+- [版本管理指南](../project-management/VERSION_MANAGEMENT_GUIDE.md)
+- [分支说明文档](../project-management/BRANCHES.md)
 
 ---
 
@@ -383,17 +396,17 @@ npm install just-validate
 
 | 系统 | 指南文档 | 优化计划 | 前端优化 |
 |------|---------|---------|----------|
-| 官网系统 | [官网指南](./HOME_SYSTEM_GUIDE.md) | [留言优化](./MESSAGE_OPTIMIZATION_PLAN.md) | ✅ 包含 |
-| 工单系统 | [工单指南](./工单系统设计文档.md) | [工单优化](./CASE_SYSTEM_OPTIMIZATION_PLAN.md) | ✅ 包含 |
-| 知识库系统 | [知识库指南](./KB_SYSTEM_GUIDE.md) | [知识库优化](./KB_SYSTEM_OPTIMIZATION_PLAN.md) | ✅ 包含 |
-| 用户管理 | [用户管理指南](./UNIFIED_SYSTEM_GUIDE.md) | [用户管理优化](./UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md) | ✅ 包含 |
+| 官网系统 | [官网指南](../system-guides/HOME_SYSTEM_GUIDE.md) | [留言优化](./MESSAGE_SYSTEM_OPTIMIZATION_PLAN.md) | ✅ 包含 |
+| 工单系统 | [工单指南](../system-guides/工单系统设计文档.md) | [工单优化](./CASE_SYSTEM_OPTIMIZATION_PLAN.md) | ✅ 包含 |
+| 知识库系统 | [知识库指南](../system-guides/KB_SYSTEM_GUIDE.md) | [知识库优化](./KB_SYSTEM_OPTIMIZATION_PLAN.md) | ✅ 包含 |
+| 用户管理 | [用户管理指南](../system-guides/UNIFIED_SYSTEM_GUIDE.md) | [用户管理优化](./UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md) | ✅ 包含 |
 
 ### 按优先级查找
 
 | 优先级 | 功能 | 文档 |
 |--------|------|------|
-| 🔴 高 | 前端安全问题修复 | [前端优化](./FRONTEND_OPTIMIZATION_GUIDE.md) |
-| 🔴 高 | 账户激活、留言回复 | [留言优化](./MESSAGE_OPTIMIZATION_PLAN.md) |
+| 🔴 高 | 前端安全问题修复 | [前端优化](../FRONTEND_OPTIMIZATION_GUIDE.md) |
+| 🔴 高 | 账户激活、留言回复 | [留言优化](./MESSAGE_SYSTEM_OPTIMIZATION_PLAN.md) |
 | 🔴 高 | 邮件通知、工单模板 | [工单优化](./CASE_SYSTEM_OPTIMIZATION_PLAN.md) |
 | 🔴 高 | 搜索增强、编辑器 | [知识库优化](./KB_SYSTEM_OPTIMIZATION_PLAN.md) |
 | 🔴 高 | 2FA、密码策略、审计 | [用户管理优化](./UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md) |
@@ -451,27 +464,10 @@ npm install just-validate
 
 ---
 
-## 📊 文档结构
-
-```
-docs/
-├── OPTIMIZATION_INDEX.md              # 本文件 - 优化文档索引
-├── FRONTEND_OPTIMIZATION_GUIDE.md    # 前端代码优化建议
-├── MESSAGE_OPTIMIZATION_PLAN.md        # 留言系统优化计划
-├── CASE_SYSTEM_OPTIMIZATION_PLAN.md    # 工单系统优化计划
-├── KB_SYSTEM_OPTIMIZATION_PLAN.md      # 知识库系统优化计划
-├── UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md # 用户管理优化计划
-├── HOME_SYSTEM_GUIDE.md              # 官网系统指南
-├── 工单系统设计文档.md              # 工单系统设计文档
-├── KB_SYSTEM_GUIDE.md               # 知识库系统指南
-├── UNIFIED_SYSTEM_GUIDE.md           # 用户管理指南
-├── README.md                       # 文档索引
-├── CHANGELOG.md                    # 更新日志
-└── ...
 ```
 
 ---
 
 **文档维护者**: 云户科技开发团队
 **最后更新**: 2026-03-07
-**文档版本**: v1.0
+**文档版本**: v2.0

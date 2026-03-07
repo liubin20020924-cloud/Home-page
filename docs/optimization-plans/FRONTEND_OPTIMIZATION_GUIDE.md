@@ -1067,10 +1067,10 @@ import JustValidate from 'just-validate';
 
 ## 🔗 相关文档
 
-- [官网系统指南](./HOME_SYSTEM_GUIDE.md)
-- [工单系统设计文档](./工单系统设计文档.md)
-- [知识库系统指南](./KB_SYSTEM_GUIDE.md)
-- [统一用户管理指南](./UNIFIED_SYSTEM_GUIDE.md)
+- [官网系统指南](../system-guides/HOME_SYSTEM_GUIDE.md)
+- [工单系统设计文档](../system-guides/工单系统设计文档.md)
+- [知识库系统指南](../system-guides/KB_SYSTEM_GUIDE.md)
+- [统一用户管理指南](../system-guides/UNIFIED_SYSTEM_GUIDE.md)
 
 ---
 

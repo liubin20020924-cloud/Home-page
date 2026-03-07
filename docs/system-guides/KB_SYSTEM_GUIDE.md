@@ -711,7 +711,7 @@ SESSION_TIMEOUT = 3600  # 1小时
 
 - [项目总览](../README.md)
 - [官网系统说明](./HOME_SYSTEM_GUIDE.md)
-- [工单系统说明](./CASE_SYSTEM_GUIDE.md)
+- [工单系统说明](./工单系统设计文档.md)
 - [统一用户管理说明](./UNIFIED_SYSTEM_GUIDE.md)
 - [统一用户管理详细指南](./UNIFIED_USER_MANAGEMENT.md)
 - [代码风格指南](./STYLE_GUIDE.md)
