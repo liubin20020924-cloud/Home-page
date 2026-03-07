@@ -11,7 +11,7 @@ import jinja2
 import config
 from common.db_manager import get_pool
 from services.socketio_service import register_socketio_events, init_case_database
-from routes import home_bp, kb_bp, kb_management_bp, case_bp, unified_bp, api_bp, auth_bp, user_management_bp, monitoring_bp
+from routes import home_bp, kb_bp, kb_management_bp, case_bp, unified_bp, api_bp, auth_bp, user_management_bp, monitoring_bp, admin_bp
 import os
 from datetime import timedelta
 
@@ -252,6 +252,7 @@ app.register_blueprint(api_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(user_management_bp)
 app.register_blueprint(monitoring_bp)
+app.register_blueprint(admin_bp)
 
 # 排除登录端点的 CSRF 保护（这些是公开接口）
 if csrf:
@@ -261,6 +262,8 @@ if csrf:
     csrf.exempt(auth_bp)
     csrf.exempt(user_management_bp)
     csrf.exempt(home_bp)  # 官网系统的公开接口（如联系表单）不需要 CSRF 保护
+    csrf.exempt(monitoring_bp)  # 监控API不需要CSRF保护
+    csrf.exempt(admin_bp)  # 统一管理后台暂时不需要CSRF保护
     csrf.exempt(monitoring_bp)  # 监控API不需要CSRF保护
 
 # 注册SocketIO事件

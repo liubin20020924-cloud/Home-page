@@ -1,0 +1,291 @@
+{% extends "admin/base.html" %}
+
+{% block title %}监控管理{% endblock %}
+
+{% block page_title %}监控管理{% endblock %}
+
+{% block content %}
+<!-- 系统状态卡片 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-microchip fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-title text-muted mb-1">CPU 使用率</h6>
+                        <h3 class="mb-0" id="cpuValue">0%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm" style="border-left-color: #0dcaf0;">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-memory fa-2x text-info"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-title text-muted mb-1">内存使用率</h6>
+                        <h3 class="mb-0" id="memoryValue">0%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm" style="border-left-color: #ffc107;">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-hdd fa-2x text-warning"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-title text-muted mb-1">磁盘使用率</h6>
+                        <h3 class="mb-0" id="diskValue">0%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card shadow-sm" style="border-left-color: #dc3545;">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-title text-muted mb-1">活跃告警</h6>
+                        <h3 class="mb-0" id="alertCount">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 详细监控数据 -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>资源使用详情</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="refreshMetrics()">
+                    <i class="fas fa-sync-alt"></i> 刷新
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>CPU 使用率</span>
+                        <span id="cpuPercent">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="cpuBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="cpuDetail">--</small>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>内存使用率</span>
+                        <span id="memoryPercent">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" id="memoryBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="memoryDetail">--</small>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>磁盘使用率</span>
+                        <span id="diskPercent">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" id="diskBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="diskDetail">--</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>系统状态</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="display-4 mb-2" id="systemStatusIcon">
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <h4 id="systemStatusText">系统正常</h4>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h6 class="text-muted">进程数</h6>
+                        <h4 id="processCount">0</h4>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-muted">网络流量</h6>
+                        <h4 id="networkTraffic">--</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 告警列表 -->
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-bell me-2"></i>活跃告警</h5>
+        <span class="badge bg-danger" id="alertBadge">0</span>
+    </div>
+    <div class="card-body">
+        <div id="alertsList">
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-check-circle fa-3x mb-3"></i>
+                <p class="mb-0">暂无活跃告警</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 刷新监控数据
+function refreshMetrics() {
+    fetch('/admin/monitoring/api/metrics')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateMetricsUI(data.data);
+            }
+        })
+        .catch(error => console.error('Error fetching metrics:', error));
+}
+
+// 更新指标UI
+function updateMetricsUI(metrics) {
+    // CPU
+    const cpu = metrics.cpu_usage || 0;
+    document.getElementById('cpuValue').textContent = cpu.toFixed(1) + '%';
+    document.getElementById('cpuPercent').textContent = cpu.toFixed(1) + '%';
+    document.getElementById('cpuBar').style.width = cpu + '%';
+    document.getElementById('cpuBar').className = `progress-bar ${getBarClass(cpu)}`;
+    
+    // 内存
+    const memory = metrics.memory_usage || 0;
+    document.getElementById('memoryValue').textContent = memory.toFixed(1) + '%';
+    document.getElementById('memoryPercent').textContent = memory.toFixed(1) + '%';
+    document.getElementById('memoryBar').style.width = memory + '%';
+    document.getElementById('memoryBar').className = `progress-bar bg-info ${getBarClass(memory, true)}`;
+    
+    // 磁盘
+    const disk = metrics.disk_usage || 0;
+    document.getElementById('diskValue').textContent = disk.toFixed(1) + '%';
+    document.getElementById('diskPercent').textContent = disk.toFixed(1) + '%';
+    document.getElementById('diskBar').style.width = disk + '%';
+    document.getElementById('diskBar').className = `progress-bar bg-warning ${getBarClass(disk, true)}`;
+    
+    // 进程数
+    if (metrics.process_count) {
+        document.getElementById('processCount').textContent = metrics.process_count;
+    }
+    
+    // 系统状态
+    updateSystemStatus(cpu, memory, disk);
+}
+
+// 获取进度条样式
+function getBarClass(value, isInfoOrWarning = false) {
+    if (value >= 90) return 'bg-danger';
+    if (value >= 70) return 'bg-warning';
+    if (isInfoOrWarning) return 'bg-success';
+    return 'bg-primary';
+}
+
+// 更新系统状态
+function updateSystemStatus(cpu, memory, disk) {
+    const isCritical = cpu >= 90 || memory >= 85 || disk >= 90;
+    const isWarning = cpu >= 70 || memory >= 70 || disk >= 80;
+    
+    const statusIcon = document.getElementById('systemStatusIcon');
+    const statusText = document.getElementById('systemStatusText');
+    
+    if (isCritical) {
+        statusIcon.innerHTML = '<i class="fas fa-times-circle text-danger"></i>';
+        statusText.textContent = '系统异常';
+        statusText.className = 'text-danger';
+    } else if (isWarning) {
+        statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i>';
+        statusText.textContent = '系统警告';
+        statusText.className = 'text-warning';
+    } else {
+        statusIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+        statusText.textContent = '系统正常';
+        statusText.className = 'text-success';
+    }
+}
+
+// 加载告警列表
+function loadAlerts() {
+    fetch('/admin/monitoring/api/alerts')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const alerts = data.data;
+                document.getElementById('alertCount').textContent = alerts.length;
+                document.getElementById('alertBadge').textContent = alerts.length;
+                
+                const alertsList = document.getElementById('alertsList');
+                if (alerts.length === 0) {
+                    alertsList.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <p class="mb-0">暂无活跃告警</p>
+                        </div>
+                    `;
+                } else {
+                    alertsList.innerHTML = alerts.map(alert => `
+                        <div class="alert alert-${alert.level === 'critical' ? 'danger' : 'warning'} alert-dismissible fade show" role="alert">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-${alert.level === 'critical' ? 'exclamation-circle' : 'exclamation-triangle'} fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading mb-1">${alert.metric_name}</h6>
+                                    <p class="mb-1">${alert.message}</p>
+                                    <small class="text-muted">
+                                        当前值: ${alert.current_value.toFixed(2)}% | 阈值: ${alert.threshold}%
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">${new Date(alert.timestamp).toLocaleString('zh-CN')}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        })
+        .catch(error => console.error('Error fetching alerts:', error));
+}
+
+// 初始加载和定时刷新
+refreshMetrics();
+loadAlerts();
+
+setInterval(() => {
+    refreshMetrics();
+    loadAlerts();
+}, 10000); // 每10秒刷新一次
+</script>
+{% endblock %}
