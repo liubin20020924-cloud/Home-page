@@ -11,7 +11,7 @@ import jinja2
 import config
 from common.db_manager import get_pool
 from services.socketio_service import register_socketio_events, init_case_database
-from routes import home_bp, kb_bp, kb_management_bp, case_bp, unified_bp, api_bp, auth_bp, user_management_bp
+from routes import home_bp, kb_bp, kb_management_bp, case_bp, unified_bp, api_bp, auth_bp, user_management_bp, admin_bp, monitoring_bp
 import os
 from datetime import timedelta
 
@@ -251,6 +251,8 @@ app.register_blueprint(unified_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(user_management_bp)
+app.register_blueprint(admin_bp)
+app.register_blueprint(monitoring_bp)
 
 # 排除登录端点的 CSRF 保护（这些是公开接口）
 if csrf:
@@ -260,6 +262,10 @@ if csrf:
     csrf.exempt(auth_bp)
     csrf.exempt(user_management_bp)
     csrf.exempt(home_bp)  # 官网系统的公开接口（如联系表单）不需要 CSRF 保护
+    csrf.exempt(admin_bp)  # 统一管理后台使用 session 认证，不需要 CSRF 保护
+    csrf.exempt(monitoring_bp)  # 监控API不需要CSRF保护
+    csrf.exempt(admin_bp)  # 统一管理后台暂时不需要CSRF保护
+    csrf.exempt(monitoring_bp)  # 监控API不需要CSRF保护
 
 # 注册SocketIO事件
 register_socketio_events(socketio)
@@ -272,10 +278,50 @@ print(f"知识库系统: http://{config.FLASK_HOST}:{config.FLASK_PORT}/kb")
 print(f"工单系统: http://{config.FLASK_HOST}:{config.FLASK_PORT}/case")
 print(f"用户管理: http://{config.FLASK_HOST}:{config.FLASK_PORT}/user-mgmt/")
 print(f"API 文档: http://{config.FLASK_HOST}:{config.FLASK_PORT}/api/docs")
+print(f"监控仪表板: http://{config.FLASK_HOST}:{config.FLASK_PORT}/monitoring/")
 print("=" * 60)
+
+
+# 初始化监控服务
+from services.monitoring_service import init_monitoring_service
+from middlewares.monitoring_middleware import MonitoringMiddleware
+
+# 创建监控服务实例
+monitoring_config = {
+    'cpu_warning_threshold': float(os.getenv('CPU_WARNING_THRESHOLD', '70')),
+    'cpu_critical_threshold': float(os.getenv('CPU_CRITICAL_THRESHOLD', '90')),
+    'memory_warning_threshold': float(os.getenv('MEMORY_WARNING_THRESHOLD', '70')),
+    'memory_critical_threshold': float(os.getenv('MEMORY_CRITICAL_THRESHOLD', '85')),
+    'disk_warning_threshold': float(os.getenv('DISK_WARNING_THRESHOLD', '80')),
+    'disk_critical_threshold': float(os.getenv('DISK_CRITICAL_THRESHOLD', '90')),
+    'email_enabled': os.getenv('MONITORING_EMAIL_ENABLED', 'true').lower() == 'true',
+    'email_recipients': os.getenv('MONITORING_EMAIL_RECIPIENTS', ''),
+    'monitor_interval': int(os.getenv('MONITOR_INTERVAL', '60')),
+}
+
+monitoring_service = init_monitoring_service(monitoring_config)
+
+# 启动监控服务
+try:
+    monitoring_service.start()
+    print("监控服务已启动")
+except Exception as e:
+    print(f"监控服务启动失败: {e}")
+
+# 注册监控中间件
+try:
+    monitoring_middleware = MonitoringMiddleware(app)
+    print("监控中间件已注册")
+except Exception as e:
+    print(f"监控中间件注册失败: {e}")
 
 
 if __name__ == '__main__':
     # 使用socketio.run以支持WebSocket
-    socketio.run(app, host=config.FLASK_HOST, port=config.FLASK_PORT,
-                 debug=config.BaseConfig.DEBUG, allow_unsafe_werkzeug=True)
+    try:
+        socketio.run(app, host=config.FLASK_HOST, port=config.FLASK_PORT,
+                     debug=config.BaseConfig.DEBUG, allow_unsafe_werkzeug=True)
+    finally:
+        # 停止监控服务
+        monitoring_service.stop()
+        print("监控服务已停止")

@@ -8,62 +8,44 @@
 ## [未发布]
 
 ### 新增 (Added)
-- 完整的版本管理系统
-  - 语义化版本规范 (SemVer)
-  - Conventional Commits 提交规范
-  - Git 分支策略 (main/develop/feat/fix/hotfix)
-  - 发布流程和标签管理
-- GitHub Actions 自动化
-  - 自动同步到 Gitee 工作流
-  - 完整的 CI/CD 流水线
-- 云主机自动部署系统
-  - 部署脚本 (备份/更新/重启/回滚)
-  - Webhook 接收器
-  - 定时检测更新脚本 (每5分钟)
-  - 服务安装脚本 (systemd + cron)
-- 完善的文档体系
-  - 版本管理规范文档
-  - 版本管理快速参考指南
-  - 自动部署配置指南
-  - 仓库配置快速指南
-  - 配置检查清单
-  - 配置总结文档
-
-### 变更 (Changed)
-- 更新 `.gitignore` 添加部署相关忽略规则
-- 更新 README.md 添加版本管理和部署文档链接
-- 更新自动部署配置文档中的 Gitee 仓库路径
+- 统一管理后台 (`feat/unified-admin-dashboard`)
+  - 统一登录认证系统
+  - 用户管理模块
+    - 用户列表展示（支持分页和多条件搜索）
+    - 用户创建/编辑/删除功能
+    - 用户详情查看
+    - 统计信息卡片（总用户数、活跃用户、管理员、锁定用户）
+    - 登录记录查看（支持过滤和搜索）
+    - 密码复杂度验证和显示/隐藏切换
+  - 留言管理模块
+    - 留言列表展示（支持分页和状态筛选）
+    - 留言状态更新
+    - 留言删除功能
+  - 监控管理模块
+    - 系统概览仪表板
+    - 实时监控数据展示
+    - 告警列表
+  - 统一导航布局
+  - 基于角色的权限控制（RBAC）
+  - Session 超时管理（3小时）
+  - 登录日志记录
 
 ### 修复 (Fixed)
-- 修复 `scripts/check_deploy_config.py` 的编码问题 (Windows GBK 兼容)
-- 将 Unicode 符号替换为 ASCII 等效字符
-- 移除已废弃的 trilium-py 依赖，改用直接 API 调用
-  - 注释掉 `requirements.txt` 中的 trilium-py==0.8.5
-  - 注释掉 `check_dependencies.py` 中的 trilium_py 依赖检查
-  - 为所有使用 trilium-py 的代码添加 fallback 机制
-  - 修复 `routes/api_bp.py` 中 Trilium 测试连接的 ImportError 处理
-  - 修复 `routes/kb_bp.py` 中附件代理的 ImportError 处理
-  - 修复 `common/trilium_helper.py` 中递归获取笔记的 ImportError 处理
-  - 所有 Trilium 相关功能 现在支持在 trilium-py 未安装时通过 requests 直接调用 API
+- 修复用户管理界面搜索功能不工作的问题
+- 修复登录记录一直加载的问题
+  - 修复后端 cursor 类型为 DictCursor
+  - 修复 datetime 对象序列化为字符串
+  - 修复前端数据路径访问（response.data.logs）
+- 添加页面初始化时自动加载数据的调用
 
 ### 变更 (Changed)
-- 重构 CI/CD 流程，实现自动合并到 main 分支
-  - 更新 `.github/workflows/ci-cd.yml`：支持所有分支的 push 和 PR 触发
-  - 添加自动合并任务：PR 通过所有检查后自动合并到 main 分支
-  - 优化部署通知：支持 Webhook 和 SSH 两种方式
-  - 添加部署摘要：在 GitHub Actions 中显示部署信息
-- 新增 Development Helper 工作流
-  - 支持通过 GitHub Actions 手动创建 PR
-  - 支持配置自动合并选项
-- 增强 webhook 接收器功能
-  - 添加版本信息记录和查询 (`/webhook/version`)
-  - 添加部署日志查询 (`/webhook/logs`)
-  - 支持更详细的部署日志记录
-  - 兼容 GitHub Webhook 标准格式和 CI/CD 通知格式
-- 新增 CI/CD 快速参考文档 (`docs/CICD_QUICK_REFERENCE.md`)
-  - 完整的分支策略说明
-  - 详细的开发和部署工作流程
-  - 常见问题解答和快速命令参考
+- 优化用户管理界面搜索功能
+  - 支持状态选择时使用下拉框而非文本输入
+  - 添加清除搜索功能
+- 优化登录记录显示
+  - 添加客户端过滤功能（用户名、IP、状态）
+  - 添加数据属性支持过滤
+- 更新统一管理后台文档 (`docs/UNIFIED_ADMIN_DASHBOARD.md`)
 
 ---
 

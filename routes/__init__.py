@@ -10,6 +10,8 @@ from .unified_bp import unified_bp
 from .api_bp import api_bp
 from .auth_bp import auth_bp
 from .user_management_bp import user_management_bp
+from .monitoring_bp import monitoring_bp
+from .admin_bp import admin_bp
 
 __all__ = [
     'home_bp',
@@ -19,5 +21,7 @@ __all__ = [
     'unified_bp',
     'api_bp',
     'auth_bp',
-    'user_management_bp'
+    'user_management_bp',
+    'monitoring_bp',
+    'admin_bp'
 ]
