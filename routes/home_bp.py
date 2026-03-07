@@ -1,6 +1,5 @@
 """
 官网系统路由蓝图
-"""
 from flask import Blueprint, request, render_template, send_from_directory
 from datetime import datetime
 import os
@@ -124,7 +123,7 @@ def test_images():
 @home_bp.route('/view-messages')
 def view_messages():
     """留言管理页面"""
-    return render_template('home/admin_messages.html')
+    return render_template('home/message_management.html')
 
 
 @home_bp.route('/api/contact', methods=['POST'])
@@ -242,6 +241,18 @@ def contact():
                         logger.warning(f"邮箱 {data['email']} 已存在（用户: {existing_user['display_name']}），跳过创建")
                         user_created = False
                     else:
+                        # 检查用户名是否已存在，如果存在则添加随机后缀
+                        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                        username_exists = cursor.fetchone()
+
+                        if username_exists:
+                            # 添加随机后缀确保用户名唯一
+                            import random
+                            import string
+                            suffix = ''.join(random.choices(string.digits, k=4))
+                            username = f"{username}{suffix}"
+                            logger.info(f"用户名已存在，使用新用户名: {username}")
+
                         # 插入新用户（状态为inactive，角色为customer）
                         insert_sql = """
                         INSERT INTO users (
@@ -251,7 +262,7 @@ def contact():
                         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                         """
                         cursor.execute(insert_sql, (
-                            username,  # 使用姓名生成的用户名
+                            username,  # 使用姓名生成的用户名（可能带后缀）
                             password_hash,
                             'werkzeug',  # 密码类型
                             display_name,  # 使用原始姓名作为显示名称
@@ -433,4 +444,129 @@ def contact():
 @home_bp.route('/api/messages', methods=['GET'])
 def get_messages():
     """获取留言列表"""
-    return success_response(data={'messages': []}, message='查询成功')
+    try:
+        # 获取查询参数
+        status = request.args.get('status', '')  # pending/processed/completed
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 20))
+        keyword = request.args.get('keyword', '')
+
+        with db_connection('clouddoors_db') as conn:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            # 构建查询条件
+            where_clause = []
+            params = []
+
+            if status:
+                where_clause.append("status = %s")
+                params.append(status)
+
+            if keyword:
+                where_clause.append("(name LIKE %s OR email LIKE %s OR company_name LIKE %s OR message LIKE %s)")
+                params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
+
+            # 计算总数
+            count_sql = "SELECT COUNT(*) as total FROM `messages`"
+            if where_clause:
+                count_sql += " WHERE " + " AND ".join(where_clause)
+
+            cursor.execute(count_sql, params)
+            total_count = cursor.fetchone()['total']
+
+            # 获取留言列表
+            base_sql = "SELECT * FROM `messages`"
+            if where_clause:
+                base_sql += " WHERE " + " AND ".join(where_clause)
+            base_sql += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+
+            params.extend([page_size, (page - 1) * page_size])
+            cursor.execute(base_sql, params)
+            messages = cursor.fetchall()
+
+            return success_response(
+                data={
+                    'messages': messages,
+                    'total': total_count,
+                    'page': page,
+                    'page_size': page_size,
+                    'total_pages': (total_count + page_size - 1) // page_size
+                },
+                message=f'查询到 {len(messages)} 条留言'
+            )
+    except Exception as e:
+        logger.error(f"获取留言列表失败: {str(e)}", exc_info=True)
+        return server_error_response(f'查询失败: {str(e)}')
+
+
+@home_bp.route('/api/messages/<int:message_id>', methods=['PUT'])
+def update_message_status():
+    """更新留言状态"""
+    try:
+        data = request.get_json()
+
+        # 验证必填字段
+        if not data.get('status') or not data.get('notes'):
+            return validation_error_response(['状态和备注不能为空'])
+
+        # 验证状态值
+        valid_statuses = ['pending', 'processed', 'completed']
+        if data['status'] not in valid_statuses:
+            return error_response('无效的状态值', 400)
+
+        with db_connection('clouddoors_db') as conn:
+            cursor = conn.cursor()
+
+            # 检查留言是否存在
+            cursor.execute("SELECT id, status FROM `messages` WHERE id = %s", (message_id,))
+            message = cursor.fetchone()
+
+            if not message:
+                return error_response('留言不存在', 404)
+
+            # 更新留言状态
+            update_sql = """
+                UPDATE `messages` 
+                SET status = %s, 
+                    processed_by = %s, 
+                    updated_at = NOW()
+                WHERE id = %s
+            """
+            cursor.execute(update_sql, (
+                data['status'],
+                data.get('processed_by', 'system'),
+                message_id
+            ))
+
+            conn.commit()
+
+            return success_response(message='留言状态更新成功')
+
+    except Exception as e:
+        logger.error(f"更新留言状态失败: {str(e)}", exc_info=True)
+        return server_error_response(f'更新失败: {str(e)}')
+
+
+@home_bp.route('/api/messages/<int:message_id>', methods=['DELETE'])
+def delete_message():
+    """删除留言"""
+    try:
+        with db_connection('clouddoors_db') as conn:
+            cursor = conn.cursor()
+
+            # 检查留言是否存在
+            cursor.execute("SELECT id FROM `messages` WHERE id = %s", (message_id,))
+            message = cursor.fetchone()
+
+            if not message:
+                return error_response('留言不存在', 404)
+
+            # 删除留言
+            cursor.execute("DELETE FROM `messages` WHERE id = %s", (message_id,))
+            conn.commit()
+
+            return success_response(message='留言删除成功')
+
+    except Exception as e:
+        logger.error(f"删除留言失败: {str(e)}", exc_info=True)
+        return server_error_response(f'删除失败: {str(e)}')

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线留言管理 - 云户科技</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .stats-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+        .stats-card .count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .filter-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .message-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+        .message-card:hover {
+            transform: translateY(-2px);
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .message-info {
+            flex: 1;
+        }
+        .message-info label {
+            display: block;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        .message-info span {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-processed {
+            background: #d1e7dd;
+            color: #1b5e20;
+        }
+        .status-completed {
+            background: #198754;
+            color: white;
+        }
+        .message-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+        }
+        .message-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-action {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-process {
+            background: #667eea;
+            color: white;
+        }
+        .btn-process:hover {
+            background: #764ba2;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pagination button:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>在线留言管理</h1>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h3>📋 待处理</h3>
+                    <div class="count" id="pendingCount">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h3>✅ 已处理</h3>
+                    <div class="count" id="processedCount">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h3>📊 已完成</h3>
+                    <div class="count" id="completedCount">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h3>💬 全部留言</h3>
+                    <div class="count" id="totalCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label">状态筛选：</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">全部状态</option>
+                        <option value="pending">待处理</option>
+                        <option value="processed">已处理</option>
+                        <option value="completed">已完成</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">关键词搜索：</label>
+                    <input type="text" class="form-control" id="keywordFilter" placeholder="搜索姓名、邮箱、公司名称或留言内容...">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-action btn-process w-100" id="btnSearch">
+                        <i class="fas fa-search me-1"></i>搜索
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 留言列表 -->
+        <div id="messagesList"></div>
+
+        <!-- 分页 -->
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentStatus = '';
+        let currentKeyword = '';
+
+        // 加载留言列表
+        function loadMessages(page = 1) {
+            const status = $('#statusFilter').val();
+            const keyword = $('#keywordFilter').val();
+
+            const url = new URL('/api/messages', window.location.origin);
+            url.searchParams.set('status', status);
+            url.searchParams.set('page', page);
+            url.searchParams.set('page_size', 20);
+            if (keyword) {
+                url.searchParams.set('keyword', keyword);
+            }
+
+            fetch(url.toString())
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayMessages(data.messages);
+                        updatePagination(data);
+                        updateStats(data.messages);
+                    } else {
+                        alert('加载失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('加载失败，请稍后重试');
+                });
+        }
+
+        // 显示留言列表
+        function displayMessages(messages) {
+            const container = $('#messagesList');
+            container.empty();
+
+            if (messages.length === 0) {
+                container.html(`
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+                        <p class="text-muted">暂无留言记录</p>
+                    </div>
+                `);
+                return;
+            }
+
+            messages.forEach(msg => {
+                const statusClass = {
+                    'pending': 'status-pending',
+                    'processed': 'status-processed',
+                    'completed': 'status-completed'
+                }[msg.status] || 'status-pending';
+
+                const statusText = {
+                    'pending': '待处理',
+                    'processed': '已处理',
+                    'completed': '已完成'
+                }[msg.status] || '待处理';
+
+                const html = `
+                    <div class="message-card" data-id="${msg.id}">
+                        <div class="message-header">
+                            <div class="message-info">
+                                <label>📋 留言ID：</label>
+                                <span>#${msg.id}</span>
+                                <label>📅 提交时间：</label>
+                                <span>${formatDate(msg.created_at)}</span>
+                            </div>
+                            <div class="message-actions">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="message-info">
+                            <label>👤 申请人：</label>
+                            <span>${msg.name}</span>
+                            <label>📧 公司：</label>
+                            <span>${msg.company_name || '-'}</span>
+                        </div>
+                        <div class="message-info">
+                            <label>📧 邮箱：</label>
+                            <span>${msg.email}</span>
+                            ${msg.phone ? `<label>📞 电话：</label><span>${msg.phone}</span>` : ''}
+                        </div>
+                        <div class="message-content">
+                            ${msg.message}
+                        </div>
+                        <div class="message-actions">
+                            ${msg.status === 'pending' ? `
+                                <button class="btn btn-action btn-process" onclick="processMessage(${msg.id}, 'processed')">
+                                    <i class="fas fa-check me-1"></i>标记为已处理
+                                </button>
+                                <button class="btn btn-action btn-process" onclick="processMessage(${msg.id}, 'completed')">
+                                    <i class="fas fa-check-double me-1"></i>标记为已完成
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-action btn-delete" onclick="deleteMessage(${msg.id})">
+                                <i class="fas fa-trash me-1"></i>删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.append(html);
+            });
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // 更新分页
+        function updatePagination(data) {
+            const totalPages = data.total_pages || 1;
+            const currentPage = data.page || 1;
+            let html = '';
+
+            if (totalPages > 1) {
+                // 上一页
+                html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="loadMessages(${currentPage - 1})">`;
+                html += `<i class="fas fa-chevron-left"></i> 上一页`;
+                html += `</button>`;
+
+                // 页码
+                html += `<span style="padding: 0 10px; font-weight: 500;">第 ${currentPage} / ${totalPages} 页</span>`;
+
+                // 下一页
+                html += `<button ${currentPage >= totalPages ? 'disabled' : ''} onclick="loadMessages(${currentPage + 1})">`;
+                html += `下一页<i class="fas fa-chevron-right"></i>`;
+                html += `</button>`;
+            } else {
+                html = '<span style="color: #6c757d; padding: 20px;">暂无更多数据</span>';
+            }
+
+            $('#pagination').html(html);
+        }
+
+        // 更新统计
+        function updateStats(messages) {
+            const pending = messages.filter(m => m.status === 'pending').length;
+            const processed = messages.filter(m => m.status === 'processed').length;
+            const completed = messages.filter(m => m.status === 'completed').length;
+
+            $('#pendingCount').text(pending);
+            $('#processedCount').text(processed);
+            $('#completedCount').text(completed);
+            $('#totalCount').text(messages.length);
+        }
+
+        // 处理留言（标记状态）
+        function processMessage(messageId, status) {
+            if (!confirm('确定要更新留言状态吗？')) return;
+
+            const notes = prompt('请输入处理备注（可选）：', '');
+
+            fetch(`/api/messages/${messageId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: status,
+                    notes: notes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    loadMessages(currentPage);
+                } else {
+                    alert('操作失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('操作失败，请稍后重试');
+            });
+        }
+
+        // 删除留言
+        function deleteMessage(messageId) {
+            if (!confirm('确定要删除这条留言吗？此操作不可撤销！')) return;
+
+            fetch(`/api/messages/${messageId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    loadMessages(currentPage);
+                } else {
+                    alert('操作失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('操作失败，请稍后重试');
+            });
+        }
+
+        // 搜索按钮
+        $('#btnSearch').on('click', function() {
+            currentPage = 1;
+            loadMessages(1);
+        });
+
+        // 状态筛选改变
+        $('#statusFilter').on('change', function() {
+            currentPage = 1;
+            loadMessages(1);
+        });
+
+        // 关键词搜索（按回车触发）
+        $('#keywordFilter').on('keypress', function(e) {
+            if (e.which === 13) {
+                currentPage = 1;
+                loadMessages(1);
+            }
+        });
+
+        // 页面加载时获取留言列表
+        $(document).ready(function() {
+            loadMessages(1);
+        });
+    </script>
+</body>
+</html>
