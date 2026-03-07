@@ -1,5 +1,6 @@
 """
 官网系统路由蓝图
+"""
 from flask import Blueprint, request, render_template, send_from_directory
 from datetime import datetime
 import os
@@ -435,6 +436,25 @@ def contact():
         except Exception as e:
             logger.error(f"邮件发送异常: {str(e)}", exc_info=True)
 
+        # 保存留言到 messages 表
+        try:
+            with db_connection('home') as conn:
+                cursor = conn.cursor()
+                insert_message_sql = """
+                INSERT INTO messages (name, email, message, status)
+                VALUES (%s, %s, %s, %s)
+                """
+                cursor.execute(insert_message_sql, (
+                    data['name'],
+                    data['email'],
+                    data['message'],
+                    'pending'
+                ))
+                conn.commit()
+                logger.info(f"留言已保存到 messages 表: {data['name']} - {data['email']}")
+        except Exception as e:
+            logger.error(f"保存留言到 messages 表失败: {str(e)}", exc_info=True)
+
         return success_response(message='留言提交成功！我们会尽快与您联系。')
     except Exception as e:
         log_exception(logger, "提交联系表单失败")
@@ -451,7 +471,7 @@ def get_messages():
         page_size = int(request.args.get('page_size', 20))
         keyword = request.args.get('keyword', '')
 
-        with db_connection('clouddoors_db') as conn:
+        with db_connection('home') as conn:
             cursor = conn.cursor(pymysql.cursors.DictCursor)
 
             # 构建查询条件
@@ -463,8 +483,8 @@ def get_messages():
                 params.append(status)
 
             if keyword:
-                where_clause.append("(name LIKE %s OR email LIKE %s OR company_name LIKE %s OR message LIKE %s)")
-                params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
+                where_clause.append("(name LIKE %s OR email LIKE %s OR message LIKE %s)")
+                params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
 
             # 计算总数
             count_sql = "SELECT COUNT(*) as total FROM `messages`"
@@ -500,7 +520,7 @@ def get_messages():
 
 
 @home_bp.route('/api/messages/<int:message_id>', methods=['PUT'])
-def update_message_status():
+def update_message_status(message_id):
     """更新留言状态"""
     try:
         data = request.get_json()
@@ -514,7 +534,7 @@ def update_message_status():
         if data['status'] not in valid_statuses:
             return error_response('无效的状态值', 400)
 
-        with db_connection('clouddoors_db') as conn:
+        with db_connection('home') as conn:
             cursor = conn.cursor()
 
             # 检查留言是否存在
@@ -526,15 +546,12 @@ def update_message_status():
 
             # 更新留言状态
             update_sql = """
-                UPDATE `messages` 
-                SET status = %s, 
-                    processed_by = %s, 
-                    updated_at = NOW()
+                UPDATE `messages`
+                SET status = %s
                 WHERE id = %s
             """
             cursor.execute(update_sql, (
                 data['status'],
-                data.get('processed_by', 'system'),
                 message_id
             ))
 
@@ -548,10 +565,10 @@ def update_message_status():
 
 
 @home_bp.route('/api/messages/<int:message_id>', methods=['DELETE'])
-def delete_message():
+def delete_message(message_id):
     """删除留言"""
     try:
-        with db_connection('clouddoors_db') as conn:
+        with db_connection('home') as conn:
             cursor = conn.cursor()
 
             # 检查留言是否存在

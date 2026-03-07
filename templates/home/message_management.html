@@ -235,28 +235,34 @@
             const status = $('#statusFilter').val();
             const keyword = $('#keywordFilter').val();
 
-            const url = new URL('/api/messages', window.location.origin);
-            url.searchParams.set('status', status);
-            url.searchParams.set('page', page);
-            url.searchParams.set('page_size', 20);
-            if (keyword) {
-                url.searchParams.set('keyword', keyword);
-            }
+            // 构建查询参数
+            const params = new URLSearchParams();
+            if (status) params.append('status', status);
+            params.append('page', page);
+            params.append('page_size', 20);
+            if (keyword) params.append('keyword', keyword);
 
-            fetch(url.toString())
-                .then(response => response.json())
+            const url = `/api/messages?${params.toString()}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
-                        displayMessages(data.messages);
-                        updatePagination(data);
-                        updateStats(data.messages);
+                        displayMessages(data.data.messages);
+                        updatePagination(data.data);
+                        updateStats(data.data.messages);
                     } else {
-                        alert('加载失败：' + data.message);
+                        alert('加载失败：' + (data.message || '未知错误'));
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('加载失败，请稍后重试');
+                    alert('加载失败，请稍后重试: ' + error.message);
                 });
         }
 
@@ -304,13 +310,8 @@
                         <div class="message-info">
                             <label>👤 申请人：</label>
                             <span>${msg.name}</span>
-                            <label>📧 公司：</label>
-                            <span>${msg.company_name || '-'}</span>
-                        </div>
-                        <div class="message-info">
                             <label>📧 邮箱：</label>
                             <span>${msg.email}</span>
-                            ${msg.phone ? `<label>📞 电话：</label><span>${msg.phone}</span>` : ''}
                         </div>
                         <div class="message-content">
                             ${msg.message}
