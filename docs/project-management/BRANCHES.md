@@ -67,6 +67,70 @@
   - `routes/user_management_bp.py` (搜索API)
   - `templates/user_management/dashboard.html` (前端界面和交互)
 
+### feat/monitoring-alerting
+- **用途**: 系统监控与告警功能
+- **状态**: 基础功能已完成，待继续开发
+- **说明**:
+  - 实现系统监控服务 (monitoring_service.py)
+    - 系统资源监控 (CPU、内存、磁盘、网络)
+    - 告警规则与多级告警 (warning/critical)
+    - 邮件通知支持
+    - API性能追踪
+  - 实现监控中间件 (monitoring_middleware.py)
+    - 请求响应时间追踪
+    - 错误率统计
+    - 性能装饰器
+  - 实现监控路由 (monitoring_bp.py)
+    - 监控仪表板页面
+    - 实时指标 API
+    - 告警历史 API
+    - 健康检查端点
+  - 更新依赖文件 (psutil==5.9.6, Flask-Login==0.6.3)
+  - 添加监控文档 (MONITORING_QUICK_START.md)
+- **待完善**:
+  - 添加用户认证和权限控制
+  - 优化邮件通知模板
+  - 添加历史数据持久化
+  - 支持自定义监控指标
+- **相关文件**:
+  - `services/monitoring_service.py`
+  - `middlewares/monitoring_middleware.py`
+  - `routes/monitoring_bp.py`
+  - `templates/monitoring/dashboard.html`
+
+### feat/unified-admin-dashboard
+- **用途**: 统一管理后台
+- **状态**: ✅ 已完成
+- **说明**:
+  - 创建统一管理路由 (admin_bp.py)
+  - 创建管理后台模板
+    - base.html: 统一布局和导航
+    - dashboard.html: 仪表板页面
+    - users.html: 用户管理页面
+    - messages.html: 留言管理页面
+    - monitoring.html: 监控管理页面
+    - login.html: 登录页面
+  - 整合三个核心模块
+    - 用户管理 (UI 和 API 已完成)
+    - 留言管理 (UI 和 API 已完成)
+    - 监控管理 (已完成)
+  - 实现统一登录认证和权限控制
+- **已实现功能**:
+  1. ✅ 用户管理 CRUD API（列表/创建/更新/删除）
+  2. ✅ 留言管理 CRUD API（列表/更新状态/删除）
+  3. ✅ 统一登录认证（基于 session）
+  4. ✅ 权限控制（基于 role，仅 admin 可访问）
+- **相关文件**:
+  - `routes/admin_bp.py`
+  - `templates/admin/`
+  - `docs/UNIFIED_ADMIN_DASHBOARD.md`
+- **访问地址**:
+  - 管理后台首页: `/admin/`
+  - 登录页面: `/admin/login`
+  - 用户管理: `/admin/users`
+  - 留言管理: `/admin/messages`
+  - 监控管理: `/admin/monitoring`
+
 ---
 
 ## 其他分支
@@ -104,6 +168,9 @@
 
 ## 最后更新
 
-- **更新时间**: 2026-03-06
+- **更新时间**: 2026-03-07
 - **更新人**: AI Assistant
-- **备注**: 完成用户管理界面功能开发，已合并到main分支
+- **备注**:
+  - 添加 feat/monitoring-alerting 分支（系统监控与告警）
+  - 添加 feat/unified-admin-dashboard 分支（统一管理后台）
+  - 统一管理后台功能已完成，包含用户管理、留言管理、监控管理三大模块
