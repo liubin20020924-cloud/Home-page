@@ -169,27 +169,21 @@ def delete_user(user_id):
 
             # 检查用户是否存在
             cursor.execute("SELECT id, username, status FROM `users` WHERE id = %s", (user_id,))
-            user = cursor.fetchone()
+            user_record = cursor.fetchone()
 
-            if not user:
+            if not user_record:
                 return error_response('用户不存在', 404)
 
-            # 不删除用户，而是锁定用户（防止session复用）
-            cursor.execute("UPDATE `users` SET status = 'locked', updated_at = NOW() WHERE id = %s", (user_id,))
+            # 获取用户名用于日志（使用字典键访问）
+            username = user_record.get('username', f"user_{user_id}")
+
+            # 删除用户记录
+            cursor.execute("DELETE FROM `users` WHERE id = %s", (user_id,))
             conn.commit()
             cursor.close()
 
-        # 清除该用户的所有session（如果可能）
-        try:
-            from flask import session as session_class
-            if hasattr(session_class, 'clear_all'):
-                # 使用session.clear_all()清除所有session
-                pass
-        except:
-            pass
-
-        logger.info(f"锁定用户 {user_id} 成功，而不是删除（防止session复用）")
-        return success_response(message='用户已锁定')
+        logger.info(f"删除用户 {user_id} ({username}) 成功")
+        return success_response(message='用户已删除')
 
     except Exception as e:
         log_exception(logger, "删除用户失败")

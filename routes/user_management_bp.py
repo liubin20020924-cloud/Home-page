@@ -6,6 +6,7 @@ from common.unified_auth import get_current_user, authenticate_user
 from common.database_context import db_connection
 from common.logger import logger
 from datetime import datetime
+import pymysql
 
 user_management_bp = Blueprint('user_management', __name__, url_prefix='/user-mgmt')
 
@@ -116,13 +117,44 @@ def dashboard():
                              error_message="权限不足，只有管理员才能访问此页面",
                              error_code=403), 403
 
+    # 获取搜索参数
+    search_type = request.args.get('search_type', '')  # username/email/role/status/company
+    search_keyword = request.args.get('search', '')
+
     try:
         with db_connection('kb') as conn:
             import pymysql
             cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-            # 获取用户列表
-            cursor.execute("SELECT * FROM `users` ORDER BY created_at DESC")
+            # 构建查询条件
+            where_clause = []
+            params = []
+
+            if search_type and search_keyword:
+                search_keyword = f"%{search_keyword}%"
+                if search_type == 'username':
+                    where_clause.append("username LIKE %s")
+                    params.append(search_keyword)
+                elif search_type == 'email':
+                    where_clause.append("email LIKE %s")
+                    params.append(search_keyword)
+                elif search_type == 'role':
+                    where_clause.append("role = %s")
+                    params.append(search_keyword)
+                elif search_type == 'status':
+                    where_clause.append("status = %s")
+                    params.append(search_keyword)
+                elif search_type == 'company':
+                    where_clause.append("company_name LIKE %s")
+                    params.append(search_keyword)
+
+            # 构建 SQL
+            base_sql = "SELECT * FROM `users`"
+            if where_clause:
+                base_sql += " WHERE " + " AND ".join(where_clause)
+            base_sql += " ORDER BY created_at DESC"
+
+            cursor.execute(base_sql, params)
             users = cursor.fetchall()
 
             # 获取最近登录日志
@@ -139,7 +171,9 @@ def dashboard():
                                  users=users,
                                  login_logs=login_logs,
                                  total_count=len(users) if users else 0,
-                                 current_user=user)
+                                 current_user=user,
+                                 search_type=search_type,
+                                 search=search_keyword)
     except Exception as e:
         logger.error(f"加载用户管理仪表盘失败: {str(e)}")
         return render_template('user_management/dashboard.html',
@@ -159,6 +193,60 @@ def check_login():
         return success_response(data={'user': user}, message='已登录且是管理员')
     from common.response import unauthorized_response
     return unauthorized_response(message='未登录或不是管理员')
+
+
+@user_management_bp.route('/api/search-users')
+def search_users():
+    """搜索用户列表API（用于AJAX请求）"""
+    from common.response import success_response, error_response
+
+    # 检查登录状态
+    user = get_current_user()
+    if not user or user.get('role') != 'admin':
+        return error_response(message='未授权访问', code=401)
+
+    # 获取搜索参数
+    search_type = request.args.get('search_type', '')
+    search_keyword = request.args.get('search', '')
+
+    try:
+        with db_connection('kb') as conn:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            # 构建查询条件
+            where_clause = []
+            params = []
+
+            if search_type and search_keyword:
+                if search_type in ['username', 'email', 'company']:
+                    search_keyword = f"%{search_keyword}%"
+                    field = 'username' if search_type == 'username' else ('email' if search_type == 'email' else 'company_name')
+                    where_clause.append(f"{field} LIKE %s")
+                    params.append(search_keyword)
+                elif search_type in ['role', 'status']:
+                    where_clause.append(f"{search_type} = %s")
+                    params.append(search_keyword)
+
+            # 构建 SQL
+            base_sql = "SELECT id, username, display_name, email, phone, role, status, company_name, last_login, created_at FROM `users`"
+            if where_clause:
+                base_sql += " WHERE " + " AND ".join(where_clause)
+            base_sql += " ORDER BY created_at DESC"
+
+            cursor.execute(base_sql, params)
+            users = cursor.fetchall()
+
+            # 格式化日期时间为字符串
+            for u in users:
+                if u.get('last_login'):
+                    u['last_login'] = u['last_login'].strftime('%Y-%m-%d %H:%M:%S')
+                if u.get('created_at'):
+                    u['created_at'] = u['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+
+            return success_response(data={'users': users}, message=f'找到 {len(users)} 个用户')
+    except Exception as e:
+        logger.error(f"搜索用户失败: {str(e)}", exc_info=True)
+        return error_response(message=f'搜索失败: {str(e)}')
 
 
 

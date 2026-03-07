@@ -446,6 +446,41 @@
                         </button>
                     </div>
 
+                    <!-- 搜索栏 -->
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <select class="form-select" id="searchType">
+                                <option value="" {% if not search_type %}selected{% endif %}>全部</option>
+                                <option value="username" {% if search_type == 'username' %}selected{% endif %}>用户名</option>
+                                <option value="email" {% if search_type == 'email' %}selected{% endif %}>邮箱</option>
+                                <option value="role" {% if search_type == 'role' %}selected{% endif %}>角色</option>
+                                <option value="status" {% if search_type == 'status' %}selected{% endif %}>状态</option>
+                                <option value="company" {% if search_type == 'company' %}selected{% endif %}>公司名称</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="keywordContainer">
+                            <input type="text" class="form-control" id="searchKeyword" placeholder="请输入搜索关键词..." value="{{ search or '' }}">
+                        </div>
+                        <div class="col-md-2" id="statusDropdownContainer" style="display: none;">
+                            <select class="form-select" id="searchStatus">
+                                <option value="">全部状态</option>
+                                <option value="active" {% if search == 'active' %}selected{% endif %}>正常</option>
+                                <option value="inactive" {% if search == 'inactive' %}selected{% endif %}>禁用</option>
+                                <option value="locked" {% if search == 'locked' %}selected{% endif %}>锁定</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary w-100 text-nowrap" id="btnSearch">
+                                <i class="fas fa-search me-1"></i>搜索
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-secondary w-100 text-nowrap" id="btnClearSearch">
+                                <i class="fas fa-times me-1"></i>清除
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="table-container">
                         <table class="table table-hover">
                             <thead>
@@ -1303,6 +1338,553 @@
             $('#filterUsername, #filterIp').on('keypress', function(e) {
                 if (e.which === 13) {
                     $('#applyFilter').click();
+                }
+            });
+
+            // 用户列表搜索功能
+            $('#btnSearch').on('click', function() {
+                const searchType = $('#searchType').val();
+                const searchKeyword = $('#searchKeyword').val();
+
+                console.log('搜索参数:', { searchType, searchKeyword });
+
+                // 使用AJAX获取过滤后的用户列表
+                $.ajax({
+                    url: '/user-mgmt/api/search-users',
+                    method: 'GET',
+                    data: {
+                        search_type: searchType,
+                        search: searchKeyword
+                    },
+                    success: function(response) {
+                        console.log('API响应:', response);
+                        console.log('response.success:', response.success);
+                        console.log('response.data:', response.data);
+                        console.log('response.users:', response.users);
+
+                        if (response.success) {
+                            // 更新用户列表
+                            const usersTable = $('table.table tbody');
+                            usersTable.empty();
+
+                            // 尝试从不同位置获取用户数据
+                            const users = response.users || response.data?.users || [];
+                            console.log('提取到的用户数据:', users);
+                            console.log('用户数据类型:', typeof users);
+                            console.log('是否为数组:', Array.isArray(users));
+                            console.log('JSON字符串化:', JSON.stringify(users));
+
+                            if (Array.isArray(users) && users.length > 0) {
+                                console.log('找到用户数量:', users.length);
+
+                                // 先清空表格
+                                usersTable.empty();
+
+                                users.forEach(function(user, index) {
+                                    try {
+                                        console.log(`处理第 ${index} 个用户:`, user);
+                                        console.log(`用户 ID:`, user.id);
+                                        console.log(`用户 username:`, user.username);
+                                        console.log(`完整用户对象:`, JSON.stringify(user));
+
+                                        // 安全获取用户名首字母
+                                        const username = user.username || '';
+                                        const avatarText = username ? username[0].toUpperCase() : '?';
+
+                                        // 构建 HTML
+                                        const row = `
+                                            <tr data-user-id="${user.id}">
+                                                <td>${user.id}</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar me-2">
+                                                            ${avatarText}
+                                                        </div>
+                                                        <div>
+                                                            <strong>${username}</strong>
+                                                            ${user.display_name ? `<small class="d-block text-muted">${user.display_name}</small>` : ''}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>${user.display_name || '-'}</td>
+                                                <td>${user.email || '-'}</td>
+                                                <td>${user.phone || '-'}</td>
+                                                <td>
+                                                    <span class="status-badge role-${user.role}">
+                                                        ${user.role === 'admin' ? '管理员' : (user.role === 'user' ? '用户' : (user.role === 'customer' ? '客户' : user.role))}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="status-badge status-${user.status}">
+                                                        ${user.status === 'active' ? '正常' : (user.status === 'inactive' ? '禁用' : (user.status === 'locked' ? '锁定' : user.status))}
+                                                    </span>
+                                                </td>
+                                                <td>${user.company_name || '-'}</td>
+                                                <td>
+                                                    <div class="action-buttons">
+                                                        <button class="btn btn-sm btn-info btn-view-user"
+                                                                data-user-id="${user.id}"
+                                                                data-username="${username}"
+                                                                data-display-name="${user.display_name || ''}"
+                                                                data-email="${user.email || ''}"
+                                                                data-phone="${user.phone || ''}"
+                                                                data-company-name="${user.company_name || ''}"
+                                                                data-role="${user.role}"
+                                                                data-status="${user.status}"
+                                                                data-last-login="${user.last_login || ''}"
+                                                                data-created-at="${user.created_at || ''}">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-primary btn-edit-user"
+                                                                data-user-id="${user.id}"
+                                                                data-username="${username}"
+                                                                data-display-name="${user.display_name || ''}"
+                                                                data-email="${user.email || ''}"
+                                                                data-phone="${user.phone || ''}"
+                                                                data-company-name="${user.company_name || ''}"
+                                                                data-role="${user.role}"
+                                                                data-status="${user.status}">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        ${username !== 'admin' ? `
+                                                        <button class="btn btn-sm btn-outline-danger btn-delete-user"
+                                                                data-user-id="${user.id}"
+                                                                data-username="${username}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                        ` : ''}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                        usersTable.append(row);
+                                        console.log(`第 ${index} 个用户已添加到表格`);
+                                    } catch (e) {
+                                        console.error(`处理第 ${index} 个用户时出错:`, e);
+                                    }
+                                });
+
+                                console.log('用户列表已更新，当前表格行数:', usersTable.find('tr').length);
+
+                                // 更新统计数据
+                                $('#totalUsers').text(users.length);
+                                const activeUsers = users.filter(u => u.status === 'active').length;
+                                $('#activeUsers').text(activeUsers);
+                                const adminUsers = users.filter(u => u.role === 'admin').length;
+                                $('#adminUsers').text(adminUsers);
+                                const lockedUsers = users.filter(u => u.status === 'locked').length;
+                                $('#lockedUsers').text(lockedUsers);
+
+                                // 更新URL参数但不刷新页面
+                                const url = new URL(window.location.href);
+                                if (searchKeyword.trim()) {
+                                    url.searchParams.set('search_type', searchType);
+                                    url.searchParams.set('search', searchKeyword);
+                                } else {
+                                    url.searchParams.delete('search_type');
+                                    url.searchParams.delete('search');
+                                }
+                                window.history.pushState({}, '', url.toString());
+
+                                showMessage(`找到 ${users.length} 个用户`, 'success');
+                            } else {
+                                console.log('没有找到用户，users:', users);
+                                usersTable.append(`
+                                    <tr>
+                                        <td colspan="9" class="text-center py-4 text-muted">
+                                            <i class="fas fa-search fa-2x mb-3"></i>
+                                            <p>没有找到匹配的用户</p>
+                                        </td>
+                                    </tr>
+                                `);
+                                $('#totalUsers').text('0');
+                                $('#activeUsers').text('0');
+                                $('#adminUsers').text('0');
+                                $('#lockedUsers').text('0');
+                                showMessage('没有找到匹配的用户', 'info');
+                            }
+                        } else {
+                            console.error('响应不成功:', response);
+                            showMessage(response.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('AJAX错误:', xhr);
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showMessage('搜索失败: ' + xhr.responseJSON.message, 'error');
+                        } else {
+                            showMessage('网络错误，请稍后重试', 'error');
+                        }
+                    }
+                });
+            });
+
+            // 清除搜索功能
+            $('#btnClearSearch').on('click', function() {
+                // 清空输入框
+                $('#searchType').val('');
+                $('#searchKeyword').val('');
+
+                console.log('清除搜索，获取全部用户');
+
+                // 使用AJAX获取全部用户列表
+                $.ajax({
+                    url: '/user-mgmt/api/search-users',
+                    method: 'GET',
+                    data: {
+                        search_type: '',
+                        search: ''
+                    },
+                    success: function(response) {
+                        console.log('清除搜索API响应:', response);
+                        console.log('response.success:', response.success);
+                        console.log('response.users:', response.users);
+                        console.log('response.users 类型:', typeof response.users);
+                        console.log('response.users 长度:', response.users ? response.users.length : 'undefined');
+
+                        if (response.success) {
+                            // 更新用户列表
+                            const usersTable = $('table.table tbody');
+                            usersTable.empty();
+
+                            const users = response.users;
+                            console.log('开始处理用户列表，users:', users);
+
+                            if (users && Array.isArray(users) && users.length > 0) {
+                                console.log('清除后找到用户数量:', users.length);
+                                users.forEach(function(user, index) {
+                                    console.log(`处理第 ${index} 个用户:`, user);
+                                    const row = `
+                                        <tr data-user-id="${user.id}">
+                                            <td>${user.id}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="user-avatar me-2">
+                                                        ${user.username[0].toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <strong>${user.username}</strong>
+                                                        ${user.display_name ? `<small class="d-block text-muted">${user.display_name}</small>` : ''}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>${user.display_name || '-'}</td>
+                                            <td>${user.email || '-'}</td>
+                                            <td>${user.phone || '-'}</td>
+                                            <td>
+                                                <span class="status-badge role-${user.role}">
+                                                    ${user.role === 'admin' ? '管理员' : (user.role === 'user' ? '用户' : (user.role === 'customer' ? '客户' : user.role))}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge status-${user.status}">
+                                                    ${user.status === 'active' ? '正常' : (user.status === 'inactive' ? '禁用' : (user.status === 'locked' ? '锁定' : user.status))}
+                                                </span>
+                                            </td>
+                                            <td>${user.company_name || '-'}</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-sm btn-info btn-view-user"
+                                                            data-user-id="${user.id}"
+                                                            data-username="${user.username}"
+                                                            data-display-name="${user.display_name || ''}"
+                                                            data-email="${user.email || ''}"
+                                                            data-phone="${user.phone || ''}"
+                                                            data-company-name="${user.company_name || ''}"
+                                                            data-role="${user.role}"
+                                                            data-status="${user.status}"
+                                                            data-last-login="${user.last_login || ''}"
+                                                            data-created-at="${user.created_at || ''}">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-primary btn-edit-user"
+                                                            data-user-id="${user.id}"
+                                                            data-username="${user.username}"
+                                                            data-display-name="${user.display_name || ''}"
+                                                            data-email="${user.email || ''}"
+                                                            data-phone="${user.phone || ''}"
+                                                            data-company-name="${user.company_name || ''}"
+                                                            data-role="${user.role}"
+                                                            data-status="${user.status}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    ${user.username !== 'admin' ? `
+                                                    <button class="btn btn-sm btn-outline-danger btn-delete-user"
+                                                            data-user-id="${user.id}"
+                                                            data-username="${user.username}">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    ` : ''}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    usersTable.append(row);
+                                });
+
+                                console.log('用户列表已更新，当前表格行数:', usersTable.find('tr').length);
+
+                                // 更新统计数据
+                                $('#totalUsers').text(users.length);
+                                const activeUsers = users.filter(u => u.status === 'active').length;
+                                $('#activeUsers').text(activeUsers);
+                                const adminUsers = users.filter(u => u.role === 'admin').length;
+                                $('#adminUsers').text(adminUsers);
+                                const lockedUsers = users.filter(u => u.status === 'locked').length;
+                                $('#lockedUsers').text(lockedUsers);
+
+                                // 清除URL参数
+                                const url = new URL(window.location.href);
+                                url.searchParams.delete('search_type');
+                                url.searchParams.delete('search');
+                                window.history.pushState({}, '', url.toString());
+
+                                showMessage('已清除搜索条件，显示全部用户', 'success');
+                            } else {
+                                console.log('清除后没有找到用户，response.users:', response.users);
+                                usersTable.append(`
+                                    <tr>
+                                        <td colspan="9" class="text-center py-4 text-muted">
+                                            <i class="fas fa-inbox fa-2x mb-3"></i>
+                                            <p>没有找到用户</p>
+                                        </td>
+                                    </tr>
+                                `);
+                                $('#totalUsers').text('0');
+                                $('#activeUsers').text('0');
+                                $('#adminUsers').text('0');
+                                $('#lockedUsers').text('0');
+                                showMessage('没有找到用户', 'warning');
+                            }
+                        } else {
+                            console.error('响应不成功:', response);
+                            showMessage(response.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('清除搜索AJAX错误:', xhr);
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showMessage('清除失败: ' + xhr.responseJSON.message, 'error');
+                        } else {
+                            showMessage('网络错误，请稍后重试', 'error');
+                        }
+                    }
+                });
+            });
+
+            // 用户列表搜索功能
+            function searchUsers() {
+                const searchType = $('#searchType').val();
+                let searchKeyword = $('#searchKeyword').val();
+
+                // 如果选择"状态"，使用状态下拉选择
+                if (searchType === 'status') {
+                    searchKeyword = $('#searchStatus').val();
+                }
+
+                // 如果选择"全部"，忽略搜索关键词
+                if (!searchType) {
+                    searchKeyword = '';
+                }
+
+                $.ajax({
+                    url: '/user-mgmt/api/search-users',
+                    method: 'GET',
+                    data: {
+                        search_type: searchType,
+                        search: searchKeyword
+                    },
+                    success: function(response) {
+                        updateUsersTable(response);
+                        if (searchKeyword.trim()) {
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('search_type', searchType);
+                            url.searchParams.set('search', searchKeyword);
+                            window.history.pushState({}, '', url.toString());
+                        }
+                    },
+                    error: function(xhr) {
+                        showMessage('搜索失败', 'error');
+                    }
+                });
+            }
+
+            // 清除搜索
+            function clearSearch() {
+                $('#searchType').val('');
+                $('#searchKeyword').val('');
+
+                $.ajax({
+                    url: '/user-mgmt/api/search-users',
+                    method: 'GET',
+                    success: function(response) {
+                        updateUsersTable(response);
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('search_type');
+                        url.searchParams.delete('search');
+                        window.history.pushState({}, '', url.toString());
+                        showMessage('已清除搜索条件', 'success');
+                    },
+                    error: function(xhr) {
+                        showMessage('清除失败', 'error');
+                    }
+                });
+            }
+
+            // 更新用户表格
+            function updateUsersTable(response) {
+                const usersTable = $('table.table tbody');
+                const users = response.data?.users || [];
+
+                usersTable.empty();
+
+                if (users.length === 0) {
+                    usersTable.append(`
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                <i class="fas fa-search fa-2x mb-3"></i>
+                                <p>没有找到匹配的用户</p>
+                            </td>
+                        </tr>
+                    `);
+                    $('#totalUsers').text('0');
+                    $('#activeUsers').text('0');
+                    $('#adminUsers').text('0');
+                    $('#lockedUsers').text('0');
+                    return;
+                }
+
+                users.forEach(function(user) {
+                    const row = createUserRow(user);
+                    usersTable.append(row);
+                });
+
+                // 更新统计
+                $('#totalUsers').text(users.length);
+                $('#activeUsers').text(users.filter(u => u.status === 'active').length);
+                $('#adminUsers').text(users.filter(u => u.role === 'admin').length);
+                $('#lockedUsers').text(users.filter(u => u.status === 'locked').length);
+            }
+
+            // 创建用户行
+            function createUserRow(user) {
+                const username = user.username || '';
+                const displayName = user.display_name || '';
+                const email = user.email || '';
+                const phone = user.phone || '';
+                const companyName = user.company_name || '';
+                const role = user.role || '';
+                const status = user.status || '';
+
+                const roleText = role === 'admin' ? '管理员' : (role === 'user' ? '用户' : role);
+                const statusText = status === 'active' ? '正常' : (status === 'inactive' ? '禁用' : status);
+
+                return `
+                    <tr data-user-id="${user.id}">
+                        <td>${user.id}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar me-2">
+                                    ${username.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <strong>${username}</strong>
+                                    ${displayName ? `<small class="d-block text-muted">${displayName}</small>` : ''}
+                                </div>
+                            </div>
+                        </td>
+                        <td>${displayName || '-'}</td>
+                        <td>${email || '-'}</td>
+                        <td>${phone || '-'}</td>
+                        <td>
+                            <span class="status-badge role-${role}">
+                                ${roleText}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${status}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td>${companyName || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-info btn-view-user"
+                                        data-user-id="${user.id}"
+                                        data-username="${username}"
+                                        data-display-name="${displayName}"
+                                        data-email="${email}"
+                                        data-phone="${phone}"
+                                        data-company-name="${companyName}"
+                                        data-role="${role}"
+                                        data-status="${status}"
+                                        data-last-login="${user.last_login || ''}"
+                                        data-created-at="${user.created_at || ''}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary btn-edit-user"
+                                        data-user-id="${user.id}"
+                                        data-username="${username}"
+                                        data-display-name="${displayName}"
+                                        data-email="${email}"
+                                        data-phone="${phone}"
+                                        data-company-name="${companyName}"
+                                        data-role="${role}"
+                                        data-status="${status}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${username !== 'admin' ? `
+                                <button class="btn btn-sm btn-outline-danger btn-delete-user"
+                                        data-user-id="${user.id}"
+                                        data-username="${username}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // 搜索按钮点击
+            $('#btnSearch').on('click', searchUsers);
+
+            // 清除按钮点击
+            $('#btnClearSearch').on('click', clearSearch);
+
+            // 搜索类型改变时
+            $('#searchType').on('change', function() {
+                const searchType = $(this).val();
+
+                // 如果选择"状态"，显示状态下拉选择，隐藏文本输入框
+                if (searchType === 'status') {
+                    $('#keywordContainer').hide();
+                    $('#statusDropdownContainer').show();
+                } else {
+                    $('#keywordContainer').show();
+                    $('#statusDropdownContainer').hide();
+                    // 清空输入
+                    $('#searchKeyword').val('');
+                    $('#searchStatus').val('');
+                }
+
+                // 如果选择"全部"，清空搜索条件
+                if (searchType === '') {
+                    $('#searchKeyword').val('');
+                }
+            });
+
+            // 回车键触发搜索
+            $('#searchKeyword').on('keypress', function(e) {
+                if (e.which === 13) {
+                    searchUsers();
+                }
+            });
+
+            // 状态下拉选择回车键触发搜索
+            $('#searchStatus').on('keypress', function(e) {
+                if (e.which === 13) {
+                    searchUsers();
                 }
             });
         });
