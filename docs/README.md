@@ -28,9 +28,13 @@
 | 文档 | 说明 | 目标读者 |
 |------|------|----------|
 | [统一用户管理指南](./UNIFIED_SYSTEM_GUIDE.md) | 用户注册、登录、权限控制、用户管理 | 所有用户 |
+| [统一用户管理优化计划](./UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md) | 用户管理后续优化方向和实施计划 | 开发人员/管理员 |
 | [工单系统指南](./工单系统设计文档.md) | 工单创建、跟踪、论坛式交流、满意度评价 | 客户/客服/管理员 |
+| [工单系统优化计划](./CASE_SYSTEM_OPTIMIZATION_PLAN.md) | 工单系统后续优化方向和实施计划 | 开发人员/管理员 |
 | [知识库系统指南](./KB_SYSTEM_GUIDE.md) | 知识库浏览、搜索、文档管理 | 知识库用户 |
+| [知识库系统优化计划](./KB_SYSTEM_OPTIMIZATION_PLAN.md) | 知识库系统后续优化方向和实施计划 | 开发人员/管理员 |
 | [官网系统指南](./HOME_SYSTEM_GUIDE.md) | 官网首页、产品展示、留言系统 | 所有用户 |
+| [留言系统优化计划](./MESSAGE_OPTIMIZATION_PLAN.md) | 留言系统后续优化方向和实施计划 | 开发人员/管理员 |
 
 ---
 
@@ -60,6 +64,10 @@ docs/
 │   ├── 40-FINAL_SUMMARY.md              # 最终总结
 │   └── 41-IMPLEMENTATION_SUMMARY.md      # 实施总结
 ├── UNIFIED_SYSTEM_GUIDE.md                # 统一用户管理系统指南
+├── UNIFIED_SYSTEM_OPTIMIZATION_PLAN.md     # 统一用户管理系统优化计划
+├── CASE_SYSTEM_OPTIMIZATION_PLAN.md       # 工单系统优化计划
+├── KB_SYSTEM_OPTIMIZATION_PLAN.md         # 知识库系统优化计划
+├── MESSAGE_OPTIMIZATION_PLAN.md           # 留言系统优化计划
 ├── 工单系统设计文档.md                   # 工单系统设计文档
 ├── KB_SYSTEM_GUIDE.md                    # 知识库系统指南
 ├── HOME_SYSTEM_GUIDE.md                   # 官网系统指南
