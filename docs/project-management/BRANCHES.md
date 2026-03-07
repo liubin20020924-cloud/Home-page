@@ -9,13 +9,18 @@
 ### main
 - **用途**: 生产环境主分支
 - **状态**: ✅ 稳定
-- **最新提交**: `ba21095 docs: 更新分支说明文档，添加所有分支最新状态` (2026-03-07)
+- **最新提交**: `7000af8 feat(database): 添加智能数据库同步脚本` (2026-03-07)
 - **说明**: 所有功能开发完成后合并到此分支，经过测试后部署到生产环境
 - **已合并分支**:
-  - feat/service-guarantee-page
-  - feat/contact-button-adjustment
-  - feat/user-management-ui
-  - feat/unified-admin-dashboard
+  - feat/service-guarantee-page ✅
+  - feat/contact-button-adjustment ✅
+  - feat/user-management-ui ✅
+  - feat/unified-admin-dashboard ✅
+- **最新功能**:
+  - ✅ 智能数据库同步脚本 (sync_database.py)
+  - ✅ 数据库升级脚本 (upgrade_to_v2.sql)
+  - ✅ 完整初始化脚本 (init_database.sql v2.0)
+  - ✅ 统一管理后台 (用户管理、留言管理、监控管理)
 
 ---
 
@@ -51,8 +56,58 @@
 ### feat/contact-form-features
 - **用途**: 联系我们在线留言功能开发
 - **状态**: 🔄 开发中 (未合并)
-- **最新提交**: `5726a28 feat(admin): 完善统一管理后台留言管理功能` (2026-03-07)
-- **本地状态**: 领先1个提交
+- **最新提交**: `c915771 feat: 完成联系表单/留言管理功能` (2026-03-07)
+- **本地状态**: 与远程同步 (最新提交已在远程)
+- **说明**:
+  - **留言提交功能**:
+    - 添加咨询类型选择（开通账户/技术咨询）
+    - 修复用户存在性判断逻辑
+    - 开通账户：创建客户账户并发送邮件
+    - 技术咨询：不创建账户，只发送邮件
+    - 联系电话改为必填
+  - **留言管理功能**:
+    - 留言列表查询（支持搜索和筛选）
+    - 留言详情查看
+    - 留言状态更新
+    - 批量删除留言
+  - **留言回复功能** (已完成):
+    - 管理员可直接回复留言
+    - 回复内容保存到数据库
+    - 回复后自动发送邮件通知客户
+    - 回复历史记录
+    - 回复状态跟踪
+  - **账户激活功能** (已完成):
+    - 管理员可激活账户并发送账户信息
+    - 自动生成临时密码
+    - 邮件包含用户名、密码和登录地址
+    - 首次登录强制修改密码提示
+  - **回复模板管理** (已完成):
+    - 创建、编辑、删除回复模板
+    - 按分类管理（通用/账户/技术/计费/其他）
+    - 支持变量替换（{name}, {email}, {phone}等）
+    - 模板使用统计
+- **相关文件**:
+  - `templates/home/index.html` (联系表单部分)
+  - `routes/home_bp.py` (表单提交处理)
+  - `routes/admin_bp.py` (留言管理、回复、激活)
+  - `routes/reply_templates_bp.py` (回复模板管理)
+  - `templates/admin/messages.html` (留言管理页面)
+  - `templates/admin/reply_templates.html` (模板管理页面)
+  - `services/email_service.py` (邮件发送服务)
+  - `database/init_database.sql` (完整数据库结构)
+  - `database/upgrade_to_v2.sql` (数据库升级脚本)
+  - `database/sync_database.py` (智能同步脚本)
+- **已完成**:
+  - ✅ 留言提交（支持咨询类型）
+  - ✅ 留言管理（列表、详情、状态更新、删除）
+  - ✅ 留言回复（邮件通知）
+  - ✅ 账户激活（邮件发送账户信息）
+  - ✅ 回复模板管理（分类、变量替换）
+- **待完成**:
+  - ⏳ 留言统计分析
+  - ⏳ 留言导出功能
+  - ⏳ 留言标签分类
+- **下一步**: 等待合并到 main 分支
 - **说明**:
   - **留言提交功能**:
     - 添加咨询类型选择（开通账户/技术咨询）
@@ -263,10 +318,10 @@
 
 | 分支名称 | 状态 | 最新提交 | 是否已合并 | 说明 |
 |---------|------|---------|-----------|------|
-| main | ✅ 稳定 | ba21095 | - | 生产主分支 |
-| feat/service-guarantee-page | ✅ 已完成 | cd243be | ✅ 是 | 服务保障页面 |
+| main | ✅ 稳定 | 7000af8 | - | 生产主分支 |
+| feat/service-guarantee-page | ✅ 已完成 | ff97628 | ✅ 是 | 服务保障页面 |
 | feat/contact-button-adjustment | ✅ 已完成 | a371744 | ✅ 是 | 联系按钮调整 |
-| feat/contact-form-features | 🔄 开发中 | 5726a28 | ❌ 否 | 联系表单/留言管理/回复模板 |
+| feat/contact-form-features | 🔄 开发中 | c915771 | ❌ 否 | 联系表单/留言管理/回复模板 |
 | feat/user-management-ui | ✅ 已完成 | 8b7607d | ✅ 是 | 用户管理UI |
 | feat/monitoring-alerting | ⚠️ 部分完成 | 80de3ef | ❌ 否 | 监控与告警（已集成到main） |
 | feat/unified-admin-dashboard | ✅ 已完成 | 469f3dd | ✅ 是 | 统一管理后台 |
@@ -406,7 +461,11 @@ CREATE TABLE reply_templates (
   - 添加分支总览表格，便于快速查看
   - 统一管理后台功能已完成，包含用户管理、留言管理、监控管理三大模块
   - 监控与告警功能基础完成，已集成到统一管理后台
-  - **联系表单功能分支已更新**：
+  - **main 分支最新更新**：
+    - ✅ 智能数据库同步脚本 (sync_database.py) - 自动检测并补充缺失内容
+    - ✅ 数据库升级脚本 (upgrade_to_v2.sql) - 升级现有数据库
+    - ✅ 完整初始化脚本 (init_database.sql v2.0) - 包含所有功能
+  - **联系表单功能分支**：
     - ✅ 留言提交（支持咨询类型：开通账户/技术咨询）
     - ✅ 留言管理（列表、详情、状态更新、删除）
     - ✅ 留言回复功能（支持邮件通知客户）
@@ -415,4 +474,5 @@ CREATE TABLE reply_templates (
     - 🔄 待完成：统计分析、导出、标签分类等高级功能
   - **文档更新**：
     - `docs/optimization-plans/MESSAGE_SYSTEM_OPTIMIZATION_PLAN.md` 已更新至 v3.0
+    - `database/README.md` 已更新，添加智能同步脚本说明
     - 记录了所有已完成功能的详细说明和技术实现
