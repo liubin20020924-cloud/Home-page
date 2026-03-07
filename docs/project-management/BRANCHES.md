@@ -9,14 +9,16 @@
 ### main
 - **用途**: 生产环境主分支
 - **状态**: ✅ 稳定
-- **最新提交**: `7000af8 feat(database): 添加智能数据库同步脚本` (2026-03-07)
+- **最新提交**: `84f0be2 docs: 更新优化计划文档，添加开发路线图` (2026-03-07)
 - **说明**: 所有功能开发完成后合并到此分支，经过测试后部署到生产环境
 - **已合并分支**:
   - feat/service-guarantee-page ✅
   - feat/contact-button-adjustment ✅
+  - feat/contact-form-features ✅ (2026-03-07)
   - feat/user-management-ui ✅
   - feat/unified-admin-dashboard ✅
-- **最新功能**:
+- **最新功能** (v2.0):
+  - ✅ 留言系统增强（联系表单、留言管理、回复、激活、模板管理）
   - ✅ 智能数据库同步脚本 (sync_database.py)
   - ✅ 数据库升级脚本 (upgrade_to_v2.sql)
   - ✅ 完整初始化脚本 (init_database.sql v2.0)
@@ -55,9 +57,10 @@
 
 ### feat/contact-form-features
 - **用途**: 联系我们在线留言功能开发
-- **状态**: 🔄 开发中 (未合并)
+- **状态**: ✅ 已完成并合并到main (2026-03-07)
 - **最新提交**: `c915771 feat: 完成联系表单/留言管理功能` (2026-03-07)
-- **本地状态**: 与远程同步 (最新提交已在远程)
+- **合并提交**: `ee37957 Feat/contact form features`
+- **本地状态**: 已合并
 - **说明**:
   - **留言提交功能**:
     - 添加咨询类型选择（开通账户/技术咨询）
@@ -318,10 +321,10 @@
 
 | 分支名称 | 状态 | 最新提交 | 是否已合并 | 说明 |
 |---------|------|---------|-----------|------|
-| main | ✅ 稳定 | 7000af8 | - | 生产主分支 |
+| main | ✅ 稳定 | 84f0be2 | - | 生产主分支 |
 | feat/service-guarantee-page | ✅ 已完成 | ff97628 | ✅ 是 | 服务保障页面 |
 | feat/contact-button-adjustment | ✅ 已完成 | a371744 | ✅ 是 | 联系按钮调整 |
-| feat/contact-form-features | 🔄 开发中 | c915771 | ❌ 否 | 联系表单/留言管理/回复模板 |
+| feat/contact-form-features | ✅ 已完成 | c915771 | ✅ 是 | 联系表单/留言管理/回复模板 |
 | feat/user-management-ui | ✅ 已完成 | 8b7607d | ✅ 是 | 用户管理UI |
 | feat/monitoring-alerting | ⚠️ 部分完成 | 80de3ef | ❌ 否 | 监控与告警（已集成到main） |
 | feat/unified-admin-dashboard | ✅ 已完成 | 469f3dd | ✅ 是 | 统一管理后台 |
